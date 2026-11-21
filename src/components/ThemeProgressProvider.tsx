@@ -25,6 +25,9 @@ interface AppContextValue {
   syncMessage: string;
   markLessonComplete: (lessonId: string) => void;
   markLabComplete: (labId: string) => void;
+  markPuzzleComplete: (puzzleId: string) => void;
+  saveLabDraft: (labId: string, code: string) => void;
+  clearLabDraft: (labId: string) => void;
   recordQuizScore: (lessonId: string, score: number, total: number) => void;
   saveLessonNote: (lessonId: string, text: string) => void;
   toggleBookmark: (lessonId: string) => void;
@@ -41,6 +44,35 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+function extractSyncParamFromLocation(): string | null {
+  if (typeof window === 'undefined') return null;
+  const searchParams = new URLSearchParams(window.location.search);
+  const fromQuery = searchParams.get('sync');
+  if (fromQuery) return fromQuery;
+
+  const hash = window.location.hash;
+  if (hash && hash.includes('sync=')) {
+    const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+    return hashParams.get('sync');
+  }
+  return null;
+}
+
+function clearSyncParamFromLocation(): void {
+  if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(window.location.search);
+  params.delete('sync');
+  let cleanHash = window.location.hash;
+  if (cleanHash && cleanHash.includes('sync=')) {
+    const hashParams = new URLSearchParams(cleanHash.startsWith('#') ? cleanHash.slice(1) : cleanHash);
+    hashParams.delete('sync');
+    cleanHash = hashParams.toString() ? '#' + hashParams.toString() : '';
+  }
+  const cleanUrl =
+    window.location.pathname + (params.toString() ? '?' + params.toString() : '') + cleanHash;
+  window.history.replaceState({}, '', cleanUrl);
+}
+
 export function ThemeProgressProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [progress, setProgress] = useState<CourseProgress>(() => createInitialProgress());
@@ -50,6 +82,7 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
   const [hydrated, setHydrated] = useState(false);
 
   const autoSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const channelRef = useRef<BroadcastChannel | null>(null);
 
   useEffect(() => {
     const rafId = requestAnimationFrame(() => {
@@ -61,32 +94,77 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
       const cfg = loadSyncConfig();
       setSyncConfig(cfg);
 
-      // Support instant cross-device import via ?sync=AIMC1_...
-      const params = new URLSearchParams(window.location.search);
-      const syncToken = params.get('sync');
+      // Support instant cross-device import via ?sync=AIMC1_... or #sync=AIMC1_...
+      const syncToken = extractSyncParamFromLocation();
       if (syncToken) {
         const decoded = decodePortableToken(syncToken);
         if (decoded) {
           local = mergeProgress(local, decoded);
-          setSyncMessage('Imported & merged from Sync Link');
+          setSyncMessage('Imported & merged from Direct Sync Link');
           setSyncStatus('synced');
         }
-        params.delete('sync');
-        const cleanUrl =
-          window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-        window.history.replaceState({}, '', cleanUrl);
+        clearSyncParamFromLocation();
       }
 
       saveLocalProgress(local);
       setProgress(local);
       setHydrated(true);
 
-      if (cfg.mode !== 'none') {
+      if (cfg.mode !== 'none' && !syncToken) {
         setSyncStatus('synced');
         setSyncMessage(cfg.mode === 'cloud-kv' ? `Cloud Key: ${cfg.syncKey}` : 'GitHub Gist Connected');
       }
     });
-    return () => cancelAnimationFrame(rafId);
+
+    // Live cross-tab sync within the same browser
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('ai_mastery_progress_sync');
+      channelRef.current = bc;
+      bc.onmessage = (ev) => {
+        if (ev.data?.type === 'progress-update' && ev.data.progress) {
+          setProgress((prev) => mergeProgress(prev, ev.data.progress));
+        }
+      };
+    }
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'ai_mastery_progress_v1' && e.newValue) {
+        try {
+          const incoming = JSON.parse(e.newValue) as CourseProgress;
+          setProgress((prev) => mergeProgress(prev, incoming));
+        } catch {
+          // Ignore invalid JSON
+        }
+      }
+    };
+
+    const onHashChange = () => {
+      const token = extractSyncParamFromLocation();
+      if (!token) return;
+      const decoded = decodePortableToken(token);
+      if (decoded) {
+        setProgress((prev) => {
+          const merged = mergeProgress(prev, decoded);
+          saveLocalProgress(merged);
+          return merged;
+        });
+        setSyncStatus('synced');
+        setSyncMessage('Merged from Direct Sync Link');
+      }
+      clearSyncParamFromLocation();
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('hashchange', onHashChange);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('hashchange', onHashChange);
+      bc?.close();
+      channelRef.current = null;
+    };
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -180,6 +258,7 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
       setProgress((prev) => {
         const next = { ...updateStreak(updater(prev)), updatedAt: Date.now() };
         saveLocalProgress(next);
+        channelRef.current?.postMessage({ type: 'progress-update', progress: next });
         return next;
       });
     },
@@ -222,6 +301,42 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
           completedLabs: [...prev.completedLabs, labId],
           xp: prev.xp + 60,
         };
+      });
+    },
+    [commitProgress]
+  );
+
+  const markPuzzleComplete = useCallback(
+    (puzzleId: string) => {
+      commitProgress((prev) => {
+        const existing = prev.completedPuzzles || [];
+        if (existing.includes(puzzleId)) return prev;
+        return {
+          ...prev,
+          completedPuzzles: [...existing, puzzleId],
+          xp: prev.xp + 25,
+        };
+      });
+    },
+    [commitProgress]
+  );
+
+  const saveLabDraft = useCallback(
+    (labId: string, code: string) => {
+      commitProgress((prev) => ({
+        ...prev,
+        labDrafts: { ...(prev.labDrafts || {}), [labId]: code },
+      }));
+    },
+    [commitProgress]
+  );
+
+  const clearLabDraft = useCallback(
+    (labId: string) => {
+      commitProgress((prev) => {
+        const nextDrafts = { ...(prev.labDrafts || {}) };
+        delete nextDrafts[labId];
+        return { ...prev, labDrafts: nextDrafts };
       });
     },
     [commitProgress]
@@ -358,6 +473,7 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
       const merged = mergeProgress(progress, incoming);
       saveLocalProgress(merged);
       setProgress(merged);
+      channelRef.current?.postMessage({ type: 'progress-update', progress: merged });
       setSyncStatus('synced');
       setSyncMessage('Merged imported progress');
     },
@@ -381,6 +497,9 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
         syncMessage,
         markLessonComplete,
         markLabComplete,
+        markPuzzleComplete,
+        saveLabDraft,
+        clearLabDraft,
         recordQuizScore,
         saveLessonNote,
         toggleBookmark,

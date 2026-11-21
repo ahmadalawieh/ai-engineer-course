@@ -20,15 +20,16 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
     setLearnerName,
   } = useCourseApp();
 
-  const [tab, setTab] = useState<'cloud' | 'gist' | 'portable'>(
-    syncConfig.mode === 'github-gist' ? 'gist' : 'cloud'
+  const [tab, setTab] = useState<'direct' | 'cloud' | 'gist'>(
+    syncConfig.mode === 'github-gist' ? 'gist' : syncConfig.mode === 'cloud-kv' ? 'cloud' : 'direct'
   );
   const [syncKeyInput, setSyncKeyInput] = useState(syncConfig.syncKey || 'tensor-atlas-4092');
   const [gistTokenInput, setGistTokenInput] = useState(syncConfig.gistToken || '');
   const [gistIdInput, setGistIdInput] = useState(syncConfig.gistId || '');
   const [pasteToken, setPasteToken] = useState('');
   const [feedback, setFeedback] = useState<string>('');
-  const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const qrCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const [nameInput, setNameInput] = useState<string | null>(null);
   const effectiveName = nameInput ?? progress.learnerName;
@@ -36,11 +37,11 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
   const portableToken = encodePortableToken(progress);
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}${window.location.pathname}?sync=${encodeURIComponent(portableToken)}`
+      ? `${window.location.origin}${window.location.pathname}#sync=${encodeURIComponent(portableToken)}`
       : '';
 
   useEffect(() => {
-    if (!open || tab !== 'portable' || !shareUrl || !qrCanvasRef.current) return;
+    if (!open || tab !== 'direct' || !shareUrl || !qrCanvasRef.current) return;
     QRCode.toCanvas(qrCanvasRef.current, shareUrl, { width: 150, margin: 1 }).catch(() => {});
   }, [open, tab, shareUrl]);
 
@@ -72,17 +73,14 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
   };
 
   const handleImportToken = () => {
-    const raw = pasteToken.includes('sync=')
-      ? decodeURIComponent(pasteToken.split('sync=')[1].split('&')[0])
-      : pasteToken;
-    const decoded = decodePortableToken(raw);
+    const decoded = decodePortableToken(pasteToken);
     if (!decoded) {
-      setFeedback('Invalid sync code or link.');
+      setFeedback('Invalid sync code or link. Paste an AIMC1_... code or full Direct Sync Link.');
       return;
     }
     importProgressObject(decoded);
     setPasteToken('');
-    setFeedback('Progress merged successfully from Sync Token!');
+    setFeedback('Progress merged successfully! Both devices are now up to date.');
   };
 
   const handleJsonDownload = () => {
@@ -120,9 +118,9 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
       <div className="modal-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Sync Progress Across Devices">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <h2 style={{ fontSize: '1.35rem' }}>Cross-Device Progress Sync</h2>
+            <h2 style={{ fontSize: '1.35rem' }}>Sync Progress Across Devices</h2>
             <p style={{ fontSize: '0.84rem', color: 'var(--ink-muted)' }}>
-              Status: <strong>{syncStatus === 'synced' ? syncMessage : 'Saved locally in browser'}</strong>
+              Status: <strong>{syncStatus === 'synced' ? syncMessage : 'Auto-saved in browser + ready to transfer'}</strong>
             </p>
           </div>
           <button type="button" className="btn btn-sm btn-ghost" onClick={onClose} aria-label="Close">
@@ -154,6 +152,15 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="pill-tabs" style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
           <button
             type="button"
+            className={`pill-tab ${tab === 'direct' ? 'active' : ''}`}
+            style={{ flex: '1 1 110px' }}
+            onClick={() => setTab('direct')}
+          >
+            <QrCode size={13} style={{ display: 'inline', marginRight: 5 }} />
+            Direct Sync (1-Click)
+          </button>
+          <button
+            type="button"
             className={`pill-tab ${tab === 'cloud' ? 'active' : ''}`}
             style={{ flex: '1 1 110px' }}
             onClick={() => setTab('cloud')}
@@ -170,23 +177,80 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
             <GitBranch size={13} style={{ display: 'inline', marginRight: 5 }} />
             GitHub Gist
           </button>
-          <button
-            type="button"
-            className={`pill-tab ${tab === 'portable' ? 'active' : ''}`}
-            style={{ flex: '1 1 110px' }}
-            onClick={() => setTab('portable')}
-          >
-            <QrCode size={13} style={{ display: 'inline', marginRight: 5 }} />
-            QR / Sync Link
-          </button>
         </div>
+
+        {tab === 'direct' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)' }}>
+              <strong>Zero-setup direct sync:</strong> scan the QR code on your phone, send yourself the Direct Sync
+              Link, or copy your Sync Code below. Opening it on another device merges all lessons, lab drafts, quizzes,
+              notes, and flashcards automatically.
+            </p>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <canvas
+                ref={qrCanvasRef}
+                width={150}
+                height={150}
+                style={{ borderRadius: 8, border: '1px solid var(--border)', background: '#fff', padding: 6 }}
+              />
+              <div style={{ flex: 1, minWidth: 'min(220px, 100%)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(shareUrl);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }}
+                >
+                  {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedLink ? 'Copied Direct Sync Link!' : 'Copy Direct Sync Link'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(portableToken);
+                    setCopiedCode(true);
+                    setTimeout(() => setCopiedCode(false), 2000);
+                  }}
+                >
+                  {copiedCode ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedCode ? 'Copied Sync Code!' : 'Copy Sync Code (AIMC1_...)'}
+                </button>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <button type="button" className="btn btn-sm" onClick={handleJsonDownload}>
+                    <Download size={13} /> Export JSON
+                  </button>
+                  <label className="btn btn-sm" style={{ cursor: 'pointer' }}>
+                    <Upload size={13} /> Import JSON
+                    <input type="file" accept="application/json" hidden onChange={handleJsonUpload} />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <input
+                className="input mono"
+                style={{ flex: '1 1 180px', minWidth: 0 }}
+                value={pasteToken}
+                onChange={(e) => setPasteToken(e.target.value)}
+                placeholder="Paste Direct Sync Link or AIMC1_... code to merge"
+              />
+              <button type="button" className="btn btn-primary btn-sm" onClick={handleImportToken}>
+                Merge Now
+              </button>
+            </div>
+          </div>
+        )}
 
         {tab === 'cloud' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)' }}>
-              Sync seamlessly across devices using a personal Sync Key backed by Vercel KV / Upstash Redis (requires{' '}
+              Auto-syncs in the background using a personal Sync Key backed by Vercel KV / Upstash Redis (requires{' '}
               <code className="inline-code">UPSTASH_REDIS_REST_URL</code> &amp;{' '}
-              <code className="inline-code">UPSTASH_REDIS_REST_TOKEN</code> env vars on Vercel).
+              <code className="inline-code">UPSTASH_REDIS_REST_TOKEN</code> env vars on Vercel). Without Redis, use the{' '}
+              <strong>Direct Sync (1-Click)</strong> tab.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               <input
@@ -246,58 +310,6 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" className="btn btn-primary btn-sm" onClick={() => void handleConnectGist()}>
                 <GitBranch size={13} /> Sync Private Gist
-              </button>
-            </div>
-          </div>
-        )}
-
-        {tab === 'portable' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)' }}>
-              Instant zero-setup transfer: scan this QR code on your phone or copy the Sync Link to merge all completed
-              lessons, quiz scores, notes, and flashcards onto another device.
-            </p>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-              <canvas
-                ref={qrCanvasRef}
-                width={150}
-                height={150}
-                style={{ borderRadius: 8, border: '1px solid var(--border)', background: '#fff', padding: 6 }}
-              />
-              <div style={{ flex: 1, minWidth: 'min(220px, 100%)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => {
-                    void navigator.clipboard.writeText(shareUrl);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                >
-                  {copied ? <Check size={13} /> : <Copy size={13} />}
-                  {copied ? 'Copied Sync Link!' : 'Copy Sync Link'}
-                </button>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <button type="button" className="btn btn-sm" onClick={handleJsonDownload}>
-                    <Download size={13} /> Export JSON
-                  </button>
-                  <label className="btn btn-sm" style={{ cursor: 'pointer' }}>
-                    <Upload size={13} /> Import JSON
-                    <input type="file" accept="application/json" hidden onChange={handleJsonUpload} />
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              <input
-                className="input mono"
-                style={{ flex: '1 1 180px', minWidth: 0 }}
-                value={pasteToken}
-                onChange={(e) => setPasteToken(e.target.value)}
-                placeholder="Paste Sync Link or AIMC1_... token from another device"
-              />
-              <button type="button" className="btn btn-sm" onClick={handleImportToken}>
-                Merge
               </button>
             </div>
           </div>

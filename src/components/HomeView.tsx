@@ -7,27 +7,29 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Cloud,
   Code2,
   Flame,
-  Layers,
   PlayCircle,
 } from 'lucide-react';
-import { ALL_LESSONS, COURSE_MODULES, getLessonById, getTotalCourseMinutes } from '@/data/curriculum';
+import { ALL_LESSONS, COURSE_MODULES, TOTAL_LABS, getLessonById, getTotalCourseMinutes } from '@/data/curriculum';
 import { useCourseApp } from './ThemeProgressProvider';
 import type { TrackTag } from '@/types/course';
 
 function trackLabel(track: TrackTag): string {
-  if (track === 'ds') return 'Data Science';
-  if (track === 'ai-eng') return 'AI Engineering';
-  return 'Core Dual-Track';
+  if (track === 'ds') return 'SQL & Tabular ML';
+  if (track === 'ai-eng') return 'LLMs, RAG & Agents';
+  return 'Core ML/AI';
 }
 
 export function HomeView({
   onSelectLesson,
   onOpenArena,
+  onOpenSync,
 }: {
   onSelectLesson: (lessonId: string) => void;
   onOpenArena: () => void;
+  onOpenSync: () => void;
 }) {
   const { progress } = useCourseApp();
   const [trackFilter, setTrackFilter] = useState<'all' | TrackTag>('all');
@@ -57,13 +59,13 @@ export function HomeView({
     <main className="container">
       <section className="hero">
         <div>
-          <div className="hero-eyebrow">Zero-Coding-Required Interactive Curriculum</div>
-          <h1>From Zero Code &amp; Basic HTML/CSS to AI Engineer &amp; Data Scientist.</h1>
+          <div className="hero-eyebrow">Zero-Coding-Required ML &amp; AI Engineer Path</div>
+          <h1>From Zero Code &amp; Basic HTML/CSS to Production ML &amp; AI Engineer.</h1>
           <p className="hero-lead">
-            Never written Python or JavaScript? You&apos;re in the right place. Every concept starts
-            from everyday tech intuition and basic HTML/CSS—guiding you step-by-step into Python,
-            statistics, Machine Learning, Transformers, RAG, and AI Agents with{' '}
-            <strong>18 interactive visual simulators</strong> and <strong>guided in-browser Python labs</strong>.
+            Never written Python before? Start from everyday tech and basic HTML/CSS intuition,
+            then level up through Python, interactive SQL, scikit-learn &amp; XGBoost, Transformers,
+            Hybrid RAG, Agents, and AI Evals with <strong>19 live visual simulators</strong>,{' '}
+            <strong>code puzzles</strong>, and <strong>in-browser Python &amp; SQL labs</strong>.
           </p>
           <div className="hero-actions">
             <button
@@ -85,7 +87,7 @@ export function HomeView({
         </div>
 
         <aside className="hero-card" aria-label="Course progress summary">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <span className="mono" style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent)' }}>
               YOUR MASTERY PROGRESS
             </span>
@@ -103,8 +105,8 @@ export function HomeView({
               <div className="stat-label">Lessons Mastered</div>
             </div>
             <div className="stat-box">
-              <div className="stat-val">{progress.completedLabs.length}/12</div>
-              <div className="stat-label">Python Labs Passed</div>
+              <div className="stat-val">{progress.completedLabs.length}/{TOTAL_LABS}</div>
+              <div className="stat-label">Python &amp; SQL Labs</div>
             </div>
             <div className="stat-box">
               <div className="stat-val">{progress.xp}</div>
@@ -132,19 +134,19 @@ export function HomeView({
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'space-between',
-              gap: '6px 12px',
+              alignItems: 'center',
+              gap: '8px 12px',
               fontSize: '0.8rem',
               color: 'var(--ink-muted)',
             }}
           >
             <span>
               <Code2 size={13} style={{ display: 'inline', marginRight: 4 }} />
-              Pyodide Python + NumPy Ready
+              {COURSE_MODULES.length} Modules · {totalLessons} Lessons · {TOTAL_LABS} Labs
             </span>
-            <span>
-              <Layers size={13} style={{ display: 'inline', marginRight: 4 }} />
-              8 Modules · 32 Lessons
-            </span>
+            <button type="button" className="btn btn-sm" onClick={onOpenSync}>
+              <Cloud size={13} /> Direct Sync
+            </button>
           </div>
         </aside>
       </section>
@@ -152,40 +154,40 @@ export function HomeView({
       <section aria-labelledby="curriculum-heading">
         <div className="section-header">
           <div>
-            <h2 id="curriculum-heading">Complete 8-Module Mastery Path</h2>
+            <h2 id="curriculum-heading">Complete 8-Module ML &amp; AI Engineer Path</h2>
             <p style={{ color: 'var(--ink-2)', fontSize: '0.95rem', marginTop: 4 }}>
-              Concise, zero-fluff lessons engineered so every hour builds directly toward job readiness.
+              Step-by-step from zero code to job-ready Python, SQL, scikit-learn, XGBoost, LLMs, RAG, and Agents.
             </p>
           </div>
 
-          <div className="pill-tabs" role="tablist" aria-label="Filter by career track">
+          <div className="pill-tabs" role="tablist" aria-label="Filter by skill pillar">
             <button
               type="button"
               className={`pill-tab ${trackFilter === 'all' ? 'active' : ''}`}
               onClick={() => setTrackFilter('all')}
             >
-              All Modules (8)
+              All Modules ({COURSE_MODULES.length})
             </button>
             <button
               type="button"
               className={`pill-tab ${trackFilter === 'core' ? 'active' : ''}`}
               onClick={() => setTrackFilter('core')}
             >
-              Core Foundations
+              Python &amp; Foundations
             </button>
             <button
               type="button"
               className={`pill-tab ${trackFilter === 'ds' ? 'active' : ''}`}
               onClick={() => setTrackFilter('ds')}
             >
-              Data Scientist
+              SQL &amp; Tabular ML
             </button>
             <button
               type="button"
               className={`pill-tab ${trackFilter === 'ai-eng' ? 'active' : ''}`}
               onClick={() => setTrackFilter('ai-eng')}
             >
-              AI Engineer
+              LLMs, RAG &amp; Agents
             </button>
           </div>
         </div>

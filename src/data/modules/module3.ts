@@ -244,6 +244,55 @@ def boost_1d(x: np.ndarray, y: np.ndarray, n_rounds: int = 15, lr: float = 0.3):
           packages: ['numpy'],
         },
         {
+          type: 'python-lab',
+          labId: 'lab-3-3',
+          title: 'Lab 3.2B: Real scikit-learn Pipeline & Gradient Boosting',
+          prompt:
+            'Now use real production `scikit-learn`! Complete `train_churn_model(X_train, y_train, X_test)` by building a leak-free `Pipeline` with `StandardScaler()` and `GradientBoostingClassifier(random_state=42)`, fitting it on `(X_train, y_train)`, and returning `predict_proba(X_test)[:, 1]` (positive-class probabilities).',
+          starterCode: `import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import roc_auc_score
+
+def train_churn_model(X_train, y_train, X_test):
+    # 1. Build a Pipeline([('scaler', StandardScaler()), ('clf', GradientBoostingClassifier(random_state=42))])
+    # 2. Fit on (X_train, y_train)
+    # 3. Return pipe.predict_proba(X_test)[:, 1]
+    pass
+
+rng = np.random.default_rng(7)
+X = rng.normal(size=(120, 4))
+y = ((X[:, 0] * 1.8 - X[:, 1] * 1.2) > 0.2).astype(int)
+probs = train_churn_model(X[:90], y[:90], X[90:])
+if probs is not None:
+    print("Test ROC-AUC:", round(float(roc_auc_score(y[90:], probs)), 3))`,
+          testCode: `import numpy as np
+from sklearn.metrics import roc_auc_score
+rng = np.random.default_rng(42)
+X = rng.normal(size=(160, 4))
+y = ((X[:, 0] * 2.0 - X[:, 1] * 1.4 + 0.3 * X[:, 2]) > 0.1).astype(int)
+probs = train_churn_model(X[:120], y[:120], X[120:])
+assert probs is not None and len(probs) == 40, "Must return 40 predicted probabilities"
+auc = float(roc_auc_score(y[120:], probs))
+assert auc >= 0.85, f"Expected ROC-AUC >= 0.85, got {auc:.3f}"
+print(f"PASS: scikit-learn Pipeline achieved ROC-AUC = {auc:.3f}!")`,
+          solutionCode: `import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
+
+def train_churn_model(X_train, y_train, X_test):
+    pipe = Pipeline([
+        ('scaler', StandardScaler()),
+        ('clf', GradientBoostingClassifier(random_state=42)),
+    ])
+    pipe.fit(X_train, y_train)
+    return pipe.predict_proba(X_test)[:, 1]`,
+          hint: 'Create `pipe = Pipeline([("scaler", StandardScaler()), ("clf", GradientBoostingClassifier(random_state=42))])`, call `pipe.fit(X_train, y_train)`, and return `pipe.predict_proba(X_test)[:, 1]`.',
+          packages: ['numpy', 'scikit-learn'],
+        },
+        {
           type: 'callout',
           variant: 'tip',
           title: 'Key Limitation of Trees: Extrapolation',

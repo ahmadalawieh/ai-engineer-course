@@ -64,7 +64,7 @@ export function SearchModal({
             className="input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search 32 lessons or 30+ AI/DS concepts (e.g. LoRA, Attention, A/B test, XGBoost)..."
+            placeholder={`Search ${ALL_LESSONS.length} lessons or 30+ AI/ML concepts (e.g. LoRA, SQL, Attention, XGBoost)...`}
           />
           <button type="button" className="btn btn-sm btn-ghost" onClick={onClose} aria-label="Close">
             <X size={18} />

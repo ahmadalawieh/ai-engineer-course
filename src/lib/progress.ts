@@ -14,6 +14,8 @@ export function createInitialProgress(): CourseProgress {
     learnerName: 'AI Engineer',
     completedLessons: [],
     completedLabs: [],
+    completedPuzzles: [],
+    labDrafts: {},
     quizScores: {},
     notes: {},
     bookmarks: [],
@@ -22,7 +24,7 @@ export function createInitialProgress(): CourseProgress {
     xp: 0,
     streakDays: 1,
     lastActiveDate: '',
-    lastVisitedLessonId: '1-1',
+    lastVisitedLessonId: '1-0',
     updatedAt: 0,
   };
 }
@@ -38,6 +40,8 @@ export function loadLocalProgress(): CourseProgress {
       ...parsed,
       completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : [],
       completedLabs: Array.isArray(parsed.completedLabs) ? parsed.completedLabs : [],
+      completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
+      labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
       quizScores: parsed.quizScores && typeof parsed.quizScores === 'object' ? parsed.quizScores : {},
       notes: parsed.notes && typeof parsed.notes === 'object' ? parsed.notes : {},
       bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
@@ -100,9 +104,9 @@ export function updateStreak(progress: CourseProgress): CourseProgress {
 
 /**
  * Conflict-free merge between two devices:
- * - Unions completed lessons, labs, bookmarks, and interview questions
+ * - Unions completed lessons, labs, puzzles, bookmarks, and interview questions
  * - Keeps highest bestScore for quizzes
- * - Takes newer notes/SRS by updatedAt (while preserving keys only present on one device)
+ * - Takes newer notes/labDrafts/SRS by updatedAt (while preserving keys only present on one device)
  */
 export function mergeProgress(local: CourseProgress, remote: CourseProgress): CourseProgress {
   const remoteIsNewer = (remote.updatedAt || 0) >= (local.updatedAt || 0);
@@ -127,12 +131,16 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
 
   const completedLessons = union(local.completedLessons, remote.completedLessons);
   const completedLabs = union(local.completedLabs, remote.completedLabs);
+  const completedPuzzles = union(local.completedPuzzles || [], remote.completedPuzzles || []);
   const interviewCompleted = union(local.interviewCompleted, remote.interviewCompleted);
 
   const mergedXp = Math.max(
     local.xp,
     remote.xp,
-    completedLessons.length * 100 + completedLabs.length * 60 + interviewCompleted.length * 40
+    completedLessons.length * 100 +
+      completedLabs.length * 60 +
+      completedPuzzles.length * 25 +
+      interviewCompleted.length * 40
   );
 
   return {
@@ -140,6 +148,8 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
     learnerName: newer.learnerName || older.learnerName || 'AI Engineer',
     completedLessons,
     completedLabs,
+    completedPuzzles,
+    labDrafts: { ...(older.labDrafts || {}), ...(newer.labDrafts || {}) },
     quizScores: mergedQuizzes,
     notes: { ...older.notes, ...newer.notes },
     bookmarks: union(local.bookmarks, remote.bookmarks),
@@ -149,7 +159,7 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
     streakDays: Math.max(local.streakDays, remote.streakDays),
     lastActiveDate:
       local.lastActiveDate > remote.lastActiveDate ? local.lastActiveDate : remote.lastActiveDate,
-    lastVisitedLessonId: newer.lastVisitedLessonId || older.lastVisitedLessonId || '1-1',
+    lastVisitedLessonId: newer.lastVisitedLessonId || older.lastVisitedLessonId || '1-0',
     updatedAt: Math.max(local.updatedAt || 0, remote.updatedAt || 0, Date.now()),
   };
 }
@@ -159,10 +169,21 @@ export function encodePortableToken(progress: CourseProgress): string {
   return 'AIMC1_' + LZString.compressToEncodedURIComponent(json);
 }
 
+export function extractSyncTokenFromString(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  if (trimmed.includes('sync=')) {
+    const raw = trimmed.split('sync=')[1].split('&')[0].split('#')[0];
+    return decodeURIComponent(raw);
+  }
+  return trimmed;
+}
+
 export function decodePortableToken(token: string): CourseProgress | null {
   try {
-    const trimmed = token.trim();
-    const payload = trimmed.startsWith('AIMC1_') ? trimmed.slice(6) : trimmed;
+    const extracted = extractSyncTokenFromString(token);
+    if (!extracted) return null;
+    const payload = extracted.startsWith('AIMC1_') ? extracted.slice(6) : extracted;
     const json = LZString.decompressFromEncodedURIComponent(payload);
     if (!json) return null;
     const parsed = JSON.parse(json) as CourseProgress;
@@ -172,6 +193,8 @@ export function decodePortableToken(token: string): CourseProgress | null {
     return {
       ...createInitialProgress(),
       ...parsed,
+      completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
+      labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
     };
   } catch {
     return null;

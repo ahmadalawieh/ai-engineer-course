@@ -57,6 +57,13 @@ class SupportTriage(BaseModel):
             '**Defense-in-Depth**: 1) Separate trusted `system` instructions from untrusted `data` wrapped in explicit XML delimiters (`<untrusted_doc>...</untrusted_doc>`). 2) Never let untrusted retrieved docs trigger destructive tools (`delete_user`, `send_email`) without deterministic human confirmation or strict policy checks. 3) Validate outputs deterministically before acting.',
           ],
         },
+        {
+          type: 'simulator',
+          simulatorId: 'prompt-defense',
+          title: 'Interactive Game: Red-Team & Defend the AI Support Bot',
+          description:
+            'Pick an attack (Direct Jailbreak or Poisoned PDF) and toggle defense layers to see which combination blocks prompt injection without breaking normal users.',
+        },
       ],
       quiz: [
         {

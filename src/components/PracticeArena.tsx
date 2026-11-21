@@ -5,7 +5,7 @@ import { Award, BookOpen, CheckCircle2, Eye, Layers, Printer, RotateCw, Search }
 import { FLASHCARDS } from '@/data/flashcards';
 import { GLOSSARY_ITEMS } from '@/data/glossary';
 import { MOCK_INTERVIEW_QUESTIONS } from '@/data/mockInterview';
-import { ALL_LESSONS } from '@/data/curriculum';
+import { ALL_LESSONS, TOTAL_LABS } from '@/data/curriculum';
 import { useCourseApp } from './ThemeProgressProvider';
 import { MathFormula, RichText } from './MathAndProse';
 
@@ -322,7 +322,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
           <div className="hero-card certificate-card" style={{ textAlign: 'center' }}>
             <div className="hero-eyebrow">Verified Completion Credential</div>
             <h2 style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', marginBottom: 8 }}>
-              Certificate of Dual-Track AI &amp; Data Science Mastery
+              Certificate of ML &amp; AI Engineering Mastery
             </h2>
             <p style={{ fontSize: '1.1rem', color: 'var(--ink-2)', marginBottom: 20 }}>
               Awarded to <strong style={{ fontSize: '1.25rem', color: 'var(--ink)' }}>{progress.learnerName}</strong>
@@ -334,8 +334,8 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
                 <div className="stat-label">Lessons (Need 24+)</div>
               </div>
               <div className="stat-box">
-                <div className="stat-val">{labsDone}/12</div>
-                <div className="stat-label">Python Labs (Need 5+)</div>
+                <div className="stat-val">{labsDone}/{TOTAL_LABS}</div>
+                <div className="stat-label">Python &amp; SQL Labs (Need 5+)</div>
               </div>
               <div className="stat-box">
                 <div className="stat-val">{interviewsDone}/{MOCK_INTERVIEW_QUESTIONS.length}</div>
@@ -350,7 +350,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
             {isCertified ? (
               <div>
                 <p style={{ color: 'var(--success)', fontWeight: 700, marginBottom: 14 }}>
-                  Congratulations — you met all Mastery Milestones across Foundations, Classical ML, LLMs, RAG, Agents &amp; System Design!
+                  Congratulations — you met all Mastery Milestones across Python, SQL, Classical ML, LLMs, RAG, Agents &amp; System Design!
                 </p>
                 <button type="button" className="btn btn-primary" onClick={() => window.print()}>
                   <Printer size={15} /> Print / Save PDF Certificate
@@ -358,7 +358,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
               </div>
             ) : (
               <p style={{ color: 'var(--ink-muted)', fontSize: '0.92rem' }}>
-                Complete at least <strong>24 lessons</strong>, <strong>5 Python labs</strong>, and{' '}
+                Complete at least <strong>24 lessons</strong>, <strong>5 Python/SQL labs</strong>, and{' '}
                 <strong>4 mock interviews</strong> to unlock your printable Mastery Certificate.
               </p>
             )}

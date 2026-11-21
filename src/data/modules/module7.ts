@@ -128,6 +128,35 @@ export const module7: CourseModule = {
           title: 'Two Fatal Biases of LLM-as-a-Judge (and How to Fix Them)',
           body: '1) **Position Bias**: in A/B pairwise judging, LLMs systematically favor whichever answer appears first! Always run twice swapping `(A, B)` and `(B, A)`. 2) **Verbosity Bias**: judges prefer longer fluff unless penalized in the rubric. Always calibrate your judge against 50 human-labeled examples (aim for $> 0.80$ agreement / Cohen’s $\\kappa$).',
         },
+        {
+          type: 'python-lab',
+          labId: 'lab-7-2',
+          title: 'Lab 7.2: Deterministic RAG Citation & Recall Scorer',
+          prompt:
+            'Before calling an expensive LLM-as-a-Judge, write fast Level-1/Level-2 deterministic evals! Implement `eval_rag_case(cited_ids, retrieved_ids, expected_ids)` returning a dict `{"citations_valid": bool, "recall": float}` where `citations_valid` is `True` only if every ID in `cited_ids` actually appeared in `retrieved_ids` (no hallucinated sources!), and `recall` is the fraction of `expected_ids` found in `retrieved_ids`.',
+          starterCode: `def eval_rag_case(cited_ids: list[str], retrieved_ids: list[str], expected_ids: list[str]) -> dict:
+    # 1. citations_valid = all(cid in retrieved_ids for cid in cited_ids)
+    # 2. hits = sum(1 for eid in expected_ids if eid in retrieved_ids)
+    # 3. recall = hits / len(expected_ids) if expected_ids else 1.0
+    pass
+
+print(eval_rag_case(["doc-1", "doc-9"], ["doc-1", "doc-2"], ["doc-1", "doc-3"]))`,
+          testCode: `r1 = eval_rag_case(["doc-1", "doc-9"], ["doc-1", "doc-2"], ["doc-1", "doc-3"])
+assert r1["citations_valid"] is False, "doc-9 was hallucinated (not retrieved)"
+assert abs(r1["recall"] - 0.5) < 1e-6, f"Expected recall 0.5, got {r1['recall']}"
+
+r2 = eval_rag_case(["doc-2"], ["doc-1", "doc-2", "doc-3"], ["doc-1", "doc-2"])
+assert r2["citations_valid"] is True and abs(r2["recall"] - 1.0) < 1e-6
+print("PASS: Deterministic RAG eval checks caught hallucinated citations and measured recall!")`,
+          solutionCode: `def eval_rag_case(cited_ids: list[str], retrieved_ids: list[str], expected_ids: list[str]) -> dict:
+    retrieved_set = set(retrieved_ids)
+    citations_valid = all(cid in retrieved_set for cid in cited_ids)
+    hits = sum(1 for eid in expected_ids if eid in retrieved_set)
+    recall = hits / len(expected_ids) if expected_ids else 1.0
+    return {"citations_valid": citations_valid, "recall": recall}`,
+          hint: 'Convert `retrieved_ids` to a `set`, use `all(cid in retrieved_set for cid in cited_ids)` for citation validity, and divide matched expected docs by `len(expected_ids)`.',
+          packages: [],
+        },
       ],
       quiz: [
         {

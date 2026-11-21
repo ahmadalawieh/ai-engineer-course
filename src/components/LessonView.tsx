@@ -14,11 +14,12 @@ import {
   Copy,
   Lightbulb,
   Menu,
+  RotateCcw,
   Sparkles,
   Target,
   X,
 } from 'lucide-react';
-import { COURSE_MODULES, getAdjacentLessons, getLessonById, getModuleById } from '@/data/curriculum';
+import { ALL_LESSONS, COURSE_MODULES, getAdjacentLessons, getLessonById, getModuleById } from '@/data/curriculum';
 import { useCourseApp } from './ThemeProgressProvider';
 import { MathFormula, RichText } from './MathAndProse';
 import { InteractiveSimulatorCard } from './InteractiveSimulators';
@@ -71,6 +72,273 @@ function CodeBlockCard({
   );
 }
 
+function MathCardBlock({
+  title,
+  latex,
+  breakdown,
+  intuition,
+}: {
+  title: string;
+  latex: string;
+  breakdown: { symbol: string; meaning: string }[];
+  intuition: string;
+}) {
+  const [plainFirst, setPlainFirst] = useState(false);
+
+  return (
+    <section className="block math-card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 6 }}>
+        <div>
+          <div className="lab-badge" style={{ marginBottom: 3 }}>
+            {plainFirst ? 'Plain-English Intuition' : 'Core Equation'}
+          </div>
+          <h3 style={{ fontSize: '1.1rem' }}>{title}</h3>
+        </div>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => setPlainFirst((v) => !v)}
+        >
+          {plainFirst ? 'Show Formal Math' : 'Plain English Only'}
+        </button>
+      </div>
+
+      {!plainFirst ? (
+        <>
+          <div className="math-display">
+            <MathFormula latex={latex} displayMode />
+          </div>
+          <div className="math-breakdown">
+            {breakdown.map((b, i) => (
+              <div key={i} className="math-row">
+                <span className="math-sym">
+                  <MathFormula latex={b.symbol} />
+                </span>
+                <span style={{ color: 'var(--ink-2)' }}>
+                  <RichText text={b.meaning} />
+                </span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+            <strong>Intuition:</strong> <RichText text={intuition} />
+          </p>
+        </>
+      ) : (
+        <div
+          style={{
+            marginTop: 8,
+            padding: '12px 14px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--surface-2)',
+            fontSize: '0.94rem',
+            color: 'var(--ink-2)',
+          }}
+        >
+          <p style={{ marginBottom: 8 }}>
+            <strong>What it really means:</strong> <RichText text={intuition} />
+          </p>
+          <ul style={{ paddingLeft: 18, fontSize: '0.86rem' }}>
+            {breakdown.map((b, i) => (
+              <li key={i} style={{ marginBottom: 3 }}>
+                <RichText text={b.meaning} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CodeBuilderBlock({
+  puzzleId,
+  title,
+  prompt,
+  lines,
+  explanation,
+}: {
+  puzzleId: string;
+  title: string;
+  prompt: string;
+  lines: string[];
+  explanation: string;
+}) {
+  const { progress, markPuzzleComplete } = useCourseApp();
+  const isDone = (progress.completedPuzzles || []).includes(puzzleId);
+
+  // Deterministic scramble so SSR & client match cleanly
+  const scrambledIndices = React.useMemo(() => {
+    const idxs = lines.map((_, i) => i);
+    const out: number[] = [];
+    for (let i = idxs.length - 1; i >= 0; i -= 2) out.push(idxs[i]);
+    for (let i = 0; i < idxs.length; i += 2) {
+      if (!out.includes(idxs[i])) out.push(idxs[i]);
+    }
+    if (out.every((v, i) => v === i) && out.length > 1) {
+      [out[0], out[1]] = [out[1], out[0]];
+    }
+    return out;
+  }, [lines]);
+
+  const [picked, setPicked] = useState<number[]>([]);
+  const [checked, setChecked] = useState(false);
+
+  const remaining = scrambledIndices.filter((i) => !picked.includes(i));
+  const isCorrect =
+    picked.length === lines.length && picked.every((lineIdx, pos) => lineIdx === pos);
+
+  const handleCheck = () => {
+    setChecked(true);
+    if (isCorrect) {
+      markPuzzleComplete(puzzleId);
+    }
+  };
+
+  return (
+    <div className="lab-card block" id={`puzzle-${puzzleId}`}>
+      <div className="lab-header">
+        <div>
+          <span className="lab-badge">
+            <Sparkles size={12} style={{ display: 'inline', marginRight: 5 }} />
+            Tap-to-Order Code Puzzle (Mobile-Friendly)
+          </span>
+          <h3 style={{ fontSize: '1.08rem', marginTop: 2 }}>{title}</h3>
+        </div>
+        {isDone && (
+          <span
+            className="track-badge"
+            style={{ background: 'var(--success-soft)', color: 'var(--success)' }}
+          >
+            <CheckCircle2 size={12} style={{ marginRight: 4 }} /> Solved (+25 XP)
+          </span>
+        )}
+      </div>
+
+      <div className="lab-body">
+        <p style={{ fontSize: '0.92rem', color: 'var(--ink-2)', marginBottom: 12 }}>
+          <RichText text={prompt} />
+        </p>
+
+        <div style={{ marginBottom: 10 }}>
+          <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', marginBottom: 6 }}>
+            YOUR PROGRAM (TAP LINES BELOW TO BUILD IN ORDER):
+          </div>
+          <div
+            style={{
+              minHeight: 74,
+              padding: 10,
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--code-bg)',
+              color: 'var(--code-ink)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            {picked.length === 0 ? (
+              <span className="mono" style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+                Tap code tiles below to assemble them here...
+              </span>
+            ) : (
+              picked.map((lineIdx, pos) => (
+                <button
+                  key={lineIdx}
+                  type="button"
+                  className="mono"
+                  onClick={() => {
+                    setPicked((prev) => prev.filter((_, p) => p !== pos));
+                    setChecked(false);
+                  }}
+                  style={{
+                    textAlign: 'left',
+                    padding: '6px 10px',
+                    borderRadius: 5,
+                    border: '1px solid rgba(255,255,255,0.16)',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: 'var(--code-ink)',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {pos + 1}. {lines[lineIdx]}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        {remaining.length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', marginBottom: 6 }}>
+              AVAILABLE LINES (TAP TO ADD):
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {remaining.map((lineIdx) => (
+                <button
+                  key={lineIdx}
+                  type="button"
+                  className="quiz-option mono"
+                  style={{ fontSize: '0.82rem', padding: '8px 11px' }}
+                  onClick={() => {
+                    setPicked((prev) => [...prev, lineIdx]);
+                    setChecked(false);
+                  }}
+                >
+                  {lines[lineIdx]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={picked.length !== lines.length}
+            onClick={handleCheck}
+          >
+            <Check size={13} /> Check Order
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            onClick={() => {
+              setPicked([]);
+              setChecked(false);
+            }}
+          >
+            <RotateCcw size={13} /> Reset
+          </button>
+        </div>
+
+        {checked && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: '9px 12px',
+              borderRadius: 'var(--radius-sm)',
+              background: isCorrect ? 'var(--success-soft)' : 'var(--warning-soft)',
+              color: isCorrect ? 'var(--success)' : 'var(--warning)',
+              fontSize: '0.86rem',
+            }}
+          >
+            {isCorrect ? (
+              <>
+                <strong>Spot on!</strong> <RichText text={explanation} />
+              </>
+            ) : (
+              <span>Not quite in the right order yet—tap a line in your program box to remove it and try again!</span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function renderContentBlock(block: ContentBlock, idx: number) {
   switch (block.type) {
     case 'prose':
@@ -110,28 +378,13 @@ function renderContentBlock(block: ContentBlock, idx: number) {
 
     case 'math':
       return (
-        <section key={idx} className="block math-card">
-          <div className="lab-badge" style={{ marginBottom: 3 }}>Core Equation</div>
-          <h3 style={{ fontSize: '1.1rem' }}>{block.title}</h3>
-          <div className="math-display">
-            <MathFormula latex={block.latex} displayMode />
-          </div>
-          <div className="math-breakdown">
-            {block.breakdown.map((b, i) => (
-              <div key={i} className="math-row">
-                <span className="math-sym">
-                  <MathFormula latex={b.symbol} />
-                </span>
-                <span style={{ color: 'var(--ink-2)' }}>
-                  <RichText text={b.meaning} />
-                </span>
-              </div>
-            ))}
-          </div>
-          <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
-            <strong>Intuition:</strong> <RichText text={block.intuition} />
-          </p>
-        </section>
+        <MathCardBlock
+          key={idx}
+          title={block.title}
+          latex={block.latex}
+          breakdown={block.breakdown}
+          intuition={block.intuition}
+        />
       );
 
     case 'code-compare':
@@ -226,6 +479,18 @@ function renderContentBlock(block: ContentBlock, idx: number) {
         </section>
       );
 
+    case 'code-builder':
+      return (
+        <CodeBuilderBlock
+          key={block.puzzleId}
+          puzzleId={block.puzzleId}
+          title={block.title}
+          prompt={block.prompt}
+          lines={block.lines}
+          explanation={block.explanation}
+        />
+      );
+
     case 'simulator':
       return (
         <InteractiveSimulatorCard
@@ -248,6 +513,8 @@ function renderContentBlock(block: ContentBlock, idx: number) {
           solutionCode={block.solutionCode}
           hint={block.hint}
           packages={block.packages}
+          language={block.language}
+          setupCode={block.setupCode}
         />
       );
   }
@@ -312,7 +579,7 @@ export function LessonView({
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span className="mono" style={{ fontSize: '0.73rem', color: 'var(--ink-muted)' }}>
-              {progress.completedLessons.length}/32
+              {progress.completedLessons.length}/{ALL_LESSONS.length}
             </span>
             <button
               type="button"

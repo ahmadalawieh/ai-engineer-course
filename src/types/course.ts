@@ -14,6 +14,7 @@ export type SimulatorId =
   | 'attention-map'
   | 'llm-vram'
   | 'sampling-lab'
+  | 'prompt-defense'
   | 'vector-search'
   | 'lora-rank'
   | 'react-agent'
@@ -57,6 +58,14 @@ export type ContentBlock =
       caption?: string;
     }
   | {
+      type: 'code-builder';
+      puzzleId: string;
+      title: string;
+      prompt: string;
+      lines: string[];
+      explanation: string;
+    }
+  | {
       type: 'callout';
       variant: 'tip' | 'warning' | 'interview' | 'key-takeaway';
       title: string;
@@ -84,6 +93,8 @@ export type ContentBlock =
       solutionCode: string;
       hint: string;
       packages?: string[];
+      language?: 'python' | 'sql';
+      setupCode?: string;
     };
 
 export interface QuizQuestion {
@@ -171,6 +182,8 @@ export interface CourseProgress {
   learnerName: string;
   completedLessons: string[];
   completedLabs: string[];
+  completedPuzzles: string[];
+  labDrafts: Record<string, string>;
   quizScores: Record<string, { score: number; total: number; bestScore: number }>;
   notes: Record<string, string>;
   bookmarks: string[];

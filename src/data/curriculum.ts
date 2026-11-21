@@ -21,6 +21,11 @@ export const COURSE_MODULES: CourseModule[] = [
 
 export const ALL_LESSONS: Lesson[] = COURSE_MODULES.flatMap((m) => m.lessons);
 
+export const TOTAL_LABS: number = ALL_LESSONS.reduce(
+  (count, lesson) => count + lesson.blocks.filter((b) => b.type === 'python-lab').length,
+  0
+);
+
 export function getLessonById(id: string): Lesson | undefined {
   return ALL_LESSONS.find((l) => l.id === id);
 }

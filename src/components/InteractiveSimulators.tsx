@@ -22,6 +22,7 @@ import {
   LatencyEconomicsSim,
   LlmVramSim,
   LoraRankSim,
+  PromptDefenseSim,
   ReactAgentSim,
   SamplingLabSim,
   VectorSearchSim,
@@ -64,6 +65,8 @@ export function InteractiveSimulatorCard({
         return <LlmVramSim />;
       case 'sampling-lab':
         return <SamplingLabSim />;
+      case 'prompt-defense':
+        return <PromptDefenseSim />;
       case 'vector-search':
         return <VectorSearchSim />;
       case 'lora-rank':

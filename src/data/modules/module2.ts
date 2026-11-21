@@ -63,6 +63,45 @@ WHERE status = 'completed';`,
         },
         {
           type: 'python-lab',
+          labId: 'lab-2-1-sql',
+          language: 'sql',
+          title: 'Lab 2.1A: Interactive SQL — Completed Spend per User',
+          prompt:
+            'Practice real SQL right in your browser! We pre-loaded an `orders` table (`order_id, user_id, status, amount`). Write a SQL query that returns `user_id` and `SUM(amount) AS total_spent` for `status = \'completed\'` orders only, grouped by `user_id` and sorted from highest `total_spent` to lowest.',
+          setupCode: `conn.execute("CREATE TABLE orders (order_id INTEGER, user_id INTEGER, status TEXT, amount REAL)")
+conn.executemany("INSERT INTO orders VALUES (?, ?, ?, ?)", [
+    (1, 101, 'completed', 50.0),
+    (2, 102, 'completed', 120.0),
+    (3, 101, 'refunded', 999.0),
+    (4, 102, 'completed', 60.0),
+    (5, 101, 'completed', 40.0),
+    (6, 103, 'cancelled', 75.0),
+])
+conn.commit()`,
+          starterCode: `SELECT
+  user_id,
+  SUM(amount) AS total_spent
+FROM orders
+-- Filter WHERE status = 'completed'
+-- GROUP BY user_id
+-- ORDER BY total_spent DESC
+;`,
+          testCode: `assert len(rows) == 2, f"Expected 2 users with completed orders, got {len(rows)} rows: {rows}"
+assert rows[0][0] == 102 and abs(rows[0][1] - 180.0) < 1e-6, f"Top spender should be user 102 with 180.0, got {rows[0]}"
+assert rows[1][0] == 101 and abs(rows[1][1] - 90.0) < 1e-6, f"Second should be user 101 with 90.0, got {rows[1]}"
+print("PASS: SQL query filtered refunded/cancelled rows and aggregated accurately!")`,
+          solutionCode: `SELECT
+  user_id,
+  SUM(amount) AS total_spent
+FROM orders
+WHERE status = 'completed'
+GROUP BY user_id
+ORDER BY total_spent DESC;`,
+          hint: 'Put `WHERE status = \'completed\'` before `GROUP BY user_id`, and `ORDER BY total_spent DESC` at the end.',
+          packages: [],
+        },
+        {
+          type: 'python-lab',
           labId: 'lab-2-1',
           title: 'Lab 2.1: Group-By Aggregation & Missing Value Imputation',
           prompt:

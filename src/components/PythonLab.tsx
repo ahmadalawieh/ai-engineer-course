@@ -15,6 +15,8 @@ interface PythonLabProps {
   solutionCode: string;
   hint: string;
   packages?: string[];
+  language?: 'python' | 'sql';
+  setupCode?: string;
 }
 
 export function PythonLab({
@@ -26,11 +28,16 @@ export function PythonLab({
   solutionCode,
   hint,
   packages = ['numpy'],
+  language = 'python',
+  setupCode,
 }: PythonLabProps) {
-  const { progress, markLabComplete } = useCourseApp();
+  const { progress, markLabComplete, saveLabDraft, clearLabDraft } = useCourseApp();
   const isCompleted = progress.completedLabs.includes(labId);
+  const savedDraft = progress.labDrafts?.[labId];
 
-  const [code, setCode] = useState(starterCode);
+  const [localDraft, setLocalDraft] = useState<string | null>(null);
+  const code = localDraft ?? savedDraft ?? starterCode;
+
   const [running, setRunning] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string>('');
   const [output, setOutput] = useState<string>('');
@@ -38,14 +45,45 @@ export function PythonLab({
   const [passed, setPassed] = useState(isCompleted);
   const [showHint, setShowHint] = useState(false);
 
+  const updateCode = (next: string) => {
+    setLocalDraft(next);
+    saveLabDraft(labId, next);
+  };
+
+  const buildSqlWrapper = (userSql: string) => {
+    const encodedSql = JSON.stringify(userSql);
+    return `import sqlite3
+conn = sqlite3.connect(":memory:")
+${setupCode || ''}
+user_sql = ${encodedSql}
+cur = conn.cursor()
+cur.execute(user_sql)
+rows = cur.fetchall()
+if cur.description:
+    cols = [d[0] for d in cur.description]
+    print(" | ".join(cols))
+    print("-" * max(12, len(" | ".join(cols))))
+    for r in rows[:25]:
+        print(" | ".join(str(v) for v in r))
+    if len(rows) > 25:
+        print(f"... ({len(rows)} total rows)")
+else:
+    print(f"Query executed ({cur.rowcount} rows affected).")
+`;
+  };
+
   const handleRun = async (withTests: boolean) => {
     setRunning(true);
     setHasError(false);
     setOutput('');
+
+    const executionCode = language === 'sql' ? buildSqlWrapper(code) : code;
+    const effectivePackages = language === 'sql' ? [] : packages;
+
     const res = await runPythonCode(
-      code,
+      executionCode,
       withTests ? testCode : undefined,
-      packages,
+      effectivePackages,
       (msg) => setStatusMsg(msg)
     );
     setRunning(false);
@@ -72,7 +110,7 @@ export function PythonLab({
       const start = el.selectionStart;
       const end = el.selectionEnd;
       const next = code.slice(0, start) + '    ' + code.slice(end);
-      setCode(next);
+      updateCode(next);
       requestAnimationFrame(() => {
         el.selectionStart = el.selectionEnd = start + 4;
       });
@@ -85,11 +123,18 @@ export function PythonLab({
         <div>
           <span className="lab-badge">
             <Terminal size={12} style={{ display: 'inline', marginRight: 5 }} />
-            In-Browser Python + {packages.length ? packages.join(', ') : 'Stdlib'} Lab
+            {language === 'sql'
+              ? 'In-Browser Interactive SQL Lab (SQLite)'
+              : `In-Browser Python + ${packages.length ? packages.join(', ') : 'Stdlib'} Lab`}
           </span>
           <h3 style={{ fontSize: '1.08rem', marginTop: 2 }}>{title}</h3>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {savedDraft && savedDraft !== starterCode && (
+            <span className="mono" style={{ fontSize: '0.7rem', color: 'var(--ink-muted)' }}>
+              Draft saved
+            </span>
+          )}
           {(passed || isCompleted) && (
             <span
               className="track-badge"
@@ -110,7 +155,7 @@ export function PythonLab({
           aria-label={title}
           className="python-textarea"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => updateCode(e.target.value)}
           onKeyDown={handleKeyDown}
           spellCheck={false}
         />
@@ -143,7 +188,7 @@ export function PythonLab({
               disabled={running}
               id={`run-${labId}`}
             >
-              Run Scratchpad
+              {language === 'sql' ? 'Run Query' : 'Run Scratchpad'}
             </button>
             <button
               type="button"
@@ -156,7 +201,7 @@ export function PythonLab({
             <button
               type="button"
               className="btn btn-sm"
-              onClick={() => setCode(solutionCode)}
+              onClick={() => updateCode(solutionCode)}
             >
               <Eye size={13} />
               Solution
@@ -165,7 +210,8 @@ export function PythonLab({
               type="button"
               className="btn btn-sm btn-ghost"
               onClick={() => {
-                setCode(starterCode);
+                setLocalDraft(starterCode);
+                clearLabDraft(labId);
                 setOutput('');
                 setHasError(false);
               }}

@@ -10,6 +10,108 @@ export const module1: CourseModule = {
   capstoneDeliverable: 'Build your first Python & NumPy score-booster, cosine similarity finder, and gradient optimizer.',
   lessons: [
     {
+      id: '1-0',
+      moduleId: 'mod-1',
+      number: '1.0',
+      title: 'Python Zero-to-One: Variables, Loops & Decisions',
+      subtitle: 'Start here if you have never written code—learn variables, lists, if/else, and loops in 15 fun minutes.',
+      durationMinutes: 15,
+      track: 'core',
+      prerequisites: ['Everyday tech comfort & basic HTML/CSS'],
+      objectives: [
+        'Store numbers and text in Python variables and lists without prior coding experience.',
+        'Make smart choices with `if / else` and repeat steps cleanly with `for` loops.',
+        'Solve an interactive tap-to-order puzzle and pass your first Python lab.',
+      ],
+      blocks: [
+        {
+          type: 'prose',
+          heading: 'Coding Is Just Giving Clear Recipes to a Computer',
+          paragraphs: [
+            'If you have ever written an HTML tag like `<button class="primary">Buy</button>` or followed a cooking recipe, you already understand the logic of programming. In Python, there are only **4 building blocks** you need on Day 1:',
+            '1) **Variables** (`score = 85`): a labeled box holding a value. 2) **Lists** (`scores = [60, 85, 92]`): an ordered row of values inside square brackets `[...]`. 3) **Loops** (`for s in scores:`): visit each item one by one. 4) **Decisions** (`if s >= 80:`): take an action only when a rule is true.',
+          ],
+        },
+        {
+          type: 'code-builder',
+          puzzleId: 'puzzle-1-0',
+          title: 'Warm-Up Puzzle: Build a Passing-Score Counter',
+          prompt:
+            'Tap the lines below in the right order to create a list of scores, loop through them, and count how many are `>= 80`. (Notice how indented lines sit inside the `for` and `if` blocks!)',
+          lines: [
+            'scores = [65, 82, 95]',
+            'passed = 0',
+            'for s in scores:',
+            '    if s >= 80:',
+            '        passed = passed + 1',
+            'print(passed)',
+          ],
+          explanation:
+            'First you create the `scores` list and set `passed = 0`. Next the `for` loop checks each score, the indented `if` tests `s >= 80`, and `passed = passed + 1` adds 1 for each match before printing `2`!',
+        },
+        {
+          type: 'callout',
+          variant: 'tip',
+          title: 'How to Read Python Error Messages (Zero Panic!)',
+          body: 'When Python prints an error, always read the **very last line first**: `IndentationError` means spaces don’t line up; `NameError` means a typo in a variable name; `TypeError` means mixing incompatible types (like `"hello" + 5`). Errors are helpful signposts, not failures!',
+        },
+        {
+          type: 'python-lab',
+          labId: 'lab-1-0',
+          title: 'Lab 1.0: Filter Confident AI Predictions',
+          prompt:
+            'Imagine an AI model outputs confidence scores like `[0.45, 0.82, 0.91, 0.60]`. Write a function `filter_confident(scores, threshold)` that starts with an empty list `kept = []`, loops `for s in scores:`, appends `s` when `s >= threshold`, and returns `kept`.',
+          starterCode: `def filter_confident(scores, threshold):
+    kept = []
+    # Loop over every score in scores:
+    # if s >= threshold:
+    #     kept.append(s)
+    return kept
+
+print(filter_confident([0.45, 0.82, 0.91, 0.60], 0.75))`,
+          testCode: `res1 = filter_confident([0.45, 0.82, 0.91, 0.60], 0.75)
+assert res1 == [0.82, 0.91], f"Expected [0.82, 0.91], got {res1}"
+res2 = filter_confident([0.2, 0.5], 0.8)
+assert res2 == [], f"Expected [], got {res2}"
+print("PASS: Nice work! Your first pure-Python loop & if-filter passed!")`,
+          solutionCode: `def filter_confident(scores, threshold):
+    kept = []
+    for s in scores:
+        if s >= threshold:
+            kept.append(s)
+    return kept`,
+          hint: 'Inside `filter_confident`, write `for s in scores:` followed by an indented `if s >= threshold:` and `kept.append(s)`.',
+          packages: [],
+        },
+      ],
+      quiz: [
+        {
+          id: 'q1-0-1',
+          question: 'What does `for item in [10, 20, 30]:` do in Python?',
+          options: [
+            'Deletes the list',
+            'Runs the indented code block once for `10`, once for `20`, and once for `30`',
+            'Only checks the first number',
+            'Sorts the list backwards',
+          ],
+          correctIndex: 1,
+          explanation: 'A `for` loop steps through every element in a list from left to right.',
+        },
+        {
+          id: 'q1-0-2',
+          question: 'If you see `NameError: name "scroes" is not defined`, what usually caused it?',
+          options: [
+            'Your internet disconnected',
+            'A spelling typo in the variable name (`scroes` instead of `scores`)',
+            'Python cannot store numbers',
+            'You forgot a semicolon',
+          ],
+          correctIndex: 1,
+          explanation: '`NameError` simply means Python looked for a variable name you haven’t defined yet—almost always a typo.',
+        },
+      ],
+    },
+    {
       id: '1-1',
       moduleId: 'mod-1',
       number: '1.1',
@@ -17,7 +119,7 @@ export const module1: CourseModule = {
       subtitle: 'Your first lines of Python—explained through HTML tags, CSS classes, and spreadsheets.',
       durationMinutes: 18,
       track: 'core',
-      prerequisites: ['Basic tech comfort & simple HTML/CSS'],
+      prerequisites: ['1.0'],
       objectives: [
         'Write your first Python variables, lists, and reusable functions (`def`) with zero prior coding.',
         'See how CSS selecting all `.card` elements at once works just like NumPy transforming a whole list of numbers.',

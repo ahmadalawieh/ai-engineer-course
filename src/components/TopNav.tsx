@@ -27,7 +27,7 @@ export function TopNav({
           <div className="brand-mark">AI</div>
           <div>
             <span className="brand-title">AI Mastery Studio</span>
-            <span className="brand-sub">Zero to AI Engineer &amp; Data Scientist</span>
+            <span className="brand-sub">Zero to ML &amp; AI Engineer</span>
           </div>
         </button>
 

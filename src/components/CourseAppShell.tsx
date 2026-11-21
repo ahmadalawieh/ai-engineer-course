@@ -12,7 +12,7 @@ import { useCourseApp } from './ThemeProgressProvider';
 export function CourseAppShell() {
   const { progress } = useCourseApp();
   const [view, setView] = useState<AppView>('home');
-  const [activeLessonId, setActiveLessonId] = useState<string>('1-1');
+  const [activeLessonId, setActiveLessonId] = useState<string>('1-0');
   const [arenaTab, setArenaTab] = useState<'flashcards' | 'interview' | 'glossary' | 'certificate'>('flashcards');
   const [searchOpen, setSearchOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
@@ -57,7 +57,7 @@ export function CourseAppShell() {
         activeView={view}
         onNavigate={(nextView) => {
           if (nextView === 'lesson' && !activeLessonId) {
-            setActiveLessonId(progress.lastVisitedLessonId || '1-1');
+            setActiveLessonId(progress.lastVisitedLessonId || '1-0');
           }
           setView(nextView);
         }}
@@ -72,6 +72,7 @@ export function CourseAppShell() {
             setArenaTab('flashcards');
             setView('arena');
           }}
+          onOpenSync={() => setSyncOpen(true)}
         />
       )}
 

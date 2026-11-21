@@ -191,6 +191,25 @@ export const module8: CourseModule = {
           ],
         },
         {
+          type: 'code',
+          title: 'Step Out of the Browser: 5-Minute Local Setup (macOS / Linux / Windows)',
+          language: 'bash',
+          code: `# 1. Install Python 3.11+ (python.org) and VS Code (code.visualstudio.com)
+# 2. Create an isolated project folder & virtual environment
+mkdir my-ai-project && cd my-ai-project
+python -m venv .venv
+
+# 3. Activate the environment (macOS/Linux vs Windows PowerShell)
+source .venv/bin/activate       # Windows: .venv\\Scripts\\Activate.ps1
+
+# 4. Install the real-world ML/AI Engineer stack!
+pip install numpy pandas scikit-learn xgboost lightgbm pydantic openai
+
+# 5. Track your code with Git & push to GitHub for your portfolio
+git init && git add . && git commit -m "Initial ML/AI project"`,
+          caption: 'Once you finish the in-browser labs, run these 5 commands locally to build your GitHub portfolio projects.',
+        },
+        {
           type: 'callout',
           variant: 'tip',
           title: 'Resume Bullet Formula That Passes Screeners',
