@@ -89,16 +89,16 @@ function renderContentBlock(block: ContentBlock, idx: number) {
       return (
         <section key={idx} className="block bridge-card">
           <div className="lab-badge" style={{ marginBottom: 4 }}>
-            Frontend → AI Mental Model Bridge
+            Tech &amp; HTML/CSS → AI Intuition Bridge
           </div>
           <h3 style={{ fontSize: '1.12rem' }}>{block.title}</h3>
           <div className="bridge-cols">
             <div className="bridge-col">
-              <span className="bridge-label">What You Already Know (Frontend)</span>
+              <span className="bridge-label">What You Already Know (Tech / HTML &amp; CSS)</span>
               <RichText text={block.frontendConcept} />
             </div>
             <div className="bridge-col">
-              <span className="bridge-label">How It Maps To AI / Data</span>
+              <span className="bridge-label">How It Maps To AI / Python</span>
               <RichText text={block.aiConcept} />
             </div>
           </div>
@@ -141,7 +141,7 @@ function renderContentBlock(block: ContentBlock, idx: number) {
           <div className="code-compare-grid">
             <div className="code-card">
               <div className="code-header">
-                <span>{block.jsLabel || 'JavaScript'}</span>
+                <span>{block.jsLabel || 'HTML / CSS Analogy'}</span>
               </div>
               <pre className="code-pre">
                 <code>{block.jsCode}</code>

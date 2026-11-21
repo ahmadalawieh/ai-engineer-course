@@ -57,13 +57,13 @@ export function HomeView({
     <main className="container">
       <section className="hero">
         <div>
-          <div className="hero-eyebrow">Self-Contained Dual-Track Curriculum</div>
-          <h1>From Frontend Basics to Production AI Engineer &amp; Data Scientist.</h1>
+          <div className="hero-eyebrow">Zero-Coding-Required Interactive Curriculum</div>
+          <h1>From Zero Code &amp; Basic HTML/CSS to AI Engineer &amp; Data Scientist.</h1>
           <p className="hero-lead">
-            Every concept explained from first principles—no external links or guesswork required.
-            Bridge directly from JavaScript mental models to vectorized NumPy, statistical A/B
-            testing, XGBoost, Transformers, Hybrid RAG, Agents, and AI System Design through{' '}
-            <strong>18 live visual simulators</strong> and <strong>in-browser Python labs</strong>.
+            Never written Python or JavaScript? You&apos;re in the right place. Every concept starts
+            from everyday tech intuition and basic HTML/CSS—guiding you step-by-step into Python,
+            statistics, Machine Learning, Transformers, RAG, and AI Agents with{' '}
+            <strong>18 interactive visual simulators</strong> and <strong>guided in-browser Python labs</strong>.
           </p>
           <div className="hero-actions">
             <button

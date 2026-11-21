@@ -169,25 +169,25 @@ export const module8: CourseModule = {
       moduleId: 'mod-8',
       number: '8.3',
       title: 'Job-Winning Portfolio & Engineering Blueprint',
-      subtitle: 'As a frontend dev transitioning into AI/DS, your superpower is shipping real interactive, evaluated products—not bare Jupyter notebooks.',
+      subtitle: 'Turn your HTML/CSS visual sense and new Python/AI skills into real interactive products—not dusty notebooks.',
       durationMinutes: 12,
       track: 'core',
       prerequisites: ['8.1', '8.2'],
       objectives: [
-        'Leverage your frontend background as an unfair hiring advantage ("Full-Stack AI Engineer").',
+        'Leverage your HTML/CSS & product design eye as an unfair hiring advantage ("Product-Minded AI Builder").',
         'Build 3 high-signal portfolio projects with live demos, automated evals, and reproducible benchmarks.',
         'Frame your resume bullets around measurable engineering & statistical impact.',
       ],
       blocks: [
         {
           type: 'prose',
-          heading: 'Your Unfair Advantage: Frontend + AI = Full-Stack AI Engineer',
+          heading: 'Your Unfair Advantage: HTML/CSS Design Eye + AI = Product-Ready Builder',
           paragraphs: [
-            'Thousands of candidates submit identical Titanic/MNIST Jupyter notebooks that never run outside their laptop. Coming from frontend development, you can wrap real ML & LLM pipelines in **polished, streaming, interactive web products** with trace viewers, evaluation dashboards, and reproducible benchmarks—making you immediately employable as an **AI Engineer** or **Product Data Scientist**!',
+            'Thousands of candidates submit identical Titanic/MNIST notebooks that only work on their laptop. Even with just basic HTML/CSS and visual web sense, you understand **how real users interact with a page**—so you can wrap real ML & LLM pipelines in clean, interactive web demos with clear citations, feedback buttons, and readable dashboards!',
             'Build **these 3 flagship projects** (quality over quantity):',
-            '**Project 1 — Evaluated Production RAG + Citation Studio**: Hybrid BM25 + Vector + Reranker pipeline with `tenant_id` filtering, SSE streaming inline citations, AND a reproducible RAGAS/Faithfulness eval script in GitHub Actions reporting exact scores (`Faithfulness: 0.92, Recall@5: 0.89`).',
-            '**Project 2 — End-to-End Tabular ML + Cost-Aware Decision App**: Real public dataset (credit default, telco churn, or Airbnb pricing) using leak-free Scikit-Learn/LightGBM CV pipeline, Optuna tuning, SHAP local explanation UI, and threshold profit simulator.',
-            '**Project 3 — Specialized Fine-Tuned Small Model OR Tool-Calling Agent**: Either QLoRA fine-tune a 3B–8B model on a focused extraction/classification task proving it matches a frontier model at 15× lower cost, OR build a sandboxed ReAct agent with OpenTelemetry trace inspection and eval tests.',
+            '**Project 1 — Evaluated Production RAG + Citation Studio**: Hybrid BM25 + Vector + Reranker pipeline with `tenant_id` filtering, live streaming answers with clickable citations, AND a reproducible RAGAS/Faithfulness eval script in GitHub Actions reporting exact scores (`Faithfulness: 0.92, Recall@5: 0.89`).',
+            '**Project 2 — End-to-End Tabular ML + Cost-Aware Decision App**: Real public dataset (credit default, telco churn, or Airbnb pricing) using a leak-free Scikit-Learn/LightGBM CV pipeline, Optuna tuning, SHAP explanation view, and threshold profit simulator.',
+            '**Project 3 — Specialized Fine-Tuned Small Model OR Tool-Calling Agent**: Either QLoRA fine-tune a 3B–8B model on a focused extraction/classification task proving it matches a frontier model at 15× lower cost, OR build a sandboxed ReAct agent with trace inspection and eval tests.',
           ],
         },
         {
@@ -212,15 +212,15 @@ export const module8: CourseModule = {
         },
         {
           id: 'q8-3-2',
-          question: 'How does basic frontend knowledge strengthen an AI Engineering resume?',
+          question: 'How does basic HTML/CSS and web UX intuition strengthen an AI Engineering portfolio?',
           options: [
             'It doesn’t matter at all',
-            'AI products need streaming UIs, structured tool outputs, citation highlighting, human-in-the-loop review flows, and eval trace viewers—making full-stack AI builders rare and high-demand',
-            'Frontend replaces Python completely',
-            'Only CSS is tested in ML interviews',
+            'AI products need clean web interfaces—streaming answers, source citations, human-in-the-loop review buttons, and eval dashboards—turning raw models into usable demos',
+            'HTML/CSS replaces Python completely',
+            'Only CSS animations are tested in ML interviews',
           ],
           correctIndex: 1,
-          explanation: 'Companies desperately need engineers who bridge model pipelines and great interactive AI product experiences.',
+          explanation: 'Teams love builders who can turn an AI backend into a clean, intuitive interactive web demo that stakeholders and users can test right away.',
         },
         {
           id: 'q8-3-3',

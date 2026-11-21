@@ -103,11 +103,11 @@ export const module5: CourseModule = {
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'Attention Is a Soft, Differentiable Database / Object Lookup',
-          frontendConcept: 'Exact JS Map lookup: `dict[query]` returns 1 exact value',
-          aiConcept: 'Soft Attention: compare `Query` against every `Key` via dot product, Softmax into weights, blend all `Values`',
+          title: 'Attention Is a Smart, Flexible Lookup (Beyond Ctrl+F)',
+          frontendConcept: 'Exact `Ctrl+F` search or dictionary lookup: matches one exact word, or returns nothing',
+          aiConcept: 'Soft Attention: compare a `Query` against every word’s `Key`, score relevance, and blend their `Values`',
           explanation:
-            'In code, a hash lookup matches one exact key. In Attention, token `"it"` broadcasts a **Query** (*"what noun am I referring to?"*), every earlier token broadcasts a **Key** (*"I am a singular animal noun: dog"*), and Softmax turns similarity scores into a weighted blend of their **Value** vectors.',
+            'Regular `Ctrl+F` only finds exact word matches. In Attention, the word `"it"` sends out a **Query** (*"which earlier noun am I talking about?"*), every earlier word holds a **Key** (*"I am a singular machine: server"*), and Softmax turns those match scores into a weighted blend of their **Value** meanings.',
         },
         {
           type: 'math',

@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'AI Mastery Studio — Zero to AI Engineer & Data Scientist',
   description:
-    'A complete, self-contained interactive course taking frontend developers from zero to job-ready AI Engineer & Data Scientist with live Python labs, 18 visual simulators, spaced-repetition flashcards, and cross-device sync.',
+    'A complete, beginner-friendly interactive course taking learners with zero coding experience (just basic HTML/CSS & tech comfort) to AI Engineer & Data Scientist with guided Python labs and 18 visual simulators.',
 };
 
 export default function RootLayout({

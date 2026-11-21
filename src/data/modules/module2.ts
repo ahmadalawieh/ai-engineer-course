@@ -26,11 +26,11 @@ export const module2: CourseModule = {
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'From SQL/GraphQL Queries & JSON Arrays to DataFrames',
-          frontendConcept: 'Array of JSON objects (`User[]`), `.filter()`, `.reduce()`, Lodash `groupBy`',
+          title: 'From Spreadsheets & HTML Tables to DataFrames',
+          frontendConcept: 'An Excel/Google Sheet or HTML `<table>` (`<tr>` rows and `<td>` columns) you filter and sort visually',
           aiConcept: 'Columnar DataFrames (Pandas / Polars / DuckDB) + SQL Window Functions',
           explanation:
-            'Frontend state stores arrays of row objects (`[{id, spend}, ...]`). DataFrames flip storage to **columns** (`id: Int64[], spend: Float64[]`) so filtering or summing 5 million rows reads only the needed columns in CPU cache.',
+            'Spreadsheets and HTML tables organize data row-by-row. DataFrames store each **column** together (`id`, `spend`, `date`) so filtering or summing 5 million rows only scans the exact columns you need in milliseconds.',
         },
         {
           type: 'code',

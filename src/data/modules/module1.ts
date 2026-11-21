@@ -4,163 +4,170 @@ export const module1: CourseModule = {
   id: 'mod-1',
   number: 1,
   title: 'Python, Linear Algebra & Probability',
-  subtitle: 'Bridge from frontend JavaScript to vectorized NumPy, vector spaces, calculus gradients, and information theory.',
+  subtitle: 'Start from zero coding experience using HTML/CSS intuition: learn Python basics, NumPy arrays, vectors, gradients, and probability.',
   track: 'core',
   estimatedHours: 3.5,
-  capstoneDeliverable: 'Build a pure-NumPy gradient descent optimizer & cosine similarity engine.',
+  capstoneDeliverable: 'Build your first Python & NumPy score-booster, cosine similarity finder, and gradient optimizer.',
   lessons: [
     {
       id: '1-1',
       moduleId: 'mod-1',
       number: '1.1',
-      title: 'Python & NumPy for Frontend Developers',
-      subtitle: 'Go from JS arrays and loops to C-speed vectorized tensors in 15 minutes.',
-      durationMinutes: 15,
+      title: 'Python & NumPy From Zero (HTML/CSS Intuition)',
+      subtitle: 'Your first lines of Python—explained through HTML tags, CSS classes, and spreadsheets.',
+      durationMinutes: 18,
       track: 'core',
-      prerequisites: ['Basic JavaScript/TypeScript'],
+      prerequisites: ['Basic tech comfort & simple HTML/CSS'],
       objectives: [
-        'Translate JS arrays, objects, and array methods into Python lists, dicts, and comprehensions.',
-        'Understand why Python loops are slow for ML and how NumPy memory layout fixes it.',
-        'Use broadcasting, slicing, and shape manipulation confidently.',
+        'Write your first Python variables, lists, and reusable functions (`def`) with zero prior coding.',
+        'See how CSS selecting all `.card` elements at once works just like NumPy transforming a whole list of numbers.',
+        'Run and pass your first interactive Python lab right inside your browser.',
       ],
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'Your JS Mental Model Maps Directly to Python',
-          frontendConcept: 'Array.map(), Object literals, const/let, async/await, TypeScript interfaces',
-          aiConcept: 'List comprehensions, Dictionaries, dynamic binding, Generators, Type hints + NumPy ndarrays',
+          title: 'HTML/CSS Already Taught You Half of How Code Thinks!',
+          frontendConcept: 'HTML tags (`<ul><li>...</li></ul>`) organize items; CSS classes (`.badge { padding: 8px; }`) style every matching element at once.',
+          aiConcept: 'Python lists hold items; functions (`def`) are reusable recipes; NumPy arrays update thousands of numbers in one shot.',
           explanation:
-            'You already know 80% of Python syntax conceptually. Python drops curly braces and semicolons in favor of indentation, replaces `.map/.filter` chains with readable list comprehensions, and delegates heavy number crunching to NumPy arrays backed by contiguous C memory.',
+            'Think of HTML as the nouns (data on a page), CSS as styling rules applied to groups at once, and **Python** as simple English-like instructions that do math and make decisions. You do NOT need JavaScript or any coding background—if you can write `<p class="card">Hello</p>`, you can read Python!',
         },
         {
           type: 'code-compare',
-          title: 'JavaScript vs Python & NumPy Side-by-Side',
-          jsLabel: 'JavaScript (ES2024)',
-          jsCode: `const scores = [72, 85, 91, 64];
-const normalized = scores
-  .filter(s => s >= 70)
-  .map(s => Number((s / 100).toFixed(2)));
+          title: 'From CSS Class Rules to Python & NumPy',
+          jsLabel: 'HTML + CSS (Update all cards at once)',
+          jsCode: `<!-- 3 score cards in HTML -->
+<div class="score">70</div>
+<div class="score">85</div>
+<div class="score">90</div>
 
-const user = { role: "ai_eng", exp: 2 };
-const mean = scores.reduce((a, b) => a + b, 0) / scores.length;`,
-          pyLabel: 'Python + NumPy',
+<style>
+  /* One rule styles ALL .score boxes at once! */
+  .score {
+    padding: 12px;
+    border-radius: 8px;
+  }
+</style>`,
+          pyLabel: 'Python + NumPy (Update all numbers at once)',
           pyCode: `import numpy as np
 
-scores = [72, 85, 91, 64]
-normalized = [round(s / 100, 2) for s in scores if s >= 70]
+# 1. A variable is just a labeled box
+bonus = 5
 
-user = {"role": "ai_eng", "exp": 2}
-arr = np.array(scores, dtype=np.float64)
-mean = arr.mean()        # Runs in C, ~100x faster on large arrays
-z_scores = (arr - arr.mean()) / arr.std()  # Broadcasting!`,
+# 2. A Python list holds items in order (like <li> tags)
+scores_list = [70, 85, 90]
+
+# 3. A NumPy array lets us update EVERY score in 1 line!
+scores = np.array([70, 85, 90])
+boosted = scores + bonus      # -> [75, 90, 95]
+average = scores.mean()       # -> 81.67`,
           takeaway:
-            'In Python AI code, never write a `for` loop over numbers when NumPy can vectorize the whole array operation at once.',
+            'Just as one CSS class updates every matching HTML element at once, NumPy applies math to every number in an array at once—no messy step-by-step loops required!',
         },
         {
           type: 'prose',
-          heading: 'Why NumPy Broadcasting Is the Superpower Behind AI',
+          heading: 'Python 101 in 60 Seconds (Zero Jargon)',
           paragraphs: [
-            'A JavaScript `Array` is a list of pointers to boxed heap objects. Iterating over 10 million numbers in JS or pure Python requires millions of type checks and pointer dereferences. A NumPy `ndarray` stores raw, homogeneous numbers (like `float32`) in one contiguous block of RAM.',
-            '**Broadcasting** lets you combine arrays of different shapes without copying memory. For example, subtracting a 1D vector of shape `(3,)` from a 2D matrix of shape `(1000, 3)` automatically stretches the 1D vector across all 1,000 rows in compiled C/SIMD loops.',
-            'Key rules to memorize: shapes align **from the trailing (rightmost) dimension**. Two dimensions are compatible if they are equal OR one of them is `1`.',
+            '**1. Variables (`name = "Maya"`):** Think of a sticky note stuck onto a value. `age = 24` stores the number `24` under the label `age`. No `let` or `const` or semicolons needed!',
+            '**2. Lists (`[10, 20, 30]`) & Dictionaries (`{"role": "AI"}`):** A list is an ordered row of items (like `<li>` bullets). A dictionary is a list of `key: value` pairs (just like CSS properties `{ color: teal; font-size: 16px; }`).',
+            '**3. Functions (`def`) & Indentation:** Python uses **4 spaces of indentation** instead of `{ curly braces }` to group lines together. A function starts with `def`, takes inputs inside `(...)`, and sends back an answer with `return`.',
+            '**4. Why NumPy (`np`)?** Regular Python lists are great for groceries or names, while **NumPy arrays** pack numbers tightly in memory so AI math runs ~100× faster and cleaner.',
           ],
         },
         {
           type: 'table',
-          title: 'Essential NumPy Operations Cheat Sheet',
-          headers: ['Operation', 'NumPy Syntax', 'Shape Effect', 'AI Use Case'],
+          title: 'Beginner Cheat Sheet: Everyday Python & NumPy',
+          headers: ['Concept', 'Example Code', 'Plain-English Meaning', 'Why AI Uses It'],
           rows: [
-            ['Create zeros/random', '`np.zeros((3, 4))` / `np.random.randn(3, 4)`', '`(3, 4)`', 'Weight initialization'],
-            ['Reshape', '`x.reshape(2, -1)`', 'Infers `-1` automatically', 'Flattening image batches'],
-            ['Matrix multiply', '`A @ B` or `np.matmul(A, B)`', '`(m, k) @ (k, n) -> (m, n)`', 'Neural network linear layer'],
-            ['Axis reduction', '`x.sum(axis=0)` / `x.mean(axis=-1)`', 'Collapses specified axis', 'Batch mean / Softmax denominator'],
-            ['Boolean mask', '`x[x > 0]`', '1D filtered elements', 'ReLU activation (`np.maximum(0, x)`)'],
+            ['Variable', '`lr = 0.01`', 'Save `0.01` under the name `lr`', 'Store settings & model scores'],
+            ['Function', '`def add_one(x): return x + 1`', 'A reusable mini-machine', 'Wrap reusable AI steps cleanly'],
+            ['NumPy array', '`a = np.array([10, 20, 30])`', 'A fast row (or grid) of numbers', 'Store embeddings, images & weights'],
+            ['Broadcast math', '`a + 5` or `a * 2`', 'Add 5 or double every item at once', 'Scale features & adjust weights'],
+            ['Cap / limit values', '`np.minimum(a, 100)`', 'Keep each item at most `100`', 'Clip probabilities & clean outliers'],
           ],
         },
         {
           type: 'python-lab',
           labId: 'lab-1-1',
-          title: 'Lab 1.1: Vectorized Feature Standardization',
+          title: 'Lab 1.1: Your Very First Python + NumPy Function!',
           prompt:
-            'Write a function `standardize_rows(X)` that takes a 2D NumPy array `X` of shape `(n_samples, n_features)` and returns a new array where **each column (feature)** has mean `0` and standard deviation `1` using broadcasting (no Python loops!). Avoid division by zero by replacing any `0` std with `1.0`.',
+            'Welcome to your interactive Python lab! Write a function `boost_and_cap(scores, bonus)` that takes a NumPy array `scores` (like `[70.0, 88.0, 97.0]`), adds `bonus` to every score in one line, and caps any score above `100.0` down to `100.0` using `np.minimum(..., 100.0)`. Hit **Check Solution** to see it pass!',
           starterCode: `import numpy as np
 
-def standardize_rows(X: np.ndarray) -> np.ndarray:
-    # X has shape (n_samples, n_features)
-    # 1. Compute column means with keepdims=True
-    # 2. Compute column stds with keepdims=True (replace 0 with 1.0)
-    # 3. Return (X - mean) / std
+def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
+    # Step 1: Add bonus to every number in scores: updated = scores + bonus
+    # Step 2: Cap values at 100.0 using np.minimum(updated, 100.0)
+    # Step 3: Return the final array!
     pass
 
-sample = np.array([[10.0, 1.0], [20.0, 1.0], [30.0, 1.0]])
-print(standardize_rows(sample))`,
+# Try running the Scratchpad or Check Solution below!
+my_scores = np.array([70.0, 88.0, 97.0])
+print("Before:", my_scores)
+print("After +5 bonus:", boost_and_cap(my_scores, 5.0))`,
           testCode: `import numpy as np
-X1 = np.array([[10.0, 2.0], [20.0, 4.0], [30.0, 6.0]])
-res1 = standardize_rows(X1)
-assert isinstance(res1, np.ndarray), "Must return a NumPy ndarray"
-assert res1.shape == X1.shape, f"Expected shape {X1.shape}, got {res1.shape}"
-assert np.allclose(res1.mean(axis=0), 0.0, atol=1e-7), "Column means must be 0"
-assert np.allclose(res1.std(axis=0), 1.0, atol=1e-7), "Column stds must be 1"
+s1 = np.array([70.0, 88.0, 97.0])
+res1 = boost_and_cap(s1, 5.0)
+assert isinstance(res1, np.ndarray), "Make sure your function returns a NumPy array!"
+assert np.allclose(res1, [75.0, 93.0, 100.0]), f"Expected [75.0, 93.0, 100.0], got {res1}"
 
-X2 = np.array([[5.0, 3.0], [5.0, 9.0]])
-res2 = standardize_rows(X2)
-assert np.allclose(res2[:, 0], 0.0), "Constant column must become 0 without NaN"
-print("PASS: All broadcasting and edge-case assertions succeeded!")`,
+s2 = np.array([40.0, 100.0])
+res2 = boost_and_cap(s2, 10.0)
+assert np.allclose(res2, [50.0, 100.0]), f"Expected [50.0, 100.0], got {res2}"
+print("PASS: Awesome job—you just wrote and tested real Python + NumPy code!")`,
           solutionCode: `import numpy as np
 
-def standardize_rows(X: np.ndarray) -> np.ndarray:
-    mean = X.mean(axis=0, keepdims=True)
-    std = X.std(axis=0, keepdims=True)
-    std = np.where(std == 0, 1.0, std)
-    return (X - mean) / std`,
-          hint: 'Use `axis=0, keepdims=True` so mean/std keep shape `(1, n_features)` for clean column broadcasting, and `np.where(std == 0, 1.0, std)` to guard constant columns.',
+def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
+    updated = scores + bonus
+    return np.minimum(updated, 100.0)`,
+          hint: 'Replace `pass` with two indented lines: `updated = scores + bonus` and then `return np.minimum(updated, 100.0)`.',
           packages: ['numpy'],
         },
         {
           type: 'callout',
-          variant: 'interview',
-          title: 'Common Interview Trap: In-Place vs View vs Copy',
-          body: 'In NumPy, slicing (`b = a[1:4]`) returns a **view** sharing the same memory—mutating `b` mutates `a`! Use `.copy()` when you need isolation, just like shallow vs deep copies in JS.',
+          variant: 'tip',
+          title: 'Pro Tip: Watch Your Indentation & Copies!',
+          body: 'In Python, lines inside a `def` function must be indented equally (4 spaces). Also, if you slice a NumPy array (`part = a[1:3]`), changing `part` changes `a`—use `.copy()` when you want an independent duplicate.',
         },
       ],
       quiz: [
         {
           id: 'q1-1-1',
-          question: 'You have matrix `A` of shape `(128, 64)` and bias vector `b` of shape `(64,)`. What happens when you execute `A + b`?',
+          question: 'If `scores = np.array([60, 80, 90])`, what does `scores + 5` produce?',
           options: [
-            'Raises a ValueError because shapes differ',
-            'Broadcasts `b` across all 128 rows, yielding shape `(128, 64)`',
-            'Broadcasts `b` across columns, yielding shape `(64, 64)`',
-            'Concatenates `b` onto `A`, yielding shape `(129, 64)`',
+            'An error because you cannot add a single number to a list of 3 numbers',
+            'A new array `[65, 85, 95]` where 5 was added to every element at once',
+            'The array `[60, 80, 90, 5]`',
+            'Only `[65, 80, 90]` (first item only)',
           ],
           correctIndex: 1,
           explanation:
-            'NumPy aligns dimensions from right to left: `(128, 64)` and `(1, 64)` match on trailing dimension `64`, so `b` is broadcast across all 128 rows.',
+            'NumPy automatically "broadcasts" the single number `5` across every item in the array—just like one CSS rule styling every matching HTML element.',
         },
         {
           id: 'q1-1-2',
-          question: 'Why does `np.sum(arr)` vastly outperform a Python `for` loop over the same 1 million numbers?',
+          question: 'In Python, how do you tell which lines belong inside a `def` function?',
           options: [
-            'Python loops run on a single thread while NumPy always uses all GPU cores',
-            'NumPy stores unboxed homogeneous numbers contiguously and executes in compiled C/SIMD loops',
-            'NumPy converts all numbers into strings first',
-            'Python `for` loops cannot iterate over floats',
+            'By wrapping them in `{ curly braces }`',
+            'By ending each line with a semicolon `;`',
+            'By indenting the inner lines consistently (usually 4 spaces)',
+            'By wrapping them in `<function>...</function>` HTML tags',
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation:
-            'Contiguous memory + unboxed C primitives + SIMD vector instructions eliminate Python interpreter overhead per element.',
+            'Python uses clean indentation (4 spaces) instead of curly braces to group code blocks inside functions, loops, and `if` statements.',
         },
         {
           id: 'q1-1-3',
-          question: 'What does `x.reshape(4, -1)` do if `x` has 24 elements?',
+          question: 'Why does AI engineering rely on NumPy arrays instead of plain Python lists for heavy math?',
           options: [
-            'Throws an error because `-1` is invalid',
-            'Creates shape `(4, 6)` by automatically inferring the remaining dimension',
-            'Reverses the elements along axis 1',
-            'Creates shape `(4, 24)` by padding with zeros',
+            'Plain Python lists can only store text, never numbers',
+            'NumPy stores numbers tightly in memory and runs math across whole arrays in fast compiled C code',
+            'NumPy automatically connects to ChatGPT',
+            'Python lists cannot be printed',
           ],
           correctIndex: 1,
-          explanation: 'Passing `-1` tells NumPy to calculate `total_elements // 4 = 6` automatically.',
+          explanation:
+            'NumPy packs numbers contiguously in RAM and runs vectorized C operations—making array math roughly 100× faster than looping in plain Python.',
         },
       ],
     },

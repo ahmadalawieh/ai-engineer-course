@@ -19,18 +19,18 @@ export const module6: CourseModule = {
       track: 'ai-eng',
       prerequisites: ['5.4'],
       objectives: [
-        'Enforce 100% valid JSON schemas via Constrained Decoding / Structured Outputs (Pydantic / Zod).',
+        'Enforce 100% valid JSON schemas via Constrained Decoding / Structured Outputs (Pydantic).',
         'Understand how LLM Tool / Function Calling actually works under the hood.',
         'Defend against Indirect Prompt Injection using privilege separation and output validation.',
       ],
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'Prompting Is Just Typed API Contract Engineering',
-          frontendConcept: 'TypeScript interfaces + Zod runtime schema validation + RPC handlers',
+          title: 'Prompting Is Just HTML Form Validation for AI Outputs',
+          frontendConcept: 'HTML `<form>` rules (`required`, `type="number"`, `min="1"`, `max="5"`, `<select>` dropdown options)',
           aiConcept: 'System Prompts + Structured Outputs (JSON Schema Constrained Decoding) + Tool Definitions',
           explanation:
-            'Treat an LLM like a probabilistic microservice. Never parse freeform Markdown with brittle regex! Define a strict JSON/Zod/Pydantic schema and pass it to **Structured Outputs**—which masks invalid grammar tokens right at the Softmax step (**constrained decoding**), guaranteeing valid JSON.',
+            'Just like HTML form attributes stop users from typing text into a `1–5` number box, **Structured Outputs** lock the AI into a strict recipe (JSON Schema). Behind the scenes, the model is blocked from picking any token that would break the format—guaranteeing clean, predictable output every time.',
         },
         {
           type: 'code',

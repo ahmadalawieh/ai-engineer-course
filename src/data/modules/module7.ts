@@ -42,11 +42,11 @@ export const module7: CourseModule = {
         {
           type: 'table',
           title: 'Agent Memory & Protocol Stack',
-          headers: ['Component', 'Frontend Analogy', 'AI Engineering Implementation'],
+          headers: ['Component', 'Everyday Web / Tech Analogy', 'AI Engineering Implementation'],
           rows: [
-            ['Short-term Working Memory', 'Component state / Redux store', 'Current conversation thread + tool outputs inside Context Window (pruned/summarized)'],
-            ['Episodic / Semantic Memory', 'IndexedDB / User DB profile', 'Vector + relational store of past user preferences & resolved incidents'],
-            ['**MCP (Model Context Protocol)**', 'USB-C / OpenAPI standard', 'Open protocol decoupling AI hosts from Tools, Resources, and Prompts via standardized JSON-RPC servers'],
+            ['Short-term Working Memory', 'An open browser tab’s live scratchpad', 'Current conversation thread + tool outputs inside Context Window (pruned/summarized)'],
+            ['Episodic / Semantic Memory', 'Saved browser bookmarks & user profile settings', 'Vector + relational store of past user preferences & resolved incidents'],
+            ['**MCP (Model Context Protocol)**', 'USB-C universal cable standard', 'Open protocol decoupling AI apps from Tools, Files, and Prompts via one standard plug-and-play interface'],
           ],
         },
       ],
