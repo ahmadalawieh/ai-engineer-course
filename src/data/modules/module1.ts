@@ -4,7 +4,7 @@ export const module1: CourseModule = {
   id: 'mod-1',
   number: 1,
   title: 'Python, Linear Algebra & Probability',
-  subtitle: 'Start from zero coding experience using HTML/CSS intuition: learn Python basics, NumPy arrays, vectors, gradients, and probability.',
+  subtitle: 'Start from absolute zero: learn Python basics, NumPy arrays, vectors, gradients, and probability from first principles.',
   track: 'core',
   estimatedHours: 3.5,
   capstoneDeliverable: 'Build your first Python & NumPy score-booster, cosine similarity finder, and gradient optimizer.',
@@ -17,7 +17,7 @@ export const module1: CourseModule = {
       subtitle: 'Start here if you have never written code—learn variables, lists, if/else, and loops in 15 fun minutes.',
       durationMinutes: 15,
       track: 'core',
-      prerequisites: ['Everyday tech comfort & basic HTML/CSS'],
+      prerequisites: ['No prior coding experience required'],
       objectives: [
         'Store numbers and text in Python variables and lists without prior coding experience.',
         'Make smart choices with `if / else` and repeat steps cleanly with `for` loops.',
@@ -28,7 +28,7 @@ export const module1: CourseModule = {
           type: 'prose',
           heading: 'Coding Is Just Giving Clear Recipes to a Computer',
           paragraphs: [
-            'If you have ever written an HTML tag like `<button class="primary">Buy</button>` or followed a cooking recipe, you already understand the logic of programming. In Python, there are only **4 building blocks** you need on Day 1:',
+            'Writing code is just writing a crystal-clear step-by-step recipe—similar to setting rules in a spreadsheet or automating a checklist. In Python, there are only **4 building blocks** you need on Day 1:',
             '1) **Variables** (`score = 85`): a labeled box holding a value. 2) **Lists** (`scores = [60, 85, 92]`): an ordered row of values inside square brackets `[...]`. 3) **Loops** (`for s in scores:`): visit each item one by one. 4) **Decisions** (`if s >= 80:`): take an action only when a rule is true.',
           ],
         },
@@ -115,65 +115,61 @@ print("PASS: Nice work! Your first pure-Python loop & if-filter passed!")`,
       id: '1-1',
       moduleId: 'mod-1',
       number: '1.1',
-      title: 'Python & NumPy From Zero (HTML/CSS Intuition)',
-      subtitle: 'Your first lines of Python—explained through HTML tags, CSS classes, and spreadsheets.',
+      title: 'Python Functions & NumPy Arrays',
+      subtitle: 'Turn manual loops into one-line vectorized math—the speed engine behind every AI model.',
       durationMinutes: 18,
       track: 'core',
       prerequisites: ['1.0'],
       objectives: [
-        'Write your first Python variables, lists, and reusable functions (`def`) with zero prior coding.',
-        'See how CSS selecting all `.card` elements at once works just like NumPy transforming a whole list of numbers.',
-        'Run and pass your first interactive Python lab right inside your browser.',
+        'Package reusable Python steps into clean functions (`def`) and dictionaries (`{key: value}`).',
+        'See how NumPy transforms an entire column of numbers at once—just like a spreadsheet formula.',
+        'Run and pass your first NumPy array lab inside the browser.',
       ],
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'HTML/CSS Already Taught You Half of How Code Thinks!',
-          frontendConcept: 'HTML tags (`<ul><li>...</li></ul>`) organize items; CSS classes (`.badge { padding: 8px; }`) style every matching element at once.',
-          aiConcept: 'Python lists hold items; functions (`def`) are reusable recipes; NumPy arrays update thousands of numbers in one shot.',
+          title: 'From Spreadsheet Formulas to NumPy Arrays',
+          frontendConcept: 'Highlighting an entire column in Excel/Google Sheets and applying `+ 5` or `=AVERAGE(A1:A100)` in one step.',
+          aiConcept: 'Python dictionaries store labeled profiles; functions (`def`) wrap recipes; NumPy arrays update millions of numbers in one shot.',
           explanation:
-            'Think of HTML as the nouns (data on a page), CSS as styling rules applied to groups at once, and **Python** as simple English-like instructions that do math and make decisions. You do NOT need JavaScript or any coding background—if you can write `<p class="card">Hello</p>`, you can read Python!',
+            'Instead of updating numbers one by one in a loop, **NumPy** lets you write `scores + 5` and updates every number in the array at once—the exact way AI models process thousands of inputs simultaneously.',
         },
         {
           type: 'code-compare',
-          title: 'From CSS Class Rules to Python & NumPy',
-          jsLabel: 'HTML + CSS (Update all cards at once)',
-          jsCode: `<!-- 3 score cards in HTML -->
-<div class="score">70</div>
-<div class="score">85</div>
-<div class="score">90</div>
+          title: 'Step-by-Step Loop vs One-Line NumPy',
+          jsLabel: 'Manual Python Loop (1 by 1)',
+          jsCode: `scores = [70, 85, 90]
+bonus = 5
 
-<style>
-  /* One rule styles ALL .score boxes at once! */
-  .score {
-    padding: 12px;
-    border-radius: 8px;
-  }
-</style>`,
-          pyLabel: 'Python + NumPy (Update all numbers at once)',
+boosted = []
+for s in scores:
+    boosted.append(s + bonus)
+
+# Works fine for 3 numbers,
+# slow for 10 million numbers!`,
+          pyLabel: 'Python + NumPy (All at once)',
           pyCode: `import numpy as np
 
 # 1. A variable is just a labeled box
 bonus = 5
 
-# 2. A Python list holds items in order (like <li> tags)
-scores_list = [70, 85, 90]
-
-# 3. A NumPy array lets us update EVERY score in 1 line!
+# 2. A NumPy array packs numbers tightly in memory
 scores = np.array([70, 85, 90])
+
+# 3. Update EVERY score in 1 clean line!
 boosted = scores + bonus      # -> [75, 90, 95]
 average = scores.mean()       # -> 81.67`,
           takeaway:
-            'Just as one CSS class updates every matching HTML element at once, NumPy applies math to every number in an array at once—no messy step-by-step loops required!',
+            'In AI engineering, NumPy applies math to every number in an array at once—cleaner to read and ~100× faster than manual loops!',
         },
         {
           type: 'prose',
           heading: 'Python 101 in 60 Seconds (Zero Jargon)',
           paragraphs: [
-            '**1. Variables (`name = "Maya"`):** Think of a sticky note stuck onto a value. `age = 24` stores the number `24` under the label `age`. No `let` or `const` or semicolons needed!',
-            '**2. Lists (`[10, 20, 30]`) & Dictionaries (`{"role": "AI"}`):** A list is an ordered row of items (like `<li>` bullets). A dictionary is a list of `key: value` pairs (just like CSS properties `{ color: teal; font-size: 16px; }`).',
-            '**3. Functions (`def`) & Indentation:** Python uses **4 spaces of indentation** instead of `{ curly braces }` to group lines together. A function starts with `def`, takes inputs inside `(...)`, and sends back an answer with `return`.',
-            '**4. Why NumPy (`np`)?** Regular Python lists are great for groceries or names, while **NumPy arrays** pack numbers tightly in memory so AI math runs ~100× faster and cleaner.',
+            '**1. Variables (`name = "Maya"`):** Think of a sticky note stuck onto a value. `age = 24` stores the number `24` under the label `age`.',
+            '**2. Lists (`[10, 20, 30]`) & Dictionaries (`{"role": "AI"}`):** A list is an ordered row of items (like a numbered playlist). A dictionary stores `key: value` pairs (like a contact card: `{"name": "Maya", "city": "Beirut"}`).',
+            '**3. Functions (`def`) & Indentation:** Python uses **4 spaces of indentation** to group lines together. A function starts with `def`, takes inputs inside `(...)`, and sends back an answer with `return`.',
+            '**4. Why NumPy (`np`)?** Regular Python lists are great for names or checklists, while **NumPy arrays** pack numbers tightly in memory so AI math runs ~100× faster.',
           ],
         },
         {
@@ -191,9 +187,9 @@ average = scores.mean()       # -> 81.67`,
         {
           type: 'python-lab',
           labId: 'lab-1-1',
-          title: 'Lab 1.1: Your Very First Python + NumPy Function!',
+          title: 'Lab 1.1: Your First NumPy AI Score Booster',
           prompt:
-            'Welcome to your interactive Python lab! Write a function `boost_and_cap(scores, bonus)` that takes a NumPy array `scores` (like `[70.0, 88.0, 97.0]`), adds `bonus` to every score in one line, and caps any score above `100.0` down to `100.0` using `np.minimum(..., 100.0)`. Hit **Check Solution** to see it pass!',
+            'Welcome to your NumPy lab! Write a function `boost_and_cap(scores, bonus)` that takes a NumPy array `scores` (like `[70.0, 88.0, 97.0]`), adds `bonus` to every score in one line, and caps any score above `100.0` down to `100.0` using `np.minimum(..., 100.0)`. Hit **Check Solution** to see it pass!',
           starterCode: `import numpy as np
 
 def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
@@ -243,7 +239,7 @@ def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
           ],
           correctIndex: 1,
           explanation:
-            'NumPy automatically "broadcasts" the single number `5` across every item in the array—just like one CSS rule styling every matching HTML element.',
+            'NumPy automatically "broadcasts" the single number `5` across every item in the array—like applying one spreadsheet formula to a whole column.',
         },
         {
           id: 'q1-1-2',
@@ -252,7 +248,7 @@ def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
             'By wrapping them in `{ curly braces }`',
             'By ending each line with a semicolon `;`',
             'By indenting the inner lines consistently (usually 4 spaces)',
-            'By wrapping them in `<function>...</function>` HTML tags',
+            'By putting `END` at the bottom',
           ],
           correctIndex: 2,
           explanation:

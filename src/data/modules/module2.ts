@@ -26,11 +26,11 @@ export const module2: CourseModule = {
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'From Spreadsheets & HTML Tables to DataFrames',
-          frontendConcept: 'An Excel/Google Sheet or HTML `<table>` (`<tr>` rows and `<td>` columns) you filter and sort visually',
+          title: 'From Spreadsheets to Columnar DataFrames',
+          frontendConcept: 'An Excel or Google Sheets table where you filter rows, sort prices, and compute column totals visually',
           aiConcept: 'Columnar DataFrames (Pandas / Polars / DuckDB) + SQL Window Functions',
           explanation:
-            'Spreadsheets and HTML tables organize data row-by-row. DataFrames store each **column** together (`id`, `spend`, `date`) so filtering or summing 5 million rows only scans the exact columns you need in milliseconds.',
+            'Spreadsheets store and display rows visually. DataFrames store each **column** together (`id`, `spend`, `date`) so filtering or summing 5 million rows only scans the exact columns you need in milliseconds.',
         },
         {
           type: 'code',

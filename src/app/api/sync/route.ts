@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSessionFromRequest } from '@/lib/auth';
 
 const KEY_PREFIX = 'ai_mastery_sync:';
+const USER_PREFIX = 'ai_mastery_user:';
 
 // Ephemeral in-memory fallback used only in local development when KV env vars aren't set
 const devMemoryStore = new Map<string, string>();
@@ -20,16 +22,27 @@ function sanitizeKey(raw: string | null): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  const key = sanitizeKey(req.nextUrl.searchParams.get('key'));
-  if (!key) {
-    return NextResponse.json(
-      { error: 'Invalid sync key. Must be 4-64 alphanumeric/dash characters.' },
-      { status: 400 }
-    );
+  const mode = req.nextUrl.searchParams.get('mode');
+  const sessionUser = getSessionFromRequest(req);
+
+  let fullKey: string | null = null;
+  if (mode === 'google') {
+    if (!sessionUser) {
+      return NextResponse.json({ message: 'Google session required.' }, { status: 401 });
+    }
+    fullKey = `${USER_PREFIX}${sessionUser.sub}`;
+  } else {
+    const key = sanitizeKey(req.nextUrl.searchParams.get('key'));
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Invalid sync key. Must be 4-64 alphanumeric/dash characters.' },
+        { status: 400 }
+      );
+    }
+    fullKey = `${KEY_PREFIX}${key}`;
   }
 
   const kv = getKvCredentials();
-  const fullKey = `${KEY_PREFIX}${key}`;
 
   if (kv) {
     try {
@@ -42,7 +55,7 @@ export async function GET(req: NextRequest) {
       }
       const data = await res.json();
       if (!data?.result) {
-        return NextResponse.json({ message: 'No progress saved under this key.' }, { status: 404 });
+        return NextResponse.json({ message: 'No progress saved yet.' }, { status: 404 });
       }
       const progress = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
       return NextResponse.json({ progress, storage: 'cloud-kv' });
@@ -54,7 +67,7 @@ export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === 'development') {
     const stored = devMemoryStore.get(fullKey);
     if (!stored) {
-      return NextResponse.json({ message: 'No progress saved under this key yet.' }, { status: 404 });
+      return NextResponse.json({ message: 'No progress saved yet.' }, { status: 404 });
     }
     return NextResponse.json({ progress: JSON.parse(stored), storage: 'dev-memory' });
   }
@@ -63,7 +76,7 @@ export async function GET(req: NextRequest) {
     {
       mode: 'unconfigured',
       message:
-        'Cloud KV is not configured on this Vercel deployment. Add UPSTASH_REDIS_REST_URL & UPSTASH_REDIS_REST_TOKEN (or Vercel KV) in Vercel Project Settings, or use GitHub Gist Sync / Portable Sync Token.',
+        'Cloud KV is not configured on this Vercel deployment. Add UPSTASH_REDIS_REST_URL & UPSTASH_REDIS_REST_TOKEN (or Vercel KV) in Vercel Project Settings.',
     },
     { status: 501 }
   );
@@ -72,11 +85,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const key = sanitizeKey(body?.key);
+    const mode = body?.mode;
     const progress = body?.progress;
+    const sessionUser = getSessionFromRequest(req);
 
-    if (!key || !progress || typeof progress !== 'object') {
-      return NextResponse.json({ message: 'Invalid key or progress payload.' }, { status: 400 });
+    if (!progress || typeof progress !== 'object') {
+      return NextResponse.json({ message: 'Invalid progress payload.' }, { status: 400 });
+    }
+
+    let fullKey: string | null = null;
+    if (mode === 'google') {
+      if (!sessionUser) {
+        return NextResponse.json({ message: 'Google session required.' }, { status: 401 });
+      }
+      fullKey = `${USER_PREFIX}${sessionUser.sub}`;
+    } else {
+      const key = sanitizeKey(body?.key);
+      if (!key) {
+        return NextResponse.json({ message: 'Invalid key or progress payload.' }, { status: 400 });
+      }
+      fullKey = `${KEY_PREFIX}${key}`;
     }
 
     const serialized = JSON.stringify(progress);
@@ -85,7 +113,6 @@ export async function POST(req: NextRequest) {
     }
 
     const kv = getKvCredentials();
-    const fullKey = `${KEY_PREFIX}${key}`;
 
     if (kv) {
       const res = await fetch(`${kv.url}/set/${encodeURIComponent(fullKey)}`, {
@@ -111,7 +138,7 @@ export async function POST(req: NextRequest) {
       {
         mode: 'unconfigured',
         message:
-          'Cloud KV is not configured on this deployment. Add Upstash/Vercel KV env vars or use GitHub Gist Sync.',
+          'Cloud KV is not configured on this deployment. Add Upstash/Vercel KV env vars.',
       },
       { status: 501 }
     );

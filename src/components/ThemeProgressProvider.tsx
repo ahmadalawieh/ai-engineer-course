@@ -12,9 +12,22 @@ import {
   saveSyncConfig,
   updateStreak,
 } from '@/lib/progress';
-import { pullFromCloudKV, pushToCloudKV, syncWithGitHubGist } from '@/lib/syncClient';
+import {
+  fetchAuthSession,
+  logoutGoogleSession,
+  pullFromCloudKV,
+  pushToCloudKV,
+  syncWithGitHubGist,
+  syncWithGoogleCloud,
+  type ClientAuthUser,
+} from '@/lib/syncClient';
 
 type ThemeMode = 'light' | 'dark';
+
+interface AuthEnvInfo {
+  googleConfigured: boolean;
+  kvConfigured: boolean;
+}
 
 interface AppContextValue {
   theme: ThemeMode;
@@ -23,6 +36,10 @@ interface AppContextValue {
   syncConfig: SyncConfig;
   syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
   syncMessage: string;
+  authUser: ClientAuthUser | null;
+  authEnv: AuthEnvInfo;
+  authNotice: string;
+  signOutGoogle: () => Promise<void>;
   markLessonComplete: (lessonId: string) => void;
   markLabComplete: (labId: string) => void;
   markPuzzleComplete: (puzzleId: string) => void;
@@ -62,6 +79,8 @@ function clearSyncParamFromLocation(): void {
   if (typeof window === 'undefined') return;
   const params = new URLSearchParams(window.location.search);
   params.delete('sync');
+  params.delete('google_auth');
+  params.delete('sync_notice');
   let cleanHash = window.location.hash;
   if (cleanHash && cleanHash.includes('sync=')) {
     const hashParams = new URLSearchParams(cleanHash.startsWith('#') ? cleanHash.slice(1) : cleanHash);
@@ -79,12 +98,16 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
   const [syncConfig, setSyncConfig] = useState<SyncConfig>({ mode: 'none', autoSync: true });
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
   const [syncMessage, setSyncMessage] = useState<string>('Local only');
+  const [authUser, setAuthUser] = useState<ClientAuthUser | null>(null);
+  const [authEnv, setAuthEnv] = useState<AuthEnvInfo>({ googleConfigured: false, kvConfigured: false });
+  const [authNotice, setAuthNotice] = useState<string>('');
   const [hydrated, setHydrated] = useState(false);
 
   const autoSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
   useEffect(() => {
+    let active = true;
     const rafId = requestAnimationFrame(() => {
       const savedTheme = (window.localStorage.getItem('ai_mastery_theme') as ThemeMode) || 'light';
       setTheme(savedTheme);
@@ -93,6 +116,14 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
       let local = updateStreak(loadLocalProgress());
       const cfg = loadSyncConfig();
       setSyncConfig(cfg);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const notice = urlParams.get('sync_notice');
+      if (notice === 'google_not_configured') {
+        setAuthNotice('Google Login is not configured on Vercel yet—add GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET first.');
+      } else if (notice === 'google_auth_failed') {
+        setAuthNotice('Google sign-in could not be completed. Please try again.');
+      }
 
       // Support instant cross-device import via ?sync=AIMC1_... or #sync=AIMC1_...
       const syncToken = extractSyncParamFromLocation();
@@ -103,6 +134,9 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
           setSyncMessage('Imported & merged from Direct Sync Link');
           setSyncStatus('synced');
         }
+      }
+
+      if (syncToken || notice || urlParams.get('google_auth')) {
         clearSyncParamFromLocation();
       }
 
@@ -114,6 +148,36 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
         setSyncStatus('synced');
         setSyncMessage(cfg.mode === 'cloud-kv' ? `Cloud Key: ${cfg.syncKey}` : 'GitHub Gist Connected');
       }
+
+      void fetchAuthSession().then(async (session) => {
+        if (!active) return;
+        setAuthEnv({
+          googleConfigured: session.googleConfigured,
+          kvConfigured: session.kvConfigured,
+        });
+        if (session.user) {
+          setAuthUser(session.user);
+          let nextLocal = local;
+          if (nextLocal.learnerName === 'AI Engineer' && session.user.name) {
+            nextLocal = { ...nextLocal, learnerName: session.user.name };
+            saveLocalProgress(nextLocal);
+            setProgress(nextLocal);
+          }
+          setSyncStatus('syncing');
+          setSyncMessage(`Syncing as ${session.user.email}...`);
+          const res = await syncWithGoogleCloud(nextLocal);
+          if (!active) return;
+          if (res.ok && res.progress) {
+            saveLocalProgress(res.progress);
+            setProgress(res.progress);
+            setSyncStatus('synced');
+            setSyncMessage(`Google Sync (${session.user.email})`);
+          } else {
+            setSyncStatus('error');
+            setSyncMessage(res.message);
+          }
+        }
+      });
     });
 
     // Live cross-tab sync within the same browser
@@ -159,6 +223,7 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
     window.addEventListener('hashchange', onHashChange);
 
     return () => {
+      active = false;
       cancelAnimationFrame(rafId);
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('hashchange', onHashChange);
@@ -176,9 +241,33 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
     });
   }, []);
 
+  const signOutGoogle = useCallback(async () => {
+    await logoutGoogleSession();
+    setAuthUser(null);
+    setSyncStatus(syncConfig.mode !== 'none' ? 'synced' : 'idle');
+    setSyncMessage(syncConfig.mode !== 'none' ? 'Local + manual sync' : 'Local only');
+  }, [syncConfig.mode]);
+
   const runSyncNow = useCallback(
     async (overrideConfig?: SyncConfig): Promise<{ ok: boolean; message: string }> => {
       const cfg = overrideConfig || syncConfig;
+
+      if (!overrideConfig && authUser) {
+        setSyncStatus('syncing');
+        setSyncMessage(`Syncing as ${authUser.email}...`);
+        const res = await syncWithGoogleCloud(progress);
+        if (res.ok && res.progress) {
+          setProgress(res.progress);
+          saveLocalProgress(res.progress);
+          setSyncStatus('synced');
+          setSyncMessage(`Google Sync (${authUser.email})`);
+          return { ok: true, message: res.message };
+        }
+        setSyncStatus('error');
+        setSyncMessage(res.message);
+        return { ok: false, message: res.message };
+      }
+
       if (cfg.mode === 'none') {
         return { ok: false, message: 'No remote sync method configured.' };
       }
@@ -225,7 +314,7 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
 
       return { ok: false, message: 'Unsupported sync mode.' };
     },
-    [progress, syncConfig]
+    [authUser, progress, syncConfig]
   );
 
   const pullSyncNow = useCallback(
@@ -265,18 +354,19 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
     []
   );
 
-  // Debounced background auto-sync when progress updates
+  // Debounced background auto-sync when progress updates (Google session OR configured key/gist)
   useEffect(() => {
-    if (!hydrated || syncConfig.mode === 'none' || !syncConfig.autoSync) return;
+    const canAutoSync = Boolean(authUser) || (syncConfig.mode !== 'none' && syncConfig.autoSync);
+    if (!hydrated || !canAutoSync) return;
     if (autoSyncTimer.current) clearTimeout(autoSyncTimer.current);
     autoSyncTimer.current = setTimeout(() => {
       void runSyncNow();
-    }, 2500);
+    }, 2000);
     return () => {
       if (autoSyncTimer.current) clearTimeout(autoSyncTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress.updatedAt, hydrated, syncConfig.mode, syncConfig.autoSync]);
+  }, [progress.updatedAt, hydrated, authUser, syncConfig.mode, syncConfig.autoSync]);
 
   const markLessonComplete = useCallback(
     (lessonId: string) => {
@@ -495,6 +585,10 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
         syncConfig,
         syncStatus,
         syncMessage,
+        authUser,
+        authEnv,
+        authNotice,
+        signOutGoogle,
         markLessonComplete,
         markLabComplete,
         markPuzzleComplete,

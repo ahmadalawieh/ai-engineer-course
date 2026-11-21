@@ -18,7 +18,8 @@ export function TopNav({
   onOpenSearch: () => void;
   onOpenSync: () => void;
 }) {
-  const { theme, toggleTheme, progress, syncConfig, syncStatus } = useCourseApp();
+  const { theme, toggleTheme, progress, syncConfig, syncStatus, authUser } = useCourseApp();
+  const isConnected = Boolean(authUser) || syncConfig.mode !== 'none' || syncStatus === 'synced';
 
   return (
     <header className="topbar">
@@ -27,7 +28,7 @@ export function TopNav({
           <div className="brand-mark">AI</div>
           <div>
             <span className="brand-title">AI Mastery Studio</span>
-            <span className="brand-sub">Zero to ML &amp; AI Engineer</span>
+            <span className="brand-sub">Basic to Advanced ML &amp; AI Engineer</span>
           </div>
         </button>
 
@@ -79,14 +80,16 @@ export function TopNav({
             {progress.completedLessons.length}/{ALL_LESSONS.length} · {progress.xp} XP
           </span>
 
-          <button type="button" className="sync-pill" onClick={onOpenSync} title="Sync progress across devices">
+          <button type="button" className="sync-pill" onClick={onOpenSync} title="Sign in or sync progress across devices">
             <span
               className={`sync-dot ${
-                syncStatus === 'syncing' ? 'syncing' : syncConfig.mode !== 'none' || syncStatus === 'synced' ? 'connected' : ''
+                syncStatus === 'syncing' ? 'syncing' : isConnected ? 'connected' : ''
               }`}
             />
             <Cloud size={13} />
-            <span className="hide-mobile">{syncConfig.mode !== 'none' ? 'Synced' : 'Sync'}</span>
+            <span className="hide-mobile">
+              {authUser ? authUser.name.split(' ')[0] : syncConfig.mode !== 'none' ? 'Synced' : 'Sign in / Sync'}
+            </span>
           </button>
 
           <button

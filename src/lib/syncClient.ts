@@ -247,3 +247,77 @@ export async function syncWithGitHubGist(
     };
   }
 }
+
+export interface ClientAuthUser {
+  sub: string;
+  email: string;
+  name: string;
+  picture?: string;
+}
+
+export interface AuthSessionResponse {
+  user: ClientAuthUser | null;
+  googleConfigured: boolean;
+  kvConfigured: boolean;
+}
+
+export async function fetchAuthSession(): Promise<AuthSessionResponse> {
+  try {
+    const res = await fetch('/api/auth/session', { cache: 'no-store' });
+    if (!res.ok) {
+      return { user: null, googleConfigured: false, kvConfigured: false };
+    }
+    return (await res.json()) as AuthSessionResponse;
+  } catch {
+    return { user: null, googleConfigured: false, kvConfigured: false };
+  }
+}
+
+export async function logoutGoogleSession(): Promise<void> {
+  await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+}
+
+export async function syncWithGoogleCloud(localProgress: CourseProgress): Promise<SyncResult> {
+  try {
+    const pullRes = await fetch('/api/sync?mode=google', {
+      method: 'GET',
+      cache: 'no-store',
+    });
+
+    let merged = localProgress;
+    if (pullRes.ok) {
+      const data = await pullRes.json();
+      if (data?.progress) {
+        merged = mergeProgress(localProgress, { ...createInitialProgress(), ...data.progress });
+      }
+    } else if (pullRes.status === 501) {
+      const err = await pullRes.json().catch(() => ({}));
+      return {
+        ok: false,
+        message:
+          err.message ||
+          'Signed in with Google, but Cloud KV (Upstash Redis) is not configured on Vercel yet.',
+      };
+    } else if (pullRes.status === 401) {
+      return { ok: false, message: 'Google session expired. Please sign in again.' };
+    }
+
+    const pushRes = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'google', progress: merged }),
+    });
+
+    if (!pushRes.ok) {
+      const err = await pushRes.json().catch(() => ({}));
+      return { ok: false, message: err.message || `Google Cloud sync failed (${pushRes.status}).` };
+    }
+
+    return { ok: true, progress: merged, message: 'Synced with your Google account.' };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'Network error during Google Cloud sync.',
+    };
+  }
+}

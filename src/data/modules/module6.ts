@@ -26,11 +26,11 @@ export const module6: CourseModule = {
       blocks: [
         {
           type: 'frontend-bridge',
-          title: 'Prompting Is Just HTML Form Validation for AI Outputs',
-          frontendConcept: 'HTML `<form>` rules (`required`, `type="number"`, `min="1"`, `max="5"`, `<select>` dropdown options)',
+          title: 'Prompting Is Just Strict Input/Output Contracts',
+          frontendConcept: 'A strict questionnaire or order form with required boxes, `1–5` number limits, and fixed multiple-choice options',
           aiConcept: 'System Prompts + Structured Outputs (JSON Schema Constrained Decoding) + Tool Definitions',
           explanation:
-            'Just like HTML form attributes stop users from typing text into a `1–5` number box, **Structured Outputs** lock the AI into a strict recipe (JSON Schema). Behind the scenes, the model is blocked from picking any token that would break the format—guaranteeing clean, predictable output every time.',
+            'Just like a strict form stops someone from typing a paragraph into a `1–5` rating box, **Structured Outputs** lock the AI into a strict JSON recipe. Behind the scenes, the model is blocked from picking any token that would break the format—guaranteeing clean, predictable output every time.',
         },
         {
           type: 'code',

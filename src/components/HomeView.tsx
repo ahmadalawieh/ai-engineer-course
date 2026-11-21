@@ -31,7 +31,7 @@ export function HomeView({
   onOpenArena: () => void;
   onOpenSync: () => void;
 }) {
-  const { progress } = useCourseApp();
+  const { progress, authUser } = useCourseApp();
   const [trackFilter, setTrackFilter] = useState<'all' | TrackTag>('all');
 
   const completedCount = progress.completedLessons.length;
@@ -59,11 +59,12 @@ export function HomeView({
     <main className="container">
       <section className="hero">
         <div>
-          <div className="hero-eyebrow">Zero-Coding-Required ML &amp; AI Engineer Path</div>
-          <h1>From Zero Code &amp; Basic HTML/CSS to Production ML &amp; AI Engineer.</h1>
+          <div className="hero-eyebrow">Basic to Advanced ML &amp; AI Engineer Roadmap</div>
+          <h1>From Absolute Beginner to Production ML &amp; AI Engineer.</h1>
           <p className="hero-lead">
-            Never written Python before? Start from everyday tech and basic HTML/CSS intuition,
-            then level up through Python, interactive SQL, scikit-learn &amp; XGBoost, Transformers,
+            Starting completely from scratch with zero coding experience? Every concept builds
+            from first principles—guiding you step-by-step from your very first Python variable
+            through interactive SQL, scikit-learn &amp; XGBoost, Deep Learning, Transformers,
             Hybrid RAG, Agents, and AI Evals with <strong>19 live visual simulators</strong>,{' '}
             <strong>code puzzles</strong>, and <strong>in-browser Python &amp; SQL labs</strong>.
           </p>
@@ -145,7 +146,7 @@ export function HomeView({
               {COURSE_MODULES.length} Modules · {totalLessons} Lessons · {TOTAL_LABS} Labs
             </span>
             <button type="button" className="btn btn-sm" onClick={onOpenSync}>
-              <Cloud size={13} /> Direct Sync
+              <Cloud size={13} /> {authUser ? `Synced (${authUser.name.split(' ')[0]})` : 'Google / Direct Sync'}
             </button>
           </div>
         </aside>
