@@ -16,6 +16,7 @@ import {
   Menu,
   Sparkles,
   Target,
+  X,
 } from 'lucide-react';
 import { COURSE_MODULES, getAdjacentLessons, getLessonById, getModuleById } from '@/data/curriculum';
 import { useCourseApp } from './ThemeProgressProvider';
@@ -281,20 +282,47 @@ export function LessonView({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [lesson.id, setLastVisitedLesson]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobileMenuOpen]);
+
   const isDone = progress.completedLessons.includes(lesson.id);
   const isBookmarked = progress.bookmarks.includes(lesson.id);
   const noteText = progress.notes[lesson.id] || '';
 
   return (
     <div className="workspace">
+      {mobileMenuOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`} aria-label="Course curriculum navigation">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 6px', gap: 8 }}>
           <button type="button" className="btn btn-sm btn-ghost" onClick={onBackHome}>
             <ArrowLeft size={14} /> Roadmap
           </button>
-          <span className="mono" style={{ fontSize: '0.73rem', color: 'var(--ink-muted)' }}>
-            {progress.completedLessons.length}/32
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span className="mono" style={{ fontSize: '0.73rem', color: 'var(--ink-muted)' }}>
+              {progress.completedLessons.length}/32
+            </span>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost mobile-only"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close lessons drawer"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {COURSE_MODULES.map((mod) => {
@@ -358,7 +386,7 @@ export function LessonView({
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <button
               type="button"
               className="btn btn-sm mobile-only"
@@ -366,12 +394,12 @@ export function LessonView({
             >
               <Menu size={14} /> Lessons
             </button>
-            <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
+            <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--ink-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Module {currentModule?.number}: {currentModule?.title}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <button
               type="button"
               className="btn btn-sm"
@@ -434,28 +462,16 @@ export function LessonView({
           />
         </section>
 
-        <nav
-          aria-label="Lesson pagination"
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 12,
-            marginTop: 32,
-            paddingTop: 20,
-            borderTop: '1px solid var(--border)',
-            flexWrap: 'wrap',
-          }}
-        >
+        <nav className="lesson-pagination" aria-label="Lesson pagination">
           {prev ? (
             <button type="button" className="btn" onClick={() => onSelectLesson(prev.id)}>
-              <ArrowLeft size={15} />
+              <ArrowLeft size={15} style={{ flexShrink: 0 }} />
               <span>
                 {prev.number} {prev.title}
               </span>
             </button>
           ) : (
-            <span />
+            <span className="hide-mobile" />
           )}
 
           {next && (
@@ -470,7 +486,7 @@ export function LessonView({
               <span>
                 Complete &amp; Next: {next.number} {next.title}
               </span>
-              <ArrowRight size={15} />
+              <ArrowRight size={15} style={{ flexShrink: 0 }} />
             </button>
           )}
         </nav>

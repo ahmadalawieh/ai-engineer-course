@@ -879,7 +879,7 @@ export function ConvKernelSim() {
           </select>
         </label>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', maxWidth: '100%', overflowX: 'auto' }}>
         <div>
           <div className="mono" style={{ fontSize: '0.75rem', marginBottom: 6 }}>Input 6×6 Image</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 32px)', gap: 2 }}>

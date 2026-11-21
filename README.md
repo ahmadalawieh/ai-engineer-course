@@ -2,6 +2,8 @@
 
 A self-contained, interactive dual-track course website taking frontend developers from foundational Python, Linear Algebra, and Statistics through Classical ML, Deep Learning, Transformers/LLMs, Hybrid RAG, Agents, Evals, and Production System Design.
 
+**Live Demo:** https://ai-engineer-course-one.vercel.app/
+
 ## Key Features
 - **8 Modules · 32 Distilled Lessons**: Self-contained explanations bridging from JavaScript/TypeScript intuition directly to AI/ML mastery.
 - **In-Browser Python + NumPy Labs**: Powered by Pyodide (WebAssembly) with automated unit-test assertions (`Check Solution`), hints, and solutions.

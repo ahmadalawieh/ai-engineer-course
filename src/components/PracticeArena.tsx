@@ -153,7 +153,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
           </div>
 
           {flipped && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 14 }}>
+            <div className="srs-grid" style={{ marginTop: 14 }}>
               {(
                 [
                   { q: 1, label: 'Again (<1d)' },
@@ -206,7 +206,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
           </div>
 
           <div className="hero-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
               <span className="track-badge track-core">
                 {activeQuestion.role} · {activeQuestion.difficulty} · {activeQuestion.topic}
               </span>
@@ -319,9 +319,9 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
 
       {tab === 'certificate' && (
         <section style={{ maxWidth: 760, margin: '24px auto 0' }}>
-          <div className="hero-card" style={{ padding: 32, textAlign: 'center' }}>
+          <div className="hero-card certificate-card" style={{ textAlign: 'center' }}>
             <div className="hero-eyebrow">Verified Completion Credential</div>
-            <h2 style={{ fontSize: '2rem', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', marginBottom: 8 }}>
               Certificate of Dual-Track AI &amp; Data Science Mastery
             </h2>
             <p style={{ fontSize: '1.1rem', color: 'var(--ink-2)', marginBottom: 20 }}>

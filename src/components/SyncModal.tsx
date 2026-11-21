@@ -130,9 +130,10 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
         </div>
 
-        <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
           <input
             className="input"
+            style={{ flex: '1 1 180px', minWidth: 0 }}
             value={effectiveName}
             onChange={(e) => setNameInput(e.target.value)}
             placeholder="Your Name (for Certificate)"
@@ -154,7 +155,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
           <button
             type="button"
             className={`pill-tab ${tab === 'cloud' ? 'active' : ''}`}
-            style={{ flex: 1 }}
+            style={{ flex: '1 1 110px' }}
             onClick={() => setTab('cloud')}
           >
             <Cloud size={13} style={{ display: 'inline', marginRight: 5 }} />
@@ -163,7 +164,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
           <button
             type="button"
             className={`pill-tab ${tab === 'gist' ? 'active' : ''}`}
-            style={{ flex: 1 }}
+            style={{ flex: '1 1 100px' }}
             onClick={() => setTab('gist')}
           >
             <GitBranch size={13} style={{ display: 'inline', marginRight: 5 }} />
@@ -172,7 +173,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
           <button
             type="button"
             className={`pill-tab ${tab === 'portable' ? 'active' : ''}`}
-            style={{ flex: 1 }}
+            style={{ flex: '1 1 110px' }}
             onClick={() => setTab('portable')}
           >
             <QrCode size={13} style={{ display: 'inline', marginRight: 5 }} />
@@ -187,9 +188,10 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
               <code className="inline-code">UPSTASH_REDIS_REST_URL</code> &amp;{' '}
               <code className="inline-code">UPSTASH_REDIS_REST_TOKEN</code> env vars on Vercel).
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               <input
                 className="input mono"
+                style={{ flex: '1 1 180px', minWidth: 0 }}
                 value={syncKeyInput}
                 onChange={(e) => setSyncKeyInput(e.target.value)}
                 placeholder="e.g. tensor-atlas-4912"
@@ -262,7 +264,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
                 height={150}
                 style={{ borderRadius: 8, border: '1px solid var(--border)', background: '#fff', padding: 6 }}
               />
-              <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 'min(220px, 100%)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
@@ -275,7 +277,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
                   {copied ? <Check size={13} /> : <Copy size={13} />}
                   {copied ? 'Copied Sync Link!' : 'Copy Sync Link'}
                 </button>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <button type="button" className="btn btn-sm" onClick={handleJsonDownload}>
                     <Download size={13} /> Export JSON
                   </button>
@@ -286,9 +288,10 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               <input
                 className="input mono"
+                style={{ flex: '1 1 180px', minWidth: 0 }}
                 value={pasteToken}
                 onChange={(e) => setPasteToken(e.target.value)}
                 placeholder="Paste Sync Link or AIMC1_... token from another device"

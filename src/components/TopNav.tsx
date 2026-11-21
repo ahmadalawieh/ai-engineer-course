@@ -65,6 +65,16 @@ export function TopNav({
             <span className="kbd">⌘K</span>
           </button>
 
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost mobile-only"
+            onClick={onOpenSearch}
+            aria-label="Search lessons and glossary"
+            title="Search"
+          >
+            <Search size={16} />
+          </button>
+
           <span className="mono hide-mobile" style={{ fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
             {progress.completedLessons.length}/{ALL_LESSONS.length} · {progress.xp} XP
           </span>

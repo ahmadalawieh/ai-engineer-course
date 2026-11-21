@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Newsreader, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import 'katex/dist/katex.min.css';
 import './globals.css';
@@ -22,6 +22,11 @@ const mono = JetBrains_Mono({
   variable: '--font-mono',
   weight: ['400', '500', '600'],
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'AI Mastery Studio — Zero to AI Engineer & Data Scientist',

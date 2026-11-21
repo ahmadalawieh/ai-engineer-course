@@ -355,14 +355,15 @@ export function VectorSearchSim() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 10,
+              flexWrap: 'wrap',
+              gap: 8,
               padding: '9px 12px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border)',
               background: idx === 0 ? 'var(--accent-soft)' : 'var(--bg)',
             }}
           >
-            <div>
+            <div style={{ minWidth: 0 }}>
               <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--accent)', marginRight: 8 }}>
                 #{idx + 1} {d.id}
               </span>
@@ -575,7 +576,7 @@ export function DriftMonitorSim() {
           Simulate Concept Drift (P(Y|X) shifted!)
         </label>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+      <div className="drift-bins-grid">
         {['Bin 1', 'Bin 2', 'Bin 3', 'Bin 4'].map((label, i) => (
           <div key={label} style={{ padding: 10, borderRadius: 'var(--radius-sm)', background: 'var(--surface-2)' }}>
             <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--ink-muted)' }}>{label}</div>

@@ -130,7 +130,9 @@ export function HomeView({
               paddingTop: 12,
               borderTop: '1px solid var(--border)',
               display: 'flex',
+              flexWrap: 'wrap',
               justifyContent: 'space-between',
+              gap: '6px 12px',
               fontSize: '0.8rem',
               color: 'var(--ink-muted)',
             }}
