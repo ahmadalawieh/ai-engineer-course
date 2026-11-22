@@ -135,4 +135,102 @@ export const MOCK_INTERVIEW_QUESTIONS: InterviewQuestion[] = [
       'Because customer emails are untrusted input vulnerable to indirect prompt injection, the model must never hold direct SQL write access or unrestricted refund authority. I wrap email content in untrusted tags, restrict SQL tools to read-only parameterized queries scoped to the verified user_id, and enforce the $200 cap, daily velocity limits, and idempotency keys deterministically inside the backend refund microservice. High-anomaly refunds pause for Human-in-the-Loop approval. Every loop iteration runs under a strict max_steps=6 budget with full OpenTelemetry span tracing and offline adversarial injection evals.',
     followUp: 'How would you expose these SQL & refund tools cleanly across multiple internal AI apps?',
   },
+  {
+    id: 'iq-9',
+    role: 'Data Scientist',
+    difficulty: 'Core',
+    topic: 'SQL Joins & Window Functions',
+    question:
+      'You need a SQL query showing every customer (even those with 0 orders) and their single largest completed order. How do you avoid dropping zero-order users and prevent duplicate rows?',
+    rubricPoints: [
+      'Use `LEFT JOIN` from `users` to `orders`, putting `o.status = \'completed\'` inside the `ON` clause (putting it in `WHERE` turns a LEFT JOIN into an INNER JOIN!).',
+      'Use `ROW_NUMBER() OVER (PARTITION BY u.user_id ORDER BY o.amount DESC)` inside a CTE and filter `rn = 1` to get one row per user.',
+      'Use `COALESCE(amount, 0)` to handle NULL amounts cleanly for zero-order users.',
+    ],
+    sampleAnswer:
+      'Use `LEFT JOIN orders o ON u.user_id = o.user_id AND o.status = \'completed\'`—filtering `o.status` inside `WHERE` would accidentally drop users with no orders! Wrap that in a CTE with `ROW_NUMBER() OVER (PARTITION BY u.user_id ORDER BY o.amount DESC) AS rn`, then select `WHERE rn = 1` with `COALESCE(o.amount, 0)`.',
+    followUp: 'When would you use `DENSE_RANK()` instead of `ROW_NUMBER()`?',
+  },
+  {
+    id: 'iq-10',
+    role: 'AI Engineer',
+    difficulty: 'Core',
+    topic: 'RAG Debugging & Evals',
+    question:
+      'Your team’s RAG chatbot answers questions politely, but often gives outdated policy numbers or skips the exact page that has the answer. How do you pinpoint whether retrieval or generation is broken?',
+    rubricPoints: [
+      'Measure Context Recall@k first: check if the right chunk even made it into the top-k retrieved context.',
+      'If Context Recall is low, fix chunking (overlap + headers), add BM25 Hybrid Search + Cross-Encoder reranking, and filter stale docs via metadata.',
+      'If Context Recall is high but answers are wrong (low Faithfulness), tighten grounding instructions, enforce Structured Outputs/citations, and lower temperature.',
+    ],
+    sampleAnswer:
+      'Always separate Retrieval from Generation using a 30–50 question Golden Eval set. First check Context Recall@5: if the right document isn’t in the retrieved top 5, it is a retriever bug—add Hybrid BM25 + dense search, Cross-Encoder reranking, and filter out archived doc versions. If the right chunk IS retrieved yet the answer ignores or alters numbers, it is a generation bug—enforce citation IDs, lower temperature near 0, and add Faithfulness assertions in CI.',
+    followUp: 'Why can `temperature = 0` still fail if the retrieved chunks contradict each other?',
+  },
+  {
+    id: 'iq-11',
+    role: 'Data Scientist',
+    difficulty: 'Senior',
+    topic: 'Imbalanced Tabular ML & ROI',
+    question:
+      'In a 1% fraud detection dataset, your LightGBM model gets 99.1% accuracy. Walk through how you properly train, evaluate, calibrate, and pick the decision threshold for production.',
+    rubricPoints: [
+      'Reject accuracy (predicting "no fraud" gets 99%) and evaluate using PR-AUC (Average Precision) + Precision@k.',
+      'Use Stratified/Time-based CV with preprocessing inside `Pipeline` to prevent leakage.',
+      'Explain calibration (Platt/Isotonic) if class weights or resampling were used, because `scale_pos_weight` shifts predicted probabilities.',
+      'Pick the classification threshold by maximizing expected business profit: TP benefit minus FP manual-review cost and FN fraud loss.',
+    ],
+    sampleAnswer:
+      '99.1% accuracy is worse than a dummy classifier here. I split temporally (with user grouping if repeat users exist), track PR-AUC instead of ROC-AUC/accuracy, and tune XGBoost/LightGBM inside leak-free `Pipeline` folds. If I use `scale_pos_weight`, I calibrate probabilities with isotonic/Platt scaling on a held-out calibration fold so probabilities reflect true risk. Finally, I sweep thresholds against real unit economics (fraud prevented vs manual-review cost + false-decline friction) to pick the profit-maximizing operating point.',
+    followUp: 'How do you monitor if fraud patterns shift two months after launch before ground-truth chargebacks arrive?',
+  },
+  {
+    id: 'iq-12',
+    role: 'Both',
+    difficulty: 'Senior',
+    topic: 'Mid-Senior End-to-End System Design',
+    question:
+      'Design a customer-support copilot that predicts churn risk from billing SQL tables AND drafts grounded policy responses from internal docs.',
+    rubricPoints: [
+      'Combine two specialized models: SQL feature pipeline + XGBoost/LightGBM for tabular churn risk, plus Hybrid RAG + LLM for policy drafting.',
+      'Keep tabular features leak-free (point-in-time SQL snapshots) and enforce tenant/role ACL pre-filtering in RAG.',
+      'Serve churn scores synchronously (<30ms) alongside routed LLM responses with Structured Outputs (JSON action + draft + citations).',
+      'Monitor both systems: PSI/concept drift for churn + CI Golden Evals (Faithfulness/Recall) and latency/cost budgets for the LLM.',
+    ],
+    sampleAnswer:
+      'Do not ask an LLM to guess churn from raw SQL rows—use the right tool per modality! First, an offline/batch SQL + LightGBM pipeline computes calibrated churn risk and top SHAP drivers (`failed_payments`, `usage_drop`) using point-in-time joins and exposes it in <20ms. Second, when an agent opens a ticket, a Hybrid RAG pipeline (BM25 + Dense + RRF + Cross-Encoder rerank with ACL pre-filters) drafts a cited response constrained to a Pydantic JSON schema, conditioned on the churn tier. Both run behind CI eval gates, PSI drift alerts, and human-in-the-loop send approval.',
+    followUp: 'If latency is too high during peak support hours, which two levers cut p95 latency fastest without hurting accuracy?',
+  },
+  {
+    id: 'iq-13',
+    role: 'AI Engineer',
+    difficulty: 'Core',
+    topic: 'Structured Outputs & Tool Safety',
+    question:
+      'Your app asks an LLM to return JSON like `{"intent": "refund", "priority": 1}` and occasionally crashes when `JSON.parse()` fails on markdown fences. How do you fix this reliably?',
+    rubricPoints: [
+      'Never rely on prompt wording ("Please only output JSON") or fragile regex post-processing alone.',
+      'Use Structured Outputs (`response_format` with JSON Schema / Pydantic), which masks grammar-invalid tokens at Softmax decoding.',
+      'Validate enum values, numeric bounds (`1..5`), and business permissions deterministically in backend code before acting.',
+    ],
+    sampleAnswer:
+      'Prompting "output JSON only" is probabilistic and still fails 1–5% of the time with extra prose or code fences. Instead, define a Pydantic/JSON Schema and enable Structured Outputs so constrained decoding masks out any token that violates the JSON grammar right before sampling—guaranteeing 100% parseable output. Then still run deterministic backend checks for authorization and business limits.',
+    followUp: 'What happens if you make a JSON schema deeply nested with 50 optional fields?',
+  },
+  {
+    id: 'iq-14',
+    role: 'Both',
+    difficulty: 'Core',
+    topic: 'Python Vectorization & Debugging',
+    question:
+      'A junior teammate wrote a nested Python `for` loop computing pairwise cosine similarity across 50,000 documents and it takes 40 seconds per search. How do you speed it up 100x in NumPy?',
+    rubricPoints: [
+      'Replace the nested Python loop with vectorized matrix multiplication (`docs @ q`) after L2-normalizing rows along `axis=1`.',
+      'Pre-normalize document embeddings once at ingestion time so query time is a single dot product (`docs_normed @ q_normed`).',
+      'Mention switching to an ANN index (HNSW / pgvector / Qdrant) once document count grows to millions.',
+    ],
+    sampleAnswer:
+      'Pre-normalize all 50,000 document vectors once (`docs / np.linalg.norm(docs, axis=1, keepdims=True)`) using float32. At query time, normalize `q` once and compute all 50,000 cosine similarities in one compiled C/BLAS matrix-vector multiply (`sims = docs_normed @ q_normed`) plus `np.argpartition`/`np.argsort`—dropping 40 seconds down to a few milliseconds. Beyond ~1M vectors, move to an HNSW vector index.',
+    followUp: 'Why does `docs[0:10]` in NumPy share memory with `docs`, and when can that cause a bug?',
+  },
 ];

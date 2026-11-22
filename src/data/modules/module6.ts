@@ -144,6 +144,22 @@ class SupportTriage(BaseModel):
           ],
         },
         {
+          type: 'code-builder',
+          puzzleId: 'puzzle-6-2-rag',
+          title: 'Warm-Up Puzzle: Production Multi-Tenant Hybrid RAG Flow',
+          prompt:
+            'Tap the stages below into the correct order to avoid tenant data leaks and maximize precision.',
+          lines: [
+            '1. Apply mandatory tenant_id / ACL metadata pre-filter',
+            '2. Run BM25 keyword search & Dense vector search in parallel',
+            '3. Fuse both ranked lists with Reciprocal Rank Fusion (RRF)',
+            '4. Cross-Encoder rerank top 50 candidates down to top 5',
+            '5. Generate grounded answer with inline [chunk_id] citations',
+          ],
+          explanation:
+            'Pre-filtering `tenant_id` first prevents cross-tenant leaks; Hybrid + RRF + Cross-Encoder delivers sharp top-5 context for grounded citations!',
+        },
+        {
           type: 'python-lab',
           labId: 'lab-6-2',
           title: 'Lab 6.2: Implement Reciprocal Rank Fusion (RRF)',

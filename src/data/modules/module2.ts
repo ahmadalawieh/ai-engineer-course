@@ -62,6 +62,22 @@ WHERE status = 'completed';`,
           ],
         },
         {
+          type: 'code-builder',
+          puzzleId: 'puzzle-2-1-sql',
+          title: 'Warm-Up Puzzle: SQL Query Clause Order',
+          prompt:
+            'SQL evaluates clauses in a strict order. Tap the clauses below into valid SQL execution order to aggregate completed order spend per user.',
+          lines: [
+            'SELECT user_id, SUM(amount) AS total_spent',
+            'FROM orders',
+            "WHERE status = 'completed'",
+            'GROUP BY user_id',
+            'ORDER BY total_spent DESC;',
+          ],
+          explanation:
+            'Valid SQL always flows `SELECT` → `FROM` → `WHERE` (filter rows before grouping) → `GROUP BY` → `ORDER BY`!',
+        },
+        {
           type: 'python-lab',
           labId: 'lab-2-1-sql',
           language: 'sql',
@@ -98,6 +114,87 @@ WHERE status = 'completed'
 GROUP BY user_id
 ORDER BY total_spent DESC;`,
           hint: 'Put `WHERE status = \'completed\'` before `GROUP BY user_id`, and `ORDER BY total_spent DESC` at the end.',
+          packages: [],
+        },
+        {
+          type: 'python-lab',
+          labId: 'lab-2-1-sql-join',
+          language: 'sql',
+          title: 'Lab 2.1B: Interactive SQL — Safe Multi-Table LEFT JOIN',
+          prompt:
+            'We pre-loaded `users (user_id, name)` and `orders (order_id, user_id, amount)`. Notice user #3 (`Lina`) has **zero** orders! Write a `LEFT JOIN` query returning `u.name, COALESCE(SUM(o.amount), 0) AS total_spent` for **every** user, grouped by `u.user_id, u.name` and sorted by `total_spent DESC, u.user_id ASC`.',
+          setupCode: `conn.execute("CREATE TABLE users (user_id INTEGER, name TEXT)")
+conn.execute("CREATE TABLE orders (order_id INTEGER, user_id INTEGER, amount REAL)")
+conn.executemany("INSERT INTO users VALUES (?, ?)", [(1, 'Sara'), (2, 'Omar'), (3, 'Lina')])
+conn.executemany("INSERT INTO orders VALUES (?, ?, ?)", [(10, 1, 40.0), (11, 1, 60.0), (12, 2, 25.0)])
+conn.commit()`,
+          starterCode: `SELECT
+  u.name,
+  COALESCE(SUM(o.amount), 0) AS total_spent
+FROM users u
+-- LEFT JOIN orders o ON u.user_id = o.user_id
+-- GROUP BY u.user_id, u.name
+ORDER BY total_spent DESC, u.user_id ASC;`,
+          testCode: `assert len(rows) == 3, f"Expected all 3 users (including 0-order Lina), got {len(rows)} rows"
+assert rows[0][0] == 'Sara' and abs(rows[0][1] - 100.0) < 1e-6, f"Expected Sara=100.0, got {rows[0]}"
+assert rows[1][0] == 'Omar' and abs(rows[1][1] - 25.0) < 1e-6, f"Expected Omar=25.0, got {rows[1]}"
+assert rows[2][0] == 'Lina' and abs(rows[2][1] - 0.0) < 1e-6, f"Expected Lina=0.0, got {rows[2]}"
+print("PASS: LEFT JOIN + COALESCE kept zero-order users cleanly!")`,
+          solutionCode: `SELECT
+  u.name,
+  COALESCE(SUM(o.amount), 0) AS total_spent
+FROM users u
+LEFT JOIN orders o ON u.user_id = o.user_id
+GROUP BY u.user_id, u.name
+ORDER BY total_spent DESC, u.user_id ASC;`,
+          hint: 'Use `LEFT JOIN orders o ON u.user_id = o.user_id` before `GROUP BY u.user_id, u.name`. `COALESCE(..., 0)` turns `NULL` into `0`.',
+          packages: [],
+        },
+        {
+          type: 'python-lab',
+          labId: 'lab-2-1-sql-window',
+          language: 'sql',
+          title: 'Lab 2.1C: Interactive SQL — Top Order per User (Window Function)',
+          prompt:
+            'A classic Mid-Senior SQL interview task! Given `orders (order_id, user_id, amount)`, use a CTE with `ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY amount DESC) AS rn` to return each user’s **single largest order** (`user_id, order_id, amount` where `rn = 1`), ordered by `user_id ASC`.',
+          setupCode: `conn.execute("CREATE TABLE orders (order_id INTEGER, user_id INTEGER, amount REAL)")
+conn.executemany("INSERT INTO orders VALUES (?, ?, ?)", [
+    (1, 101, 20.0),
+    (2, 101, 95.0),
+    (3, 101, 50.0),
+    (4, 102, 45.0),
+    (5, 102, 110.0),
+])
+conn.commit()`,
+          starterCode: `WITH ranked AS (
+  SELECT
+    user_id,
+    order_id,
+    amount,
+    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY amount DESC) AS rn
+  FROM orders
+)
+SELECT user_id, order_id, amount
+FROM ranked
+-- Filter WHERE rn = 1
+ORDER BY user_id ASC;`,
+          testCode: `assert len(rows) == 2, f"Expected 1 top row per user (2 rows), got {len(rows)}"
+assert tuple(rows[0]) == (101, 2, 95.0), f"User 101 top order should be (101, 2, 95.0), got {rows[0]}"
+assert tuple(rows[1]) == (102, 5, 110.0), f"User 102 top order should be (102, 5, 110.0), got {rows[1]}"
+print("PASS: Window function ROW_NUMBER() ranked each user's top order!")`,
+          solutionCode: `WITH ranked AS (
+  SELECT
+    user_id,
+    order_id,
+    amount,
+    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY amount DESC) AS rn
+  FROM orders
+)
+SELECT user_id, order_id, amount
+FROM ranked
+WHERE rn = 1
+ORDER BY user_id ASC;`,
+          hint: 'Simply add `WHERE rn = 1` before `ORDER BY user_id ASC;` to keep only the #1 ranked order per user.',
           packages: [],
         },
         {

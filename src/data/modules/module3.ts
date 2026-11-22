@@ -175,6 +175,22 @@ def fit_logistic(X: np.ndarray, y: np.ndarray, lr: float = 0.2, steps: int = 400
           ],
         },
         {
+          type: 'code-builder',
+          puzzleId: 'puzzle-3-2-ml',
+          title: 'Warm-Up Puzzle: Leak-Free Tabular ML Pipeline Order',
+          prompt:
+            'Ordering steps wrong causes subtle data leakage! Tap the lines below into the exact leak-free training & evaluation order.',
+          lines: [
+            'X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)',
+            'pipe = Pipeline([("scaler", StandardScaler()), ("clf", GradientBoostingClassifier())])',
+            'pipe.fit(X_train, y_train)',
+            'probs = pipe.predict_proba(X_test)[:, 1]',
+            'print("Test ROC-AUC:", roc_auc_score(y_test, probs))',
+          ],
+          explanation:
+            'Always split `train` and `test` FIRST, wrap preprocessing + model in a `Pipeline`, `.fit()` strictly on `X_train`, and evaluate `.predict_proba()` on `X_test`!',
+        },
+        {
           type: 'python-lab',
           labId: 'lab-3-2',
           title: 'Lab 3.2: Build a Mini Gradient Booster from Scratch',

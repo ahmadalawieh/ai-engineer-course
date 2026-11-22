@@ -210,6 +210,67 @@ git init && git add . && git commit -m "Initial ML/AI project"`,
           caption: 'Once you finish the in-browser labs, run these 5 commands locally to build your GitHub portfolio projects.',
         },
         {
+          type: 'code',
+          title: 'Capstone Starter Kit 1: Leak-Free Tabular ML Pipeline (train_churn.py)',
+          language: 'python',
+          code: `import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import average_precision_score, roc_auc_score
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from xgboost import XGBClassifier
+
+df = pd.read_csv("customer_churn.csv")
+X, y = df.drop(columns=["churned", "user_id"]), df["churned"]
+
+num_cols = X.select_dtypes(include="number").columns.tolist()
+cat_cols = X.select_dtypes(exclude="number").columns.tolist()
+
+pre = ColumnTransformer([
+    ("num", Pipeline([("imp", SimpleImputer(strategy="median")), ("sc", StandardScaler())]), num_cols),
+    ("cat", Pipeline([("imp", SimpleImputer(strategy="most_frequent")), ("ohe", OneHotEncoder(handle_unknown="ignore"))]), cat_cols),
+])
+
+pipe = Pipeline([
+    ("pre", pre),
+    ("clf", XGBClassifier(n_estimators=250, max_depth=4, learning_rate=0.05, eval_metric="logloss", random_state=42)),
+])
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+oof_probs = cross_val_predict(pipe, X, y, cv=cv, method="predict_proba")[:, 1]
+print(f"5-Fold ROC-AUC: {roc_auc_score(y, oof_probs):.3f} | PR-AUC: {average_precision_score(y, oof_probs):.3f}")`,
+          caption: 'Copy this into `train_churn.py` as your Mid-Senior tabular ML project baseline.',
+        },
+        {
+          type: 'code',
+          title: 'Capstone Starter Kit 2: Hybrid RAG + Golden CI Eval (eval_rag.py)',
+          language: 'python',
+          code: `import json
+
+def rrf_fuse(dense_ids: list[str], bm25_ids: list[str], k: int = 60) -> list[str]:
+    scores: dict[str, float] = {}
+    for ranking in (dense_ids, bm25_ids):
+        for idx, doc_id in enumerate(ranking):
+            scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + idx + 1)
+    return sorted(scores, key=lambda d: scores[d], reverse=True)
+
+def run_ci_eval(golden_cases: list[dict], retriever_fn, generator_fn) -> None:
+    recalls, valid_citations = [], []
+    for case in golden_cases:
+        retrieved = retriever_fn(case["query"], tenant_id=case["tenant_id"])[:5]
+        answer = generator_fn(case["query"], retrieved)
+        recalls.append(len(set(case["expected_ids"]) & set(retrieved)) / len(case["expected_ids"]))
+        valid_citations.append(all(c in retrieved for c in answer["cited_ids"]))
+
+    avg_recall = sum(recalls) / len(recalls)
+    cit_rate = sum(valid_citations) / len(valid_citations)
+    print(json.dumps({"recall_at_5": round(avg_recall, 3), "citation_validity": round(cit_rate, 3)}))
+    assert avg_recall >= 0.85 and cit_rate == 1.0, "CI quality gate failed!"`,
+          caption: 'Copy this into `eval_rag.py` and run it in GitHub Actions to prove measurable RAG quality.',
+        },
+        {
           type: 'callout',
           variant: 'tip',
           title: 'Resume Bullet Formula That Passes Screeners',

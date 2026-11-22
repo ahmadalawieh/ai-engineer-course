@@ -49,6 +49,22 @@ export const module7: CourseModule = {
             ['**MCP (Model Context Protocol)**', 'USB-C universal cable standard', 'Open protocol decoupling AI apps from Tools, Files, and Prompts via one standard plug-and-play interface'],
           ],
         },
+        {
+          type: 'code-builder',
+          puzzleId: 'puzzle-7-1-agent',
+          title: 'Warm-Up Puzzle: Safe Production Agent Execution Flow',
+          prompt:
+            'When an agent reads an untrusted customer email and wants to issue a refund, what is the safe execution order?',
+          lines: [
+            '1. Wrap email text inside <untrusted_data> delimiters',
+            '2. Query read-only SQL scoped to verified customer_id',
+            '3. Enforce $200 refund cap & rate limits in deterministic backend code',
+            '4. Pause for Human-in-the-Loop (HITL) approval on high-risk writes',
+            '5. Execute refund with an idempotency key & log OpenTelemetry trace',
+          ],
+          explanation:
+            'Untrusted text is always isolated first; deterministic backend guards + HITL checks protect financial writes before execution!',
+        },
       ],
       quiz: [
         {

@@ -1,17 +1,25 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Award, BookOpen, CheckCircle2, Eye, Layers, Printer, RotateCw, Search } from 'lucide-react';
+import { ArrowRight, Award, Bookmark, BookOpen, CheckCircle2, Eye, Layers, Printer, RotateCw, Search } from 'lucide-react';
 import { FLASHCARDS } from '@/data/flashcards';
 import { GLOSSARY_ITEMS } from '@/data/glossary';
 import { MOCK_INTERVIEW_QUESTIONS } from '@/data/mockInterview';
-import { ALL_LESSONS, TOTAL_LABS } from '@/data/curriculum';
+import { ALL_LESSONS, TOTAL_LABS, getLessonById } from '@/data/curriculum';
 import { useCourseApp } from './ThemeProgressProvider';
 import { MathFormula, RichText } from './MathAndProse';
 
-export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'flashcards' | 'interview' | 'glossary' | 'certificate' }) {
+type ArenaTab = 'flashcards' | 'interview' | 'glossary' | 'notes' | 'certificate';
+
+export function PracticeArena({
+  initialTab = 'flashcards',
+  onSelectLesson,
+}: {
+  initialTab?: ArenaTab;
+  onSelectLesson?: (lessonId: string) => void;
+}) {
   const { progress, reviewFlashcard, markInterviewComplete } = useCourseApp();
-  const [tab, setTab] = useState<'flashcards' | 'interview' | 'glossary' | 'certificate'>(initialTab);
+  const [tab, setTab] = useState<ArenaTab>(initialTab);
 
   // Flashcards state
   const [cardIdx, setCardIdx] = useState(0);
@@ -35,6 +43,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
 
   // Interview state
   const [roleFilter, setRoleFilter] = useState<'All' | 'AI Engineer' | 'Data Scientist' | 'Both'>('All');
+  const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Core' | 'Senior' | 'Staff'>('All');
   const [qIdx, setQIdx] = useState(0);
   const [userDraft, setUserDraft] = useState('');
   const [showSample, setShowSample] = useState(false);
@@ -42,10 +51,14 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
 
   const filteredQuestions = useMemo(
     () =>
-      MOCK_INTERVIEW_QUESTIONS.filter((q) => roleFilter === 'All' || q.role === roleFilter),
-    [roleFilter]
+      MOCK_INTERVIEW_QUESTIONS.filter(
+        (q) =>
+          (roleFilter === 'All' || q.role === roleFilter) &&
+          (difficultyFilter === 'All' || q.difficulty === difficultyFilter)
+      ),
+    [roleFilter, difficultyFilter]
   );
-  const activeQuestion = filteredQuestions[qIdx % filteredQuestions.length];
+  const activeQuestion = filteredQuestions.length > 0 ? filteredQuestions[qIdx % filteredQuestions.length] : undefined;
 
   // Glossary state
   const [glossarySearch, setGlossarySearch] = useState('');
@@ -60,10 +73,26 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
     );
   }, [glossarySearch]);
 
+  const savedNotesEntries = useMemo(
+    () =>
+      Object.entries(progress.notes)
+        .filter(([, text]) => text.trim().length > 0)
+        .map(([id, text]) => ({ id, text, lesson: getLessonById(id) })),
+    [progress.notes]
+  );
+
+  const savedBookmarks = useMemo(
+    () => progress.bookmarks.map((id) => ({ id, lesson: getLessonById(id) })),
+    [progress.bookmarks]
+  );
+
   const lessonsDone = progress.completedLessons.length;
   const labsDone = progress.completedLabs.length;
   const interviewsDone = progress.interviewCompleted.length;
-  const isCertified = lessonsDone >= 24 && labsDone >= 5 && interviewsDone >= 4;
+  const isCertified = lessonsDone >= 24 && labsDone >= 8 && interviewsDone >= 6;
+
+  const roleLabel = (r: 'All' | 'AI Engineer' | 'Data Scientist' | 'Both') =>
+    r === 'AI Engineer' ? 'AI / LLM' : r === 'Data Scientist' ? 'ML / SQL' : r;
 
   return (
     <main className="container">
@@ -72,7 +101,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
           <span className="lab-badge">Active Recall &amp; Job Readiness</span>
           <h1>Practice Arena</h1>
           <p style={{ color: 'var(--ink-2)', fontSize: '0.96rem', marginTop: 4 }}>
-            Lock in formulas with SM-2 spaced repetition, rehearse Staff-level interviews, and verify full job readiness.
+            Lock in concepts with spaced repetition, rehearse Core to Mid-Senior &amp; Staff interviews, and review saved notes.
           </p>
         </div>
 
@@ -100,6 +129,14 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
           >
             <BookOpen size={13} style={{ display: 'inline', marginRight: 5 }} />
             Glossary ({GLOSSARY_ITEMS.length})
+          </button>
+          <button
+            type="button"
+            className={`pill-tab ${tab === 'notes' ? 'active' : ''}`}
+            onClick={() => setTab('notes')}
+          >
+            <Bookmark size={13} style={{ display: 'inline', marginRight: 5 }} />
+            Saved ({savedBookmarks.length + savedNotesEntries.length})
           </button>
           <button
             type="button"
@@ -180,77 +217,97 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
         </section>
       )}
 
-      {tab === 'interview' && activeQuestion && (
+      {tab === 'interview' && (
         <section style={{ maxWidth: 820, margin: '18px auto 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
-            <div className="pill-tabs">
-              {(['All', 'AI Engineer', 'Data Scientist', 'Both'] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  className={`pill-tab ${roleFilter === r ? 'active' : ''}`}
-                  onClick={() => {
-                    setRoleFilter(r);
-                    setQIdx(0);
-                    setShowSample(false);
-                    setCheckedRubric({});
-                  }}
-                >
-                  {r}
-                </button>
-              ))}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div className="pill-tabs">
+                {(['All', 'AI Engineer', 'Data Scientist', 'Both'] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    className={`pill-tab ${roleFilter === r ? 'active' : ''}`}
+                    onClick={() => {
+                      setRoleFilter(r);
+                      setQIdx(0);
+                      setShowSample(false);
+                      setCheckedRubric({});
+                    }}
+                  >
+                    {roleLabel(r)}
+                  </button>
+                ))}
+              </div>
+              <div className="pill-tabs">
+                {(['All', 'Core', 'Senior', 'Staff'] as const).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    className={`pill-tab ${difficultyFilter === d ? 'active' : ''}`}
+                    onClick={() => {
+                      setDifficultyFilter(d);
+                      setQIdx(0);
+                      setShowSample(false);
+                      setCheckedRubric({});
+                    }}
+                  >
+                    {d === 'All' ? 'All Levels' : d === 'Core' ? 'Core / Junior' : d === 'Senior' ? 'Mid-Senior' : 'Staff'}
+                  </button>
+                ))}
+              </div>
             </div>
             <span className="mono" style={{ fontSize: '0.82rem', color: 'var(--ink-muted)', alignSelf: 'center' }}>
-              Completed: {interviewsDone}/{MOCK_INTERVIEW_QUESTIONS.length}
+              Practiced: {interviewsDone}/{MOCK_INTERVIEW_QUESTIONS.length}
             </span>
           </div>
 
-          <div className="hero-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-              <span className="track-badge track-core">
-                {activeQuestion.role} · {activeQuestion.difficulty} · {activeQuestion.topic}
-              </span>
-              {progress.interviewCompleted.includes(activeQuestion.id) && (
-                <span className="track-badge" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
-                  <CheckCircle2 size={12} style={{ marginRight: 4 }} /> Practiced
+          {activeQuestion ? (
+            <div className="hero-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                <span className="track-badge track-core">
+                  {roleLabel(activeQuestion.role)} · {activeQuestion.difficulty === 'Senior' ? 'Mid-Senior' : activeQuestion.difficulty} · {activeQuestion.topic}
                 </span>
-              )}
-            </div>
+                {progress.interviewCompleted.includes(activeQuestion.id) && (
+                  <span className="track-badge" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
+                    <CheckCircle2 size={12} style={{ marginRight: 4 }} /> Practiced
+                  </span>
+                )}
+              </div>
 
-            <h2 style={{ fontSize: '1.35rem', lineHeight: 1.35, marginBottom: 14 }}>{activeQuestion.question}</h2>
+              <h2 style={{ fontSize: '1.35rem', lineHeight: 1.35, marginBottom: 14 }}>{activeQuestion.question}</h2>
 
-            <textarea
-              className="input"
-              rows={5}
-              value={userDraft}
-              onChange={(e) => setUserDraft(e.target.value)}
-              placeholder="Draft your structured response before checking the grading rubric..."
-            />
+              <textarea
+                className="input"
+                rows={5}
+                value={userDraft}
+                onChange={(e) => setUserDraft(e.target.value)}
+                placeholder="Draft your structured response before checking the grading rubric..."
+              />
 
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowSample((v) => !v)}>
-                <Eye size={14} /> {showSample ? 'Hide Rubric & Sample Answer' : 'Reveal Rubric & Sample Answer'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm"
-                onClick={() => {
-                  markInterviewComplete(activeQuestion.id);
-                  setUserDraft('');
-                  setShowSample(false);
-                  setCheckedRubric({});
-                  setQIdx((i) => i + 1);
-                }}
-              >
-                Mark Practiced &amp; Next (+40 XP)
-              </button>
-            </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowSample((v) => !v)}>
+                  <Eye size={14} /> {showSample ? 'Hide Rubric & Sample Answer' : 'Reveal Rubric & Sample Answer'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    markInterviewComplete(activeQuestion.id);
+                    setUserDraft('');
+                    setShowSample(false);
+                    setCheckedRubric({});
+                    setQIdx((i) => i + 1);
+                  }}
+                >
+                  Mark Practiced &amp; Next (+40 XP)
+                </button>
+              </div>
 
-            {showSample && (
-              <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <strong style={{ fontSize: '0.9rem' }}>Interviewer Grading Rubric (Check what you covered):</strong>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+              {showSample && (
+                <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <strong style={{ fontSize: '0.9rem' }}>Interviewer Grading Rubric (Check what you covered):</strong>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                     {activeQuestion.rubricPoints.map((pt, i) => (
                       <label key={i} style={{ display: 'flex', gap: 8, fontSize: '0.88rem', color: 'var(--ink-2)', cursor: 'pointer' }}>
                         <input
@@ -264,17 +321,22 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
                   </div>
                 </div>
 
-                <div style={{ padding: 14, borderRadius: 'var(--radius-sm)', background: 'var(--surface-2)' }}>
-                  <strong style={{ fontSize: '0.88rem', display: 'block', marginBottom: 6 }}>Staff-Level Sample Answer:</strong>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)' }}>{activeQuestion.sampleAnswer}</p>
-                </div>
+                  <div style={{ padding: 14, borderRadius: 'var(--radius-sm)', background: 'var(--surface-2)' }}>
+                    <strong style={{ fontSize: '0.88rem', display: 'block', marginBottom: 6 }}>Sample Strong Answer:</strong>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)' }}>{activeQuestion.sampleAnswer}</p>
+                  </div>
 
-                <div style={{ fontSize: '0.86rem', color: 'var(--accent)' }}>
-                  <strong>Likely Follow-Up:</strong> {activeQuestion.followUp}
+                  <div style={{ fontSize: '0.86rem', color: 'var(--accent)' }}>
+                    <strong>Likely Follow-Up:</strong> {activeQuestion.followUp}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <div className="hero-card" style={{ textAlign: 'center', color: 'var(--ink-muted)' }}>
+              No questions match that exact role + difficulty filter. Pick another filter above!
+            </div>
+          )}
         </section>
       )}
 
@@ -317,10 +379,88 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
         </section>
       )}
 
+      {tab === 'notes' && (
+        <section style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 22 }}>
+          <div>
+            <h2 style={{ fontSize: '1.35rem', marginBottom: 10 }}>Bookmarked Lessons ({savedBookmarks.length})</h2>
+            {savedBookmarks.length === 0 ? (
+              <div className="hero-card" style={{ color: 'var(--ink-muted)', fontSize: '0.9rem' }}>
+                No bookmarked lessons yet. Click <strong>Bookmark</strong> inside any lesson to save it here.
+              </div>
+            ) : (
+              <div className="module-grid">
+                {savedBookmarks.map(({ id, lesson }) => (
+                  <article key={id} className="module-card">
+                    <div className="module-top">
+                      <span className="module-num">LESSON {lesson?.number || id}</span>
+                      <Bookmark size={14} color="var(--accent-warm)" fill="var(--accent-warm)" />
+                    </div>
+                    <h3 style={{ fontSize: '1.1rem' }}>{lesson?.title || id}</h3>
+                    <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)' }}>{lesson?.subtitle}</p>
+                    {onSelectLesson && (
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{ alignSelf: 'flex-start', marginTop: 'auto' }}
+                        onClick={() => onSelectLesson(id)}
+                      >
+                        Open Lesson <ArrowRight size={13} />
+                      </button>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.35rem', marginBottom: 10 }}>Personal Study Notes ({savedNotesEntries.length})</h2>
+            {savedNotesEntries.length === 0 ? (
+              <div className="hero-card" style={{ color: 'var(--ink-muted)', fontSize: '0.9rem' }}>
+                No study notes saved yet. Write notes at the bottom of any lesson—they auto-save and sync across devices.
+              </div>
+            ) : (
+              <div className="module-grid">
+                {savedNotesEntries.map(({ id, text, lesson }) => (
+                  <article key={id} className="module-card">
+                    <div className="module-top">
+                      <span className="module-num">LESSON {lesson?.number || id}</span>
+                    </div>
+                    <h3 style={{ fontSize: '1.08rem' }}>{lesson?.title || id}</h3>
+                    <p
+                      style={{
+                        fontSize: '0.88rem',
+                        color: 'var(--ink-2)',
+                        whiteSpace: 'pre-wrap',
+                        background: 'var(--surface-2)',
+                        padding: '10px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                    >
+                      {text}
+                    </p>
+                    {onSelectLesson && (
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{ alignSelf: 'flex-start', marginTop: 'auto' }}
+                        onClick={() => onSelectLesson(id)}
+                      >
+                        Edit in Lesson <ArrowRight size={13} />
+                      </button>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {tab === 'certificate' && (
         <section style={{ maxWidth: 760, margin: '24px auto 0' }}>
           <div className="hero-card certificate-card" style={{ textAlign: 'center' }}>
-            <div className="hero-eyebrow">Verified Completion Credential</div>
+            <div className="hero-eyebrow">Mid-Senior Readiness Credential</div>
             <h2 style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', marginBottom: 8 }}>
               Certificate of ML &amp; AI Engineering Mastery
             </h2>
@@ -335,11 +475,11 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
               </div>
               <div className="stat-box">
                 <div className="stat-val">{labsDone}/{TOTAL_LABS}</div>
-                <div className="stat-label">Python &amp; SQL Labs (Need 5+)</div>
+                <div className="stat-label">Python &amp; SQL Labs (Need 8+)</div>
               </div>
               <div className="stat-box">
                 <div className="stat-val">{interviewsDone}/{MOCK_INTERVIEW_QUESTIONS.length}</div>
-                <div className="stat-label">Mock Interviews (Need 4+)</div>
+                <div className="stat-label">Mock Interviews (Need 6+)</div>
               </div>
               <div className="stat-box">
                 <div className="stat-val">{progress.xp}</div>
@@ -350,7 +490,7 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
             {isCertified ? (
               <div>
                 <p style={{ color: 'var(--success)', fontWeight: 700, marginBottom: 14 }}>
-                  Congratulations — you met all Mastery Milestones across Python, SQL, Classical ML, LLMs, RAG, Agents &amp; System Design!
+                  Congratulations — you met all Mid-Senior Mastery Milestones across Python, SQL, Classical ML, LLMs, RAG, Agents &amp; System Design!
                 </p>
                 <button type="button" className="btn btn-primary" onClick={() => window.print()}>
                   <Printer size={15} /> Print / Save PDF Certificate
@@ -358,8 +498,8 @@ export function PracticeArena({ initialTab = 'flashcards' }: { initialTab?: 'fla
               </div>
             ) : (
               <p style={{ color: 'var(--ink-muted)', fontSize: '0.92rem' }}>
-                Complete at least <strong>24 lessons</strong>, <strong>5 Python/SQL labs</strong>, and{' '}
-                <strong>4 mock interviews</strong> to unlock your printable Mastery Certificate.
+                Complete at least <strong>24 lessons</strong>, <strong>8 Python/SQL labs</strong>, and{' '}
+                <strong>6 mock interviews</strong> to unlock your printable Mastery Certificate.
               </p>
             )}
           </div>

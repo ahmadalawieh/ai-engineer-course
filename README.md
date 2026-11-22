@@ -6,9 +6,9 @@ A self-contained, interactive roadmap designed for **complete coding beginners**
 
 ## Key Features
 - **8 Modules · 33 Distilled Lessons**: Zero prior programming required—plain-English explanations from first principles, plus a **Plain-English / Formal Math** toggle on every equation.
-- **Tap-to-Order Code Puzzles & Auto-Saved Labs**: Mobile-friendly code-order puzzles plus **16 In-Browser Python, `scikit-learn` & Interactive SQL (SQLite) Labs** powered by Pyodide WebAssembly with automatic draft saving.
+- **6 Tap-to-Order Code Puzzles & 18 Auto-Saved Labs**: Mobile-friendly code-order puzzles plus **18 In-Browser Python, `scikit-learn` & Interactive SQL (SQLite) Labs** (including `LEFT JOIN` and `ROW_NUMBER` Window Functions) powered by Pyodide WebAssembly with automatic draft saving.
 - **19 Interactive Visual Simulators**: Live matrix transforms, Gradient Descent race, Bayes/Entropy explorer, A/B Test power planner, ROC/cost optimizer, Polynomial Regularization, K-Means, Neural Net decision boundary trainer, 2D Convolution explorer, BPE tokenizer, Attention heatmap, LLM VRAM calculator, Sampling lab, Prompt Injection Red-Team game, Hybrid Search RRF, LoRA savings, ReAct Agent tracer, Unit Economics, and PSI Drift monitor.
-- **Practice Arena**: SM-2 spaced-repetition flashcards, Staff-level Mock Technical Interviews with grading rubrics, searchable glossary, and printable Mastery Certificate.
+- **Practice Arena**: SM-2 spaced-repetition flashcards, **14 Core to Mid-Senior & Staff Mock Technical Interviews** with grading rubrics, searchable glossary, Saved Notes & Bookmarks hub, and printable Mastery Certificate.
 - **Google Sign-In & Direct Cross-Device Sync**:
   1. **Google Sign-In Sync** — One-click **"Continue with Google"** OAuth backed by Upstash Redis / Vercel KV (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`).
   2. **Direct Link / QR / Code (Zero Config)** — Instant `#sync=` Direct Sync Link, QR Code, `AIMC1_` Sync Code, JSON backup, plus automatic same-browser cross-tab sync.

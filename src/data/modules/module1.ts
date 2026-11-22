@@ -320,22 +320,46 @@ def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
           ],
         },
         {
+          type: 'prose',
+          heading: 'Beginner Bridge: How Vector Norms & Ranking Work in Python',
+          paragraphs: [
+            'Before coding semantic search, remember two small tools: **1) Length (`np.linalg.norm`)** measures how long an arrow is (`np.linalg.norm(docs, axis=1)` measures every row in one line!). **2) Ranking (`np.argsort`)** gives the *positions* that would sort an array smallest-to-largest—so `np.argsort(-sims)[:k]` flips the sign to get the **top `k` highest-scoring indices**!',
+          ],
+        },
+        {
+          type: 'code-builder',
+          puzzleId: 'puzzle-1-2',
+          title: 'Warm-Up Puzzle: Order the Cosine Search Steps',
+          prompt:
+            'Tap the lines in order to measure query/document lengths, compute cosine similarity scores, and return the top `k` best-matching document indices.',
+          lines: [
+            'q_norm = np.linalg.norm(q) + 1e-9',
+            'docs_norm = np.linalg.norm(docs, axis=1) + 1e-9',
+            'sims = (docs @ q) / (docs_norm * q_norm)',
+            'top_indices = np.argsort(-sims)[:k]',
+            'return top_indices',
+          ],
+          explanation:
+            'First compute vector lengths (adding `1e-9` so we never divide by zero), divide dot products `docs @ q` by those lengths, and use `np.argsort(-sims)[:k]` to grab the top `k` matches!',
+        },
+        {
           type: 'python-lab',
           labId: 'lab-1-2',
-          title: 'Lab 1.2: Implement Batch Cosine Similarity',
+          title: 'Lab 1.2: Implement Batch Cosine Similarity Search',
           prompt:
-            'Given a query vector `q` of shape `(d,)` and a matrix of document embeddings `docs` of shape `(n, d)`, write `top_k_similar(q, docs, k)` returning the indices of the `k` most similar documents by cosine similarity (highest first).',
+            'Given a query vector `q` of shape `(d,)` and a matrix of document embeddings `docs` of shape `(n, d)`, write `top_k_similar(q, docs, k)` returning the indices of the `k` most similar documents by cosine similarity (highest first). Follow the 4 numbered steps in the comments!',
           starterCode: `import numpy as np
 
 def top_k_similar(q: np.ndarray, docs: np.ndarray, k: int) -> np.ndarray:
-    # 1. Compute dot products docs @ q
-    # 2. Divide by ||docs||_2 * ||q||_2 (guard against 0 with 1e-9)
-    # 3. Return indices of top k descending
+    # Step 1: q_norm = np.linalg.norm(q) + 1e-9
+    # Step 2: docs_norm = np.linalg.norm(docs, axis=1) + 1e-9
+    # Step 3: sims = (docs @ q) / (docs_norm * q_norm)
+    # Step 4: return np.argsort(-sims)[:k]
     pass
 
 q = np.array([1.0, 0.0, 1.0])
 docs = np.array([[0.0, 1.0, 0.0], [2.0, 0.0, 2.0], [1.0, 1.0, 0.0]])
-print(top_k_similar(q, docs, 2))`,
+print("Top matching doc indices:", top_k_similar(q, docs, 2))`,
           testCode: `import numpy as np
 q = np.array([1.0, 0.0, 1.0])
 docs = np.array([

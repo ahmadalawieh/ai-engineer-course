@@ -84,7 +84,7 @@ export function CourseAppShell() {
         />
       )}
 
-      {view === 'arena' && <PracticeArena key={arenaTab} initialTab={arenaTab} />}
+      {view === 'arena' && <PracticeArena key={arenaTab} initialTab={arenaTab} onSelectLesson={openLesson} />}
 
       <SearchModal
         open={searchOpen}
