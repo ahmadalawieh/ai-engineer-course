@@ -8,6 +8,8 @@ import { module6 } from './modules/module6';
 import { module7 } from './modules/module7';
 import { module8 } from './modules/module8';
 import { module9 } from './modules/module9';
+import { module10 } from './modules/module10';
+import { module11 } from './modules/module11';
 import type { CourseModule, Lesson } from '@/types/course';
 
 export const COURSE_MODULES: CourseModule[] = [
@@ -21,6 +23,8 @@ export const COURSE_MODULES: CourseModule[] = [
   module7,
   module9,
   module8,
+  module10,
+  module11,
 ];
 
 export const ALL_LESSONS: Lesson[] = COURSE_MODULES.flatMap((m) => m.lessons);

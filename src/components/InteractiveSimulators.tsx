@@ -18,6 +18,7 @@ import {
 import {
   AttentionMapSim,
   BpeTokenizerSim,
+  CostCalculatorSim,
   DriftMonitorSim,
   LatencyEconomicsSim,
   LlmVramSim,
@@ -75,6 +76,8 @@ export function InteractiveSimulatorCard({
         return <ReactAgentSim />;
       case 'latency-economics':
         return <LatencyEconomicsSim />;
+      case 'cost-calculator':
+        return <CostCalculatorSim />;
       case 'drift-monitor':
         return <DriftMonitorSim />;
     }

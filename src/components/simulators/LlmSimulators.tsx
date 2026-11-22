@@ -689,3 +689,83 @@ export function PromptDefenseSim() {
     </div>
   );
 }
+
+/* 20. FinOps Cost, Prefix Caching & Batch API Calculator */
+export function CostCalculatorSim() {
+  const [dailyQueriesK, setDailyQueriesK] = useState(100);
+  const [inputTokens, setInputTokens] = useState(4000);
+  const [outputTokens, setOutputTokens] = useState(400);
+  const [prefixCachePct, setPrefixCachePct] = useState(65);
+  const [smallRouterPct, setSmallRouterPct] = useState(75);
+  const [batchMode, setBatchMode] = useState(false);
+
+  // Illustrative tier rates per 1M tokens ($ in / $ cached in / $ out)
+  const frontierIn = 2.5;
+  const frontierCached = 0.625;
+  const frontierOut = 10.0;
+  const smallIn = 0.15;
+  const smallCached = 0.0375;
+  const smallOut = 0.6;
+
+  const monthlyReqs = dailyQueriesK * 1000 * 30;
+  const batchMult = batchMode ? 0.5 : 1.0;
+
+  const naivePerReq = (inputTokens * frontierIn + outputTokens * frontierOut) / 1_000_000;
+  const naiveMonthly = monthlyReqs * naivePerReq;
+
+  const cacheRatio = prefixCachePct / 100;
+  const uncachedIn = inputTokens * (1 - cacheRatio);
+  const cachedIn = inputTokens * cacheRatio;
+
+  const frontierOptReq =
+    ((uncachedIn * frontierIn + cachedIn * frontierCached + outputTokens * frontierOut) / 1_000_000) * batchMult;
+  const smallOptReq =
+    ((uncachedIn * smallIn + cachedIn * smallCached + outputTokens * smallOut) / 1_000_000) * batchMult;
+
+  const smallShare = smallRouterPct / 100;
+  const blendedPerReq = smallShare * smallOptReq + (1 - smallShare) * frontierOptReq;
+  const optimizedMonthly = monthlyReqs * blendedPerReq;
+  const savedPct = Math.round((1 - optimizedMonthly / Math.max(naiveMonthly, 1e-6)) * 100);
+  const ctxPct = (((inputTokens + outputTokens) / 128000) * 100).toFixed(1);
+
+  return (
+    <div>
+      <div className="sim-controls">
+        <label className="sim-control">
+          <span>Daily Requests: {dailyQueriesK}k/day</span>
+          <input type="range" min={5} max={500} step={5} value={dailyQueriesK} onChange={(e) => setDailyQueriesK(+e.target.value)} />
+        </label>
+        <label className="sim-control">
+          <span>Input Context: {inputTokens.toLocaleString()} tok</span>
+          <input type="range" min={500} max={16000} step={500} value={inputTokens} onChange={(e) => setInputTokens(+e.target.value)} />
+        </label>
+        <label className="sim-control">
+          <span>Output Length: {outputTokens} tok</span>
+          <input type="range" min={100} max={2000} step={100} value={outputTokens} onChange={(e) => setOutputTokens(+e.target.value)} />
+        </label>
+        <label className="sim-control">
+          <span>Prefix Cache Hit: {prefixCachePct}%</span>
+          <input type="range" min={0} max={90} step={5} value={prefixCachePct} onChange={(e) => setPrefixCachePct(+e.target.value)} />
+        </label>
+        <label className="sim-control">
+          <span>Small-Fast Cascade Share: {smallRouterPct}%</span>
+          <input type="range" min={0} max={95} step={5} value={smallRouterPct} onChange={(e) => setSmallRouterPct(+e.target.value)} />
+        </label>
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '0.86rem', cursor: 'pointer' }}>
+          <input type="checkbox" checked={batchMode} onChange={(e) => setBatchMode(e.target.checked)} />
+          Async Batch API Mode (50% token discount, up to 24h SLA)
+        </label>
+      </div>
+      <div className="sim-metrics">
+        <div className="sim-metric">Naive Frontier: ${Math.round(naiveMonthly).toLocaleString()}/mo</div>
+        <div className="sim-metric" style={{ color: 'var(--success)' }}>
+          Optimized FinOps: <strong>${Math.round(optimizedMonthly).toLocaleString()}/mo</strong> ({savedPct}% saved)
+        </div>
+        <div className="sim-metric">Unit Cost: <strong>${blendedPerReq.toFixed(5)}/req</strong></div>
+        <div className="sim-metric">128k Context Usage: <strong>{ctxPct}%</strong></div>
+      </div>
+    </div>
+  );
+}

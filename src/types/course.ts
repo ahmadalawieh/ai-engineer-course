@@ -19,6 +19,7 @@ export type SimulatorId =
   | 'lora-rank'
   | 'react-agent'
   | 'latency-economics'
+  | 'cost-calculator'
   | 'drift-monitor';
 
 export type DiagramId =

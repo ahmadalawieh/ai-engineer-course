@@ -177,9 +177,11 @@ export const LEVEL_PATHS: LevelPath[] = [
       '7-1', '7-2', '7-3', '7-4',
       '9-1', '9-2', '9-3', '9-4',
       '8-1', '8-3', '8-4', '8-5',
+      '10-1', '10-2', '10-3', '10-4', '10-5',
+      '11-1', '11-2', '11-3',
     ],
     requiredLabPct: 75,
-    requiredModuleExams: ['mod-6', 'mod-7', 'mod-9', 'mod-8'],
+    requiredModuleExams: ['mod-6', 'mod-7', 'mod-9', 'mod-8', 'mod-10'],
     requiredCapstones: ['proj-rag', 'proj-agent', 'proj-fastapi-docker', 'proj-eval-harness'],
     requiredScenarios: ['scen-sysdesign-rag', 'scen-incident-postmortem', 'scen-adr-routing'],
     competencyIds: [
@@ -198,7 +200,7 @@ export const LEVEL_PATHS: LevelPath[] = [
       'Designs multi-service AI architectures with build-vs-buy rigor; defines org eval strategy & error budgets; builds threat models against OWASP LLM attacks; optimizes unit economics at scale; leads blameless incident postmortems and engineering reviews.',
     requiredLessonIds: ALL_LESSONS.map((l) => l.id),
     requiredLabPct: 85,
-    requiredModuleExams: ['mod-6', 'mod-7', 'mod-9', 'mod-8', 'final-assessment'],
+    requiredModuleExams: ['mod-6', 'mod-7', 'mod-8', 'mod-9', 'mod-10', 'mod-11', 'final-assessment'],
     requiredCapstones: [
       'proj-churn',
       'proj-rag',
