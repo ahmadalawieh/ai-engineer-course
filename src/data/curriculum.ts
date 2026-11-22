@@ -7,6 +7,7 @@ import { module5 } from './modules/module5';
 import { module6 } from './modules/module6';
 import { module7 } from './modules/module7';
 import { module8 } from './modules/module8';
+import { module9 } from './modules/module9';
 import type { CourseModule, Lesson } from '@/types/course';
 
 export const COURSE_MODULES: CourseModule[] = [
@@ -18,6 +19,7 @@ export const COURSE_MODULES: CourseModule[] = [
   module5,
   module6,
   module7,
+  module9,
   module8,
 ];
 
