@@ -16,7 +16,7 @@ const STRICT_ALL = ARGS.has('--strict-all');
 const REBUILT_LESSON_IDS = new Set([
   '0-1', '0-2', '0-3',
   '1-0', '1-1', '1-2', '1-3', '1-4', '1-5', '1-6',
-  '6-3',
+  '6-0', '6-1', '6-2', '6-3', '6-4', '6-5',
 ]);
 
 const EXTERNAL_URL_ALLOWLIST = [
