@@ -15,9 +15,11 @@ import {
   GraduationCap,
   Lock,
   PlayCircle,
+  ShieldCheck,
   Zap,
 } from 'lucide-react';
 import { ALL_LESSONS, COURSE_MODULES, TOTAL_LABS, getLessonById, getTotalCourseMinutes } from '@/data/curriculum';
+import { COMPETENCIES, LEVEL_PATHS, evaluateLevelReadiness } from '@/data/levels';
 import { WORKPLACE_TICKETS } from '@/data/jobWorkbench';
 import {
   PLACEMENT_EXAM,
@@ -28,7 +30,7 @@ import {
 import { getUnmetPrerequisites } from '@/lib/prerequisites';
 import { TimedExamModal } from './TimedExamModal';
 import { useCourseApp } from './ThemeProgressProvider';
-import type { TrackTag } from '@/types/course';
+import type { LevelId, TrackTag } from '@/types/course';
 
 function trackLabel(track: TrackTag): string {
   if (track === 'ds') return 'SQL & Tabular ML';
@@ -47,9 +49,19 @@ export function HomeView({
   onOpenArena: () => void;
   onOpenSync: () => void;
 }) {
-  const { progress, authUser } = useCourseApp();
+  const { progress, authUser, setTargetLevel } = useCourseApp();
   const [trackFilter, setTrackFilter] = useState<'all' | TrackTag>('all');
   const [activeExam, setActiveExam] = useState<TimedExamSpec | null>(null);
+
+  const activeLevelId: LevelId = progress.targetLevel || 'junior';
+  const levelEval = useMemo(
+    () => evaluateLevelReadiness(activeLevelId, progress, TOTAL_LABS),
+    [activeLevelId, progress]
+  );
+  const levelCompetencies = useMemo(
+    () => COMPETENCIES.filter((c) => levelEval.level.competencyIds.includes(c.id)),
+    [levelEval]
+  );
 
   const completedCount = progress.completedLessons.length;
   const totalLessons = ALL_LESSONS.length;
@@ -194,7 +206,120 @@ export function HomeView({
               <Cloud size={13} /> {authUser ? `Synced (${authUser.name.split(' ')[0]})` : 'Google / Direct Sync'}
             </button>
           </div>
+          <p style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 8, lineHeight: 1.4 }}>
+            Progress saves locally (self-reported). Public proof comes from your GitHub repos &amp; validator{' '}
+            <code>evidence.json</code> artifacts.
+          </p>
         </aside>
+      </section>
+
+      <section aria-labelledby="target-level-heading" className="hero-card" style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{ flex: '1 1 320px' }}>
+            <div className="hero-eyebrow" style={{ marginBottom: 6 }}>
+              <ShieldCheck size={13} style={{ display: 'inline', marginRight: 5 }} />
+              Evidence-Backed Target Level
+            </div>
+            <h2 id="target-level-heading" style={{ fontSize: '1.3rem', marginBottom: 4 }}>
+              {levelEval.level.title}
+            </h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)', marginBottom: 6 }}>{levelEval.level.tagline}</p>
+            <p style={{ fontSize: '0.82rem', color: 'var(--ink-muted)' }}>
+              <strong>Realistic effort:</strong> {levelEval.level.honestEffortRange}
+            </p>
+          </div>
+
+          <div className="pill-tabs" role="tablist" aria-label="Target AI Engineer Level">
+            {LEVEL_PATHS.map((lvl) => (
+              <button
+                key={lvl.id}
+                type="button"
+                className={`pill-tab ${activeLevelId === lvl.id ? 'active' : ''}`}
+                onClick={() => setTargetLevel(lvl.id)}
+              >
+                {lvl.id === 'junior' ? 'Junior' : lvl.id === 'mid' ? 'Mid-Level' : 'Senior Bar'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)', marginTop: 12, lineHeight: 1.55 }}>
+          {levelEval.level.barSummary}
+        </p>
+
+        <div className="stat-grid" style={{ marginTop: 14, marginBottom: 12 }}>
+          <div className="stat-box">
+            <div className="stat-val">
+              {levelEval.lessonsDone}/{levelEval.lessonsTotal}
+            </div>
+            <div className="stat-label">Required Lessons</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-val">
+              {levelEval.labPct}%/{levelEval.level.requiredLabPct}%
+            </div>
+            <div className="stat-label">Lab Threshold</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-val">
+              {levelEval.level.requiredModuleExams.length - levelEval.missingExams.length}/
+              {levelEval.level.requiredModuleExams.length}
+            </div>
+            <div className="stat-label">Timed Exams (&ge;70%)</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-val">
+              {levelEval.level.requiredCapstones.length - levelEval.missingCapstones.length}/
+              {levelEval.level.requiredCapstones.length}
+            </div>
+            <div className="stat-label">Verified Capstones</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-val">
+              {levelEval.level.requiredScenarios.length - levelEval.missingScenarios.length}/
+              {levelEval.level.requiredScenarios.length}
+            </div>
+            <div className="stat-label">Scenario &amp; ADR Reviews</div>
+          </div>
+        </div>
+
+        <details style={{ marginTop: 8 }}>
+          <summary style={{ cursor: 'pointer', fontSize: '0.86rem', fontWeight: 600, color: 'var(--accent)' }}>
+            View {levelCompetencies.length} Required Competencies &amp; Honest Credential Scope
+          </summary>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
+            {levelCompetencies.map((comp) => (
+              <div
+                key={comp.id}
+                style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  background: 'var(--surface-2)',
+                }}
+              >
+                <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--accent)', fontWeight: 700 }}>
+                  {comp.level.toUpperCase()} · {comp.area}
+                </div>
+                <div style={{ fontWeight: 600, fontSize: '0.88rem', marginTop: 2 }}>{comp.title}</div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: 4, lineHeight: 1.45 }}>
+                  {comp.description}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: 12, lineHeight: 1.5 }}>
+            <strong>Honest Program Scope:</strong> No course grants a job title—titles come from employers.{' '}
+            {levelEval.level.honestScopeNote}
+          </p>
+        </details>
       </section>
 
       <section aria-labelledby="curriculum-heading">

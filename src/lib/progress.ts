@@ -8,7 +8,7 @@ export function getTodayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export const CURRENT_PROGRESS_VERSION = 2;
+export const CURRENT_PROGRESS_VERSION = 3;
 
 export function generateQuizSeed(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
@@ -24,9 +24,13 @@ export function createInitialProgress(): CourseProgress {
     version: CURRENT_PROGRESS_VERSION,
     learnerName: 'AI Engineer',
     quizSeed: 'default-learner-seed',
+    targetLevel: 'junior',
+    learningTrack: 'ai-eng-full',
     fastTrackUnlocked: false,
     moduleExamScores: {},
     projectJournals: {},
+    capstoneEvidence: {},
+    scenarioScores: {},
     completedLessons: [],
     completedLabs: [],
     completedPuzzles: [],
@@ -52,17 +56,35 @@ export function migrateProgress(raw: unknown): CourseProgress {
   const base = createInitialProgress();
   if (!raw || typeof raw !== 'object') return base;
   const parsed = raw as Partial<CourseProgress>;
+  const validLevel = parsed.targetLevel === 'junior' || parsed.targetLevel === 'mid' || parsed.targetLevel === 'senior'
+    ? parsed.targetLevel
+    : base.targetLevel;
+  const validTrack =
+    parsed.learningTrack === 'ai-eng-fast' ||
+    parsed.learningTrack === 'ai-eng-full' ||
+    parsed.learningTrack === 'dual-ml-ai'
+      ? parsed.learningTrack
+      : parsed.fastTrackUnlocked
+        ? 'ai-eng-fast'
+        : base.learningTrack;
+
   return {
     ...base,
     ...parsed,
     version: CURRENT_PROGRESS_VERSION,
     learnerName: typeof parsed.learnerName === 'string' && parsed.learnerName ? parsed.learnerName : base.learnerName,
     quizSeed: typeof parsed.quizSeed === 'string' && parsed.quizSeed ? parsed.quizSeed : base.quizSeed,
+    targetLevel: validLevel,
+    learningTrack: validTrack,
     fastTrackUnlocked: Boolean(parsed.fastTrackUnlocked),
     moduleExamScores:
       parsed.moduleExamScores && typeof parsed.moduleExamScores === 'object' ? parsed.moduleExamScores : {},
     projectJournals:
       parsed.projectJournals && typeof parsed.projectJournals === 'object' ? parsed.projectJournals : {},
+    capstoneEvidence:
+      parsed.capstoneEvidence && typeof parsed.capstoneEvidence === 'object' ? parsed.capstoneEvidence : {},
+    scenarioScores:
+      parsed.scenarioScores && typeof parsed.scenarioScores === 'object' ? parsed.scenarioScores : {},
     completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : [],
     completedLabs: Array.isArray(parsed.completedLabs) ? parsed.completedLabs : [],
     completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
@@ -213,9 +235,13 @@ export function mergeProgress(localRaw: CourseProgress, remoteRaw: CourseProgres
       (local.quizSeed && local.quizSeed !== 'default-learner-seed' ? local.quizSeed : remote.quizSeed) ||
       'default-learner-seed',
     fastTrackUnlocked: Boolean(local.fastTrackUnlocked || remote.fastTrackUnlocked),
+    targetLevel: newer.targetLevel || older.targetLevel || 'junior',
+    learningTrack: newer.learningTrack || older.learningTrack || 'ai-eng-full',
     placementScore: newer.placementScore || older.placementScore,
     moduleExamScores: mergedExams,
     projectJournals: { ...(older.projectJournals || {}), ...(newer.projectJournals || {}) },
+    capstoneEvidence: { ...(older.capstoneEvidence || {}), ...(newer.capstoneEvidence || {}) },
+    scenarioScores: { ...(older.scenarioScores || {}), ...(newer.scenarioScores || {}) },
     completedLessons,
     completedLabs,
     completedPuzzles,

@@ -1,15 +1,49 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, Award, Bookmark, BookOpen, CheckCircle2, Eye, Layers, Printer, RotateCw, Search } from 'lucide-react';
+import {
+  ArrowRight,
+  Award,
+  Bookmark,
+  BookOpen,
+  CheckCircle2,
+  ClipboardCheck,
+  Copy,
+  Download,
+  Eye,
+  FileCode2,
+  Layers,
+  Printer,
+  RotateCw,
+  Search,
+  ShieldCheck,
+} from 'lucide-react';
 import { FLASHCARDS } from '@/data/flashcards';
 import { GLOSSARY_ITEMS } from '@/data/glossary';
 import { MOCK_INTERVIEW_QUESTIONS } from '@/data/mockInterview';
 import { ALL_LESSONS, TOTAL_LABS, getLessonById } from '@/data/curriculum';
+import { GUIDED_PROJECTS } from '@/data/jobWorkbench';
+import {
+  LEVEL_PATHS,
+  SCENARIO_ASSESSMENTS,
+  evaluateLevelReadiness,
+  exportEvidencePackMarkdown,
+  validateCapstoneEvidence,
+} from '@/data/levels';
+import type { LevelId } from '@/types/course';
 import { useCourseApp } from './ThemeProgressProvider';
 import { MathFormula, RichText } from './MathAndProse';
 
-type ArenaTab = 'flashcards' | 'interview' | 'glossary' | 'notes' | 'certificate';
+export type ArenaTab =
+  | 'flashcards'
+  | 'interview'
+  | 'scenarios'
+  | 'evidence'
+  | 'glossary'
+  | 'notes'
+  | 'certificate';
+
+const ALL_CAPSTONES = GUIDED_PROJECTS;
 
 export function PracticeArena({
   initialTab = 'flashcards',
@@ -18,7 +52,14 @@ export function PracticeArena({
   initialTab?: ArenaTab;
   onSelectLesson?: (lessonId: string) => void;
 }) {
-  const { progress, reviewFlashcard, markInterviewComplete } = useCourseApp();
+  const {
+    progress,
+    reviewFlashcard,
+    markInterviewComplete,
+    setTargetLevel,
+    saveCapstoneEvidence,
+    recordScenarioAssessment,
+  } = useCourseApp();
   const [tab, setTab] = useState<ArenaTab>(initialTab);
 
   // Flashcards state
@@ -48,6 +89,24 @@ export function PracticeArena({
   const [userDraft, setUserDraft] = useState('');
   const [showSample, setShowSample] = useState(false);
   const [checkedRubric, setCheckedRubric] = useState<Record<number, boolean>>({});
+
+  // Scenarios & ADRs state
+  const [activeScenarioId, setActiveScenarioId] = useState<string>(SCENARIO_ASSESSMENTS[0].id);
+  const activeScenario = useMemo(
+    () => SCENARIO_ASSESSMENTS.find((s) => s.id === activeScenarioId) || SCENARIO_ASSESSMENTS[0],
+    [activeScenarioId]
+  );
+  const [scenarioDrafts, setScenarioDrafts] = useState<Record<string, string>>({});
+  const [scenarioChecks, setScenarioChecks] = useState<Record<string, Record<string, boolean>>>({});
+  const [showScenarioSample, setShowScenarioSample] = useState(false);
+  const [scenarioSavedNote, setScenarioSavedNote] = useState<string | null>(null);
+
+  // Capstone Evidence Pack state
+  const [evidenceInputs, setEvidenceInputs] = useState<
+    Record<string, { repoUrl: string; demoUrl: string; rawJson: string }>
+  >({});
+  const [evidenceMessages, setEvidenceMessages] = useState<Record<string, { ok: boolean; msg: string }>>({});
+  const [packCopied, setPackCopied] = useState(false);
 
   const filteredQuestions = useMemo(
     () =>
@@ -89,7 +148,12 @@ export function PracticeArena({
   const lessonsDone = progress.completedLessons.length;
   const labsDone = progress.completedLabs.length;
   const interviewsDone = progress.interviewCompleted.length;
-  const isCertified = lessonsDone >= 24 && labsDone >= 8 && interviewsDone >= 6;
+  const activeLevelId: LevelId = progress.targetLevel || 'junior';
+  const levelEval = useMemo(
+    () => evaluateLevelReadiness(activeLevelId, progress, TOTAL_LABS),
+    [activeLevelId, progress]
+  );
+  const isParticipationEligible = lessonsDone >= 24 && labsDone >= 8;
 
   const roleLabel = (r: 'All' | 'AI Engineer' | 'Data Scientist' | 'Both') =>
     r === 'AI Engineer' ? 'AI / LLM' : r === 'Data Scientist' ? 'ML / SQL' : r;
@@ -98,10 +162,11 @@ export function PracticeArena({
     <main className="container">
       <div className="section-header" style={{ marginTop: 8 }}>
         <div>
-          <span className="lab-badge">Active Recall &amp; Job Readiness</span>
+          <span className="lab-badge">Active Recall &amp; Verified Readiness</span>
           <h1>Practice Arena</h1>
           <p style={{ color: 'var(--ink-2)', fontSize: '0.96rem', marginTop: 4 }}>
-            Lock in concepts with spaced repetition, rehearse Core to Mid-Senior &amp; Staff interviews, and review saved notes.
+            Lock in concepts with spaced repetition, defend real incident &amp; architecture scenarios, submit capstone{' '}
+            <code>evidence.json</code>, and generate your Level Readiness Report.
           </p>
         </div>
 
@@ -124,6 +189,22 @@ export function PracticeArena({
           </button>
           <button
             type="button"
+            className={`pill-tab ${tab === 'scenarios' ? 'active' : ''}`}
+            onClick={() => setTab('scenarios')}
+          >
+            <ClipboardCheck size={13} style={{ display: 'inline', marginRight: 5 }} />
+            Scenarios &amp; ADRs ({SCENARIO_ASSESSMENTS.length})
+          </button>
+          <button
+            type="button"
+            className={`pill-tab ${tab === 'evidence' ? 'active' : ''}`}
+            onClick={() => setTab('evidence')}
+          >
+            <FileCode2 size={13} style={{ display: 'inline', marginRight: 5 }} />
+            Evidence Pack
+          </button>
+          <button
+            type="button"
             className={`pill-tab ${tab === 'glossary' ? 'active' : ''}`}
             onClick={() => setTab('glossary')}
           >
@@ -143,8 +224,8 @@ export function PracticeArena({
             className={`pill-tab ${tab === 'certificate' ? 'active' : ''}`}
             onClick={() => setTab('certificate')}
           >
-            <Award size={13} style={{ display: 'inline', marginRight: 5 }} />
-            Certificate
+            <ShieldCheck size={13} style={{ display: 'inline', marginRight: 5 }} />
+            Readiness &amp; Report
           </button>
         </div>
       </div>
@@ -251,7 +332,7 @@ export function PracticeArena({
                       setCheckedRubric({});
                     }}
                   >
-                    {d === 'All' ? 'All Levels' : d === 'Core' ? 'Core / Junior' : d === 'Senior' ? 'Mid-Senior' : 'Staff'}
+                    {d === 'All' ? 'All Levels' : d === 'Core' ? 'Core / Junior' : d === 'Senior' ? 'Mid / Senior' : 'Staff'}
                   </button>
                 ))}
               </div>
@@ -265,7 +346,7 @@ export function PracticeArena({
             <div className="hero-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
                 <span className="track-badge track-core">
-                  {roleLabel(activeQuestion.role)} · {activeQuestion.difficulty === 'Senior' ? 'Mid-Senior' : activeQuestion.difficulty} · {activeQuestion.topic}
+                  {roleLabel(activeQuestion.role)} · {activeQuestion.difficulty === 'Senior' ? 'Mid / Senior' : activeQuestion.difficulty} · {activeQuestion.topic}
                 </span>
                 {progress.interviewCompleted.includes(activeQuestion.id) && (
                   <span className="track-badge" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
@@ -457,64 +538,534 @@ export function PracticeArena({
         </section>
       )}
 
-      {tab === 'certificate' && (
-        <section style={{ maxWidth: 760, margin: '24px auto 0' }}>
-          <div className="hero-card certificate-card" style={{ textAlign: 'center' }}>
-            <div className="hero-eyebrow">Mid-Senior Readiness Credential</div>
-            <h2 style={{ fontSize: 'clamp(1.4rem, 4vw, 2rem)', marginBottom: 8 }}>
-              Certificate of ML &amp; AI Engineering Mastery
-            </h2>
-            <p style={{ fontSize: '1.1rem', color: 'var(--ink-2)', marginBottom: 20 }}>
-              Awarded to <strong style={{ fontSize: '1.25rem', color: 'var(--ink)' }}>{progress.learnerName}</strong>
+      {tab === 'scenarios' && (
+        <section style={{ marginTop: 24 }}>
+          <div className="pill-tabs" style={{ marginBottom: 16 }}>
+            {SCENARIO_ASSESSMENTS.map((sc) => {
+              const saved = progress.scenarioScores?.[sc.id];
+              const passed = saved && saved.selfScore >= sc.passPoints;
+              return (
+                <button
+                  key={sc.id}
+                  type="button"
+                  className={`pill-tab ${activeScenarioId === sc.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setActiveScenarioId(sc.id);
+                    setShowScenarioSample(false);
+                    setScenarioSavedNote(null);
+                  }}
+                >
+                  {sc.minLevel.toUpperCase()} · {sc.kind === 'system-design' ? 'System Design' : sc.kind === 'incident-postmortem' ? 'Incident Postmortem' : 'ADR Review'}
+                  {passed ? ' ✓' : ''}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hero-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+              <span className="track-badge track-ai-eng">
+                Min Level: {activeScenario.minLevel.toUpperCase()} · Pass Bar: {activeScenario.passPoints}/
+                {activeScenario.rubric.reduce((s, r) => s + r.maxPoints, 0)} pts
+              </span>
+              {progress.scenarioScores?.[activeScenario.id] && (
+                <span className="mono" style={{ fontSize: '0.82rem', color: 'var(--success)', fontWeight: 700 }}>
+                  Saved Score: {progress.scenarioScores[activeScenario.id].selfScore}/
+                  {progress.scenarioScores[activeScenario.id].maxScore}
+                </span>
+              )}
+            </div>
+
+            <h2 style={{ fontSize: '1.25rem', marginBottom: 8 }}>{activeScenario.title}</h2>
+            <p style={{ color: 'var(--ink-2)', fontSize: '0.93rem', lineHeight: 1.55, marginBottom: 14 }}>
+              {activeScenario.prompt}
             </p>
 
-            <div className="stat-grid" style={{ maxWidth: 660, margin: '0 auto 22px' }}>
-              <div className="stat-box">
-                <div className="stat-val">{lessonsDone}/{ALL_LESSONS.length}</div>
-                <div className="stat-label">Lessons (Need 24+)</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-val">{labsDone}/{TOTAL_LABS}</div>
-                <div className="stat-label">Python &amp; SQL Labs (Need 8+)</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-val">{interviewsDone}/{MOCK_INTERVIEW_QUESTIONS.length}</div>
-                <div className="stat-label">Mock Interviews (Need 6+)</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-val">
-                  {Object.values(progress.moduleExamScores || {}).filter((e) => e.bestScore >= Math.ceil(e.total * 0.7)).length}/10
+            {activeScenario.artifactContent && (
+              <div style={{ marginBottom: 16 }}>
+                <div className="mono" style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--ink-muted)', marginBottom: 6 }}>
+                  {activeScenario.artifactTitle || 'Reference Artifact'}
                 </div>
-                <div className="stat-label">Timed Module Exams</div>
+                <pre
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    padding: 12,
+                    fontSize: '0.8rem',
+                    overflowX: 'auto',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {activeScenario.artifactContent}
+                </pre>
               </div>
-              <div className="stat-box">
-                <div className="stat-val">
-                  {progress.moduleExamScores?.['final-assessment']
-                    ? `${progress.moduleExamScores['final-assessment'].bestScore}/${progress.moduleExamScores['final-assessment'].total}`
-                    : 'Pending'}
-                </div>
-                <div className="stat-label">Final Exam (25 Qs)</div>
+            )}
+
+            <label
+              htmlFor="scenario-response-editor"
+              style={{ display: 'block', fontWeight: 600, fontSize: '0.88rem', marginBottom: 6 }}
+            >
+              Your Engineering Response (saved with your Evidence Pack)
+            </label>
+            <textarea
+              id="scenario-response-editor"
+              className="input"
+              rows={8}
+              placeholder="Write your architecture spec, root-cause timeline, or ADR defense (min 60 characters)..."
+              value={
+                scenarioDrafts[activeScenario.id] ??
+                progress.scenarioScores?.[activeScenario.id]?.responseText ??
+                ''
+              }
+              onChange={(e) =>
+                setScenarioDrafts((prev) => ({ ...prev, [activeScenario.id]: e.target.value }))
+              }
+              style={{ width: '100%', fontFamily: 'var(--font-sans)', marginBottom: 16 }}
+            />
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: 8 }}>
+                Self-Grading Rubric (check only criteria genuinely covered in your response)
               </div>
-              <div className="stat-box">
-                <div className="stat-val">{progress.xp}</div>
-                <div className="stat-label">Mastery XP</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {activeScenario.rubric.map((item) => {
+                  const checkedMap = scenarioChecks[activeScenario.id] || {};
+                  const checked = !!checkedMap[item.id];
+                  return (
+                    <label
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        gap: 10,
+                        alignItems: 'flex-start',
+                        border: '1px solid var(--border)',
+                        borderRadius: 10,
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        background: checked ? 'var(--success-soft)' : 'var(--surface-2)',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) =>
+                          setScenarioChecks((prev) => ({
+                            ...prev,
+                            [activeScenario.id]: {
+                              ...(prev[activeScenario.id] || {}),
+                              [item.id]: e.target.checked,
+                            },
+                          }))
+                        }
+                        style={{ marginTop: 3 }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>
+                          {item.criterion}{' '}
+                          <span className="mono" style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>
+                            (+{item.maxPoints} pts)
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--ink-muted)', marginTop: 2 }}>
+                          {item.guidance}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
-            {isCertified ? (
+            {(() => {
+              const draftText =
+                scenarioDrafts[activeScenario.id] ??
+                progress.scenarioScores?.[activeScenario.id]?.responseText ??
+                '';
+              const checkedMap = scenarioChecks[activeScenario.id] || {};
+              const checkedIds = activeScenario.rubric.filter((r) => checkedMap[r.id]).map((r) => r.id);
+              const selfScore = activeScenario.rubric
+                .filter((r) => checkedMap[r.id])
+                .reduce((acc, r) => acc + r.maxPoints, 0);
+              const maxScore = activeScenario.rubric.reduce((acc, r) => acc + r.maxPoints, 0);
+
+              return (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (draftText.trim().length < 60) {
+                        setScenarioSavedNote('Write at least 60 characters before recording your scenario score.');
+                        return;
+                      }
+                      recordScenarioAssessment({
+                        scenarioId: activeScenario.id,
+                        responseText: draftText,
+                        checkedRubricIds: checkedIds,
+                        selfScore,
+                        maxScore,
+                        completedAt: Date.now(),
+                      });
+                      setScenarioSavedNote(
+                        `Recorded ${selfScore}/${maxScore} pts (${selfScore >= activeScenario.passPoints ? 'Meets Pass Bar' : `Need ${activeScenario.passPoints}+ to pass`}).`
+                      );
+                    }}
+                  >
+                    <CheckCircle2 size={15} /> Save Scenario &amp; Score ({selfScore}/{maxScore})
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => setShowScenarioSample((prev) => !prev)}
+                  >
+                    <Eye size={15} /> {showScenarioSample ? 'Hide Example Answer' : 'View Scored Example'}
+                  </button>
+                  {scenarioSavedNote && (
+                    <span style={{ fontSize: '0.84rem', color: 'var(--ink-2)', fontWeight: 600 }}>
+                      {scenarioSavedNote}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
+            {showScenarioSample && (
+              <pre
+                style={{
+                  marginTop: 14,
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 10,
+                  padding: 12,
+                  fontSize: '0.82rem',
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.5,
+                }}
+              >
+                {activeScenario.exampleScoredAnswer}
+              </pre>
+            )}
+          </div>
+        </section>
+      )}
+
+      {tab === 'evidence' && (
+        <section style={{ marginTop: 24 }}>
+          <div className="hero-card" style={{ marginBottom: 18 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div>
-                <p style={{ color: 'var(--success)', fontWeight: 700, marginBottom: 14 }}>
-                  Congratulations — you met all Mid-Senior Mastery Milestones across Python, SQL, Classical ML, LLMs, RAG, Agents, SwEng &amp; System Design!
+                <h2 style={{ fontSize: '1.25rem', marginBottom: 4 }}>Portfolio &amp; Capstone Evidence Pack</h2>
+                <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)' }}>
+                  Run <code>make check</code> in each downloaded capstone starter repo to emit <code>evidence.json</code>, then submit your public GitHub repo URL, live demo URL, and validator output below.
                 </p>
-                <button type="button" className="btn btn-primary" onClick={() => window.print()}>
-                  <Printer size={15} /> Print / Save PDF Certificate
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    const md = exportEvidencePackMarkdown(activeLevelId, progress, TOTAL_LABS);
+                    navigator.clipboard?.writeText(md);
+                    setPackCopied(true);
+                    setTimeout(() => setPackCopied(false), 2500);
+                  }}
+                >
+                  <Copy size={14} /> {packCopied ? 'Copied Markdown!' : 'Copy Evidence Pack MD'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    const md = exportEvidencePackMarkdown(activeLevelId, progress, TOTAL_LABS);
+                    const blob = new Blob([md], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ai-engineer-evidence-${activeLevelId}.md`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Download size={14} /> Download Evidence Pack (.md)
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 14 }}>
+            {ALL_CAPSTONES.map((proj) => {
+              const saved = progress.capstoneEvidence?.[proj.id];
+              const inputs = evidenceInputs[proj.id] || {
+                repoUrl: saved?.repoUrl || '',
+                demoUrl: saved?.demoUrl || '',
+                rawJson: saved?.evidenceJsonRaw || '',
+              };
+              const feedback = evidenceMessages[proj.id];
+              return (
+                <div key={proj.id} className="hero-card">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <div>
+                      <span className="track-badge track-ai-eng">{proj.id}</span>{' '}
+                      <strong style={{ fontSize: '1.02rem' }}>{proj.title}</strong>
+                    </div>
+                    {saved?.parsedSummary?.passed ? (
+                      <span className="track-badge" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
+                        <CheckCircle2 size={12} style={{ marginRight: 4 }} /> Verified ({saved.parsedSummary.mode})
+                      </span>
+                    ) : (
+                      <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
+                        Awaiting valid evidence.json
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10, marginBottom: 10 }}>
+                    <input
+                      type="url"
+                      className="input"
+                      placeholder="Public GitHub repo URL (github.com/you/project)"
+                      value={inputs.repoUrl}
+                      onChange={(e) =>
+                        setEvidenceInputs((prev) => ({
+                          ...prev,
+                          [proj.id]: { ...inputs, repoUrl: e.target.value },
+                        }))
+                      }
+                    />
+                    <input
+                      type="url"
+                      className="input"
+                      placeholder="Live deployed demo URL (your-app.fly.dev)"
+                      value={inputs.demoUrl}
+                      onChange={(e) =>
+                        setEvidenceInputs((prev) => ({
+                          ...prev,
+                          [proj.id]: { ...inputs, demoUrl: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <textarea
+                    className="input"
+                    rows={4}
+                    placeholder='Paste JSON from evidence.json (generated by validator.py / make check)...'
+                    value={inputs.rawJson}
+                    onChange={(e) =>
+                      setEvidenceInputs((prev) => ({
+                        ...prev,
+                        [proj.id]: { ...inputs, rawJson: e.target.value },
+                      }))
+                    }
+                    style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: 10 }}
+                  />
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        const res = validateCapstoneEvidence(
+                          proj.id,
+                          inputs.repoUrl,
+                          inputs.demoUrl,
+                          inputs.rawJson
+                        );
+                        if (!res.valid || !res.parsedSummary) {
+                          setEvidenceMessages((prev) => ({
+                            ...prev,
+                            [proj.id]: { ok: false, msg: res.error || 'Validation failed.' },
+                          }));
+                          return;
+                        }
+                        saveCapstoneEvidence(proj.id, {
+                          projectId: proj.id,
+                          repoUrl: inputs.repoUrl.trim(),
+                          demoUrl: inputs.demoUrl.trim(),
+                          evidenceJsonRaw: inputs.rawJson.trim(),
+                          validatedAt: Date.now(),
+                          parsedSummary: res.parsedSummary,
+                        });
+                        setEvidenceMessages((prev) => ({
+                          ...prev,
+                          [proj.id]: {
+                            ok: true,
+                            msg: `Saved: ${res.parsedSummary!.testsPassed} tests passed (${res.parsedSummary!.mode}), p95=${res.parsedSummary!.p95Ms}ms, $${res.parsedSummary!.costPerReqUsd}/req.`,
+                          },
+                        }));
+                      }}
+                    >
+                      Validate &amp; Save Evidence
+                    </button>
+                    {feedback && (
+                      <span
+                        style={{
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: feedback.ok ? 'var(--success)' : 'var(--danger, #c62828)',
+                        }}
+                      >
+                        {feedback.msg}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {tab === 'certificate' && (
+        <section style={{ maxWidth: 820, margin: '24px auto 0', display: 'grid', gap: 18 }}>
+          <div className="hero-card certificate-card">
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <div>
+                <div className="hero-eyebrow">Gated Level Readiness Report</div>
+                <h2 style={{ fontSize: 'clamp(1.25rem, 3.5vw, 1.8rem)', marginBottom: 4 }}>
+                  {levelEval.level.title}
+                </h2>
+                <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)' }}>
+                  Candidate: <strong>{progress.learnerName}</strong> · Target Level Selector:
+                </p>
+              </div>
+              <div className="pill-tabs">
+                {LEVEL_PATHS.map((lvl) => (
+                  <button
+                    key={lvl.id}
+                    type="button"
+                    className={`pill-tab ${activeLevelId === lvl.id ? 'active' : ''}`}
+                    onClick={() => setTargetLevel(lvl.id)}
+                  >
+                    {lvl.id === 'junior' ? 'Junior' : lvl.id === 'mid' ? 'Mid-Level' : 'Senior Bar'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="stat-grid" style={{ marginBottom: 18 }}>
+              <div className="stat-box">
+                <div className="stat-val">{levelEval.lessonsDone}/{levelEval.lessonsTotal}</div>
+                <div className="stat-label">Required Lessons</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">{levelEval.labPct}% / {levelEval.level.requiredLabPct}%</div>
+                <div className="stat-label">Python &amp; SQL Labs</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">
+                  {levelEval.level.requiredModuleExams.length - levelEval.missingExams.length}/
+                  {levelEval.level.requiredModuleExams.length}
+                </div>
+                <div className="stat-label">Timed Exams (&ge;70%)</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">
+                  {levelEval.level.requiredCapstones.length - levelEval.missingCapstones.length}/
+                  {levelEval.level.requiredCapstones.length}
+                </div>
+                <div className="stat-label">Verified Capstones</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">
+                  {levelEval.level.requiredScenarios.length - levelEval.missingScenarios.length}/
+                  {levelEval.level.requiredScenarios.length}
+                </div>
+                <div className="stat-label">Scenario &amp; ADR Reviews</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">{progress.xp}</div>
+                <div className="stat-label">Course XP</div>
+              </div>
+            </div>
+
+            {levelEval.ready ? (
+              <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                <p style={{ color: 'var(--success)', fontWeight: 700, marginBottom: 12 }}>
+                  Level Readiness Report Unlocked — every required lesson, timed exam, capstone{' '}
+                  <code>evidence.json</code>, and scenario review for {levelEval.level.title} is recorded.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 10 }}>
+                  <button type="button" className="btn btn-primary" onClick={() => window.print()}>
+                    <Printer size={15} /> Print Level Readiness Report
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      const md = exportEvidencePackMarkdown(activeLevelId, progress, TOTAL_LABS);
+                      const blob = new Blob([md], { type: 'text/markdown' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `ai-engineer-readiness-${activeLevelId}.md`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download size={15} /> Export Evidence Pack (.md)
+                  </button>
+                </div>
+              </div>
             ) : (
-              <p style={{ color: 'var(--ink-muted)', fontSize: '0.92rem' }}>
-                Complete at least <strong>24 lessons</strong>, <strong>8 Python/SQL labs</strong>, and{' '}
-                <strong>6 mock interviews</strong> to unlock your printable Mastery Certificate.
-              </p>
+              <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 6 }}>
+                  Remaining Requirements to Unlock {levelEval.level.title} Report:
+                </div>
+                <ul style={{ marginLeft: 18, fontSize: '0.84rem', color: 'var(--ink-2)', lineHeight: 1.55 }}>
+                  {levelEval.missingLessons.length > 0 && (
+                    <li>{levelEval.missingLessons.length} required lessons still incomplete</li>
+                  )}
+                  {!levelEval.labsPass && (
+                    <li>Need at least {levelEval.level.requiredLabPct}% of labs (currently {levelEval.labPct}%)</li>
+                  )}
+                  {levelEval.missingExams.length > 0 && (
+                    <li>Timed exams missing &ge;70%: {levelEval.missingExams.join(', ')}</li>
+                  )}
+                  {levelEval.missingCapstones.length > 0 && (
+                    <li>
+                      Missing verified capstone <code>evidence.json</code>: {levelEval.missingCapstones.join(', ')}{' '}
+                      <button type="button" className="pill-tab" onClick={() => setTab('evidence')}>
+                        Submit in Evidence Pack &rarr;
+                      </button>
+                    </li>
+                  )}
+                  {levelEval.missingScenarios.length > 0 && (
+                    <li>
+                      Missing passing scenario reviews: {levelEval.missingScenarios.join(', ')}{' '}
+                      <button type="button" className="pill-tab" onClick={() => setTab('scenarios')}>
+                        Open Scenarios &rarr;
+                      </button>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.78rem', color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+              <strong>Tamper-Evident &amp; Employer Honesty Notice:</strong> No course grants an employer job title.
+              In-browser lessons/labs/self-grades are stored in your browser/sync store and are self-reported; the
+              verifiable proof is your public GitHub repositories, live deployed URLs, and validator{' '}
+              <code>evidence.json</code> outputs. {levelEval.level.honestScopeNote}
+            </p>
+          </div>
+
+          <div className="hero-card" style={{ textAlign: 'center' }}>
+            <div className="hero-eyebrow">Self-Paced Course Participation Record</div>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Certificate of Self-Paced Participation</h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)', marginBottom: 12 }}>
+              Issued upon completing 24+ lessons and 8+ labs ({lessonsDone}/{ALL_LESSONS.length} lessons, {labsDone}/
+              {TOTAL_LABS} labs completed). Records coursework participation only—not an employer credential.
+            </p>
+            {isParticipationEligible ? (
+              <button type="button" className="btn" onClick={() => window.print()}>
+                <Award size={15} /> Print Participation Record
+              </button>
+            ) : (
+              <span style={{ fontSize: '0.84rem', color: 'var(--ink-muted)' }}>
+                Complete 24+ lessons and 8+ labs to unlock the participation record.
+              </span>
             )}
           </div>
         </section>

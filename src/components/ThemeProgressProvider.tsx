@@ -1,7 +1,14 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import type { CourseProgress, FlashcardReviewState, SyncConfig } from '@/types/course';
+import type {
+  CapstoneEvidence,
+  CourseProgress,
+  FlashcardReviewState,
+  LevelId,
+  ScenarioScoreRecord,
+  SyncConfig,
+} from '@/types/course';
 import {
   createInitialProgress,
   decodePortableToken,
@@ -58,6 +65,10 @@ interface AppContextValue {
   unlockFastTrack: (score: number, total: number) => void;
   recordModuleExamScore: (moduleId: string, score: number, total: number) => void;
   saveProjectJournal: (projectId: string, text: string) => void;
+  setTargetLevel: (level: LevelId) => void;
+  setLearningTrack: (track: 'ai-eng-fast' | 'ai-eng-full' | 'dual-ml-ai') => void;
+  saveCapstoneEvidence: (projectId: string, evidence: CapstoneEvidence) => void;
+  recordScenarioAssessment: (record: ScenarioScoreRecord) => void;
   reviewFlashcard: (cardId: string, quality: 1 | 2 | 3 | 4) => void;
   markInterviewComplete: (questionId: string) => void;
   updateSyncConfig: (next: SyncConfig) => void;
@@ -667,6 +678,50 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
     [commitProgress]
   );
 
+  const setTargetLevel = useCallback(
+    (level: LevelId) => {
+      commitProgress((prev) => ({ ...prev, targetLevel: level }));
+    },
+    [commitProgress]
+  );
+
+  const setLearningTrack = useCallback(
+    (track: 'ai-eng-fast' | 'ai-eng-full' | 'dual-ml-ai') => {
+      commitProgress((prev) => ({ ...prev, learningTrack: track }));
+    },
+    [commitProgress]
+  );
+
+  const saveCapstoneEvidence = useCallback(
+    (projectId: string, evidence: CapstoneEvidence) => {
+      commitProgress((prev) => ({
+        ...prev,
+        capstoneEvidence: {
+          ...(prev.capstoneEvidence || {}),
+          [projectId]: evidence,
+        },
+      }));
+    },
+    [commitProgress]
+  );
+
+  const recordScenarioAssessment = useCallback(
+    (record: ScenarioScoreRecord) => {
+      commitProgress((prev) => {
+        const had = Boolean(prev.scenarioScores?.[record.scenarioId]);
+        return {
+          ...prev,
+          scenarioScores: {
+            ...(prev.scenarioScores || {}),
+            [record.scenarioId]: record,
+          },
+          xp: prev.xp + (had ? 0 : 120),
+        };
+      });
+    },
+    [commitProgress]
+  );
+
   const updateSyncConfig = useCallback((next: SyncConfig) => {
     setSyncConfig(next);
     saveSyncConfig(next);
@@ -724,6 +779,10 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
         unlockFastTrack,
         recordModuleExamScore,
         saveProjectJournal,
+        setTargetLevel,
+        setLearningTrack,
+        saveCapstoneEvidence,
+        recordScenarioAssessment,
         reviewFlashcard,
         markInterviewComplete,
         updateSyncConfig,

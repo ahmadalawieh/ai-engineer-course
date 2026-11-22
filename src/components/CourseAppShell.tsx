@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { TopNav, type AppView } from './TopNav';
 import { HomeView } from './HomeView';
 import { LessonView } from './LessonView';
-import { PracticeArena } from './PracticeArena';
+import { PracticeArena, type ArenaTab } from './PracticeArena';
 import { JobWorkBench } from './JobWorkBench';
 import { SearchModal } from './SearchModal';
 import { SyncModal } from './SyncModal';
@@ -14,7 +14,7 @@ export function CourseAppShell() {
   const { progress } = useCourseApp();
   const [view, setView] = useState<AppView>('home');
   const [activeLessonId, setActiveLessonId] = useState<string>('1-0');
-  const [arenaTab, setArenaTab] = useState<'flashcards' | 'interview' | 'glossary' | 'notes' | 'certificate'>('flashcards');
+  const [arenaTab, setArenaTab] = useState<ArenaTab>('flashcards');
   const [searchOpen, setSearchOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
 

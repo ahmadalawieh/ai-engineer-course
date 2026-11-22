@@ -156,6 +156,97 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export type LevelId = 'junior' | 'mid' | 'senior';
+
+export type ModelRole =
+  | 'small-fast'
+  | 'frontier-reasoning'
+  | 'embedding'
+  | 'reranker'
+  | 'multimodal-vision'
+  | 'speech-audio'
+  | 'local-open-weights';
+
+export interface ModelCatalogEntry {
+  roleId: ModelRole;
+  roleLabel: string;
+  lastReviewed: string;
+  currentExamples: string[];
+  typicalContext: string;
+  useWhen: string;
+  avoidWhen: string;
+}
+
+export interface Competency {
+  id: string;
+  level: LevelId;
+  area: string;
+  title: string;
+  description: string;
+}
+
+export interface LevelPath {
+  id: LevelId;
+  title: string;
+  tagline: string;
+  honestEffortRange: string;
+  honestScopeNote: string;
+  barSummary: string;
+  requiredLessonIds: string[];
+  requiredLabPct: number;
+  requiredModuleExams: string[];
+  requiredCapstones: string[];
+  requiredScenarios: string[];
+  competencyIds: string[];
+}
+
+export interface CapstoneEvidence {
+  projectId: string;
+  repoUrl: string;
+  demoUrl: string;
+  evidenceJsonRaw: string;
+  validatedAt: number;
+  parsedSummary?: {
+    passed: boolean;
+    testsPassed: number;
+    testsFailed: number;
+    p95Ms: number;
+    costPerReqUsd: number;
+    secretScanPassed: boolean;
+    injectionTestsPassed: boolean;
+    mode: string;
+  };
+}
+
+export interface ScenarioRubricItem {
+  id: string;
+  criterion: string;
+  maxPoints: number;
+  guidance: string;
+}
+
+export interface ScenarioAssessment {
+  id: string;
+  minLevel: LevelId;
+  kind: 'system-design' | 'incident-postmortem' | 'adr';
+  title: string;
+  prompt: string;
+  artifactTitle?: string;
+  artifactContent?: string;
+  rubric: ScenarioRubricItem[];
+  passPoints: number;
+  exampleScoredAnswer: string;
+}
+
+export interface ScenarioScoreRecord {
+  scenarioId: string;
+  responseText: string;
+  checkedRubricIds: string[];
+  selfScore: number;
+  maxScore: number;
+  completedAt: number;
+}
+
 export interface Lesson {
   id: string;
   moduleId: string;
@@ -167,6 +258,8 @@ export interface Lesson {
   prerequisites: string[];
   teaches?: string[];
   requires?: string[];
+  competencies?: string[];
+  lastReviewed?: string;
   objectives: string[];
   checkWithoutNotes?: string[];
   blocks: ContentBlock[];
@@ -179,6 +272,7 @@ export interface CourseModule {
   title: string;
   subtitle: string;
   track: TrackTag;
+  recommendedPath?: 'foundation' | 'ml-depth' | 'ai-eng' | 'career';
   estimatedHours: number;
   capstoneDeliverable: string;
   lessons: Lesson[];
@@ -208,6 +302,7 @@ export interface InterviewQuestion {
   id: string;
   role: 'AI Engineer' | 'Data Scientist' | 'Both';
   difficulty: 'Core' | 'Senior' | 'Staff';
+  level?: LevelId;
   topic: string;
   question: string;
   rubricPoints: string[];
@@ -235,10 +330,14 @@ export interface CourseProgress {
   version: number;
   learnerName: string;
   quizSeed?: string;
+  targetLevel?: LevelId;
+  learningTrack?: 'ai-eng-fast' | 'ai-eng-full' | 'dual-ml-ai';
   fastTrackUnlocked?: boolean;
   placementScore?: { score: number; total: number };
   moduleExamScores?: Record<string, { score: number; total: number; bestScore: number }>;
   projectJournals?: Record<string, string>;
+  capstoneEvidence?: Record<string, CapstoneEvidence>;
+  scenarioScores?: Record<string, ScenarioScoreRecord>;
   completedLessons: string[];
   completedLabs: string[];
   completedPuzzles: string[];
