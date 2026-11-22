@@ -1734,4 +1734,49 @@ html[data-theme='dark'] .reel-step-pill.active {
   }
 }
 
+.live-project-box {
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent-soft) 38%, var(--surface));
+  padding: 16px;
+}
+
+.live-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.live-slider-label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.live-output-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 720px) {
+  .live-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 

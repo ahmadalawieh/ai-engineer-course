@@ -30,6 +30,7 @@ import { useCourseApp } from './ThemeProgressProvider';
 import { PythonLab } from './PythonLab';
 import { RichText } from './MathAndProse';
 import { VisualDiagramBlock } from './VisualDiagrams';
+import { LiveProjectPlayground } from './LiveProjectPlayground';
 
 type WorkTab = 'day-in-life' | 'tickets' | 'pr-reviews' | 'projects' | 'debugger';
 
@@ -158,7 +159,7 @@ export function JobWorkBench() {
           onClick={() => setTab('projects')}
         >
           <FolderGit2 size={13} style={{ display: 'inline', marginRight: 5 }} />
-          4. Guided Projects (3)
+          4. Live Projects (3)
         </button>
         <button
           type="button"
@@ -635,6 +636,21 @@ export function JobWorkBench() {
             </div>
 
             <div className="lab-body">
+              <LiveProjectPlayground key={activeProject.id} projectId={activeProject.id} />
+
+              <PythonLab
+                key={activeProject.liveLab.labId}
+                labId={activeProject.liveLab.labId}
+                title={activeProject.liveLab.title}
+                prompt={activeProject.liveLab.prompt}
+                starterCode={activeProject.liveLab.starterCode}
+                testCode={activeProject.liveLab.testCode}
+                solutionCode={activeProject.liveLab.solutionCode}
+                hint={activeProject.liveLab.hint}
+                packages={activeProject.liveLab.packages}
+                xpLabel="Live Project Passed (+60 XP)"
+              />
+
               <VisualDiagramBlock
                 diagramId={activeProject.diagramId}
                 title={`Architecture Blueprint: ${activeProject.title}`}
