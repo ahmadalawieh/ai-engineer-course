@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
   Bookmark,
   Check,
   CheckCircle2,
@@ -561,16 +562,31 @@ export function LessonView({
   } = useCourseApp();
 
   const lesson = getLessonById(lessonId) || COURSE_MODULES[0].lessons[0];
+  const lessonIndex = Math.max(0, ALL_LESSONS.findIndex((l) => l.id === lesson.id));
   const currentModule = getModuleById(lesson.moduleId);
   const { prev, next } = getAdjacentLessons(lesson.id);
 
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrollPct, setScrollPct] = useState(0);
+  const [showTopBtn, setShowTopBtn] = useState(false);
 
   useEffect(() => {
     setLastVisitedLesson(lesson.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [lesson.id, setLastVisitedLesson]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollPct(docH > 0 ? Math.min(100, Math.round((y / docH) * 100)) : 0);
+      setShowTopBtn(y > 420);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [lesson.id]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -666,6 +682,10 @@ export function LessonView({
       </aside>
 
       <main className="lesson-main">
+        <div className="reading-progress-bar" aria-label={`Reading progress ${scrollPct}%`}>
+          <div className="reading-progress-fill" style={{ width: `${scrollPct}%` }} />
+        </div>
+
         <div
           style={{
             display: 'flex',
@@ -690,6 +710,9 @@ export function LessonView({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span className="mono hide-mobile" style={{ fontSize: '0.74rem', color: 'var(--ink-muted)' }}>
+              {lessonIndex + 1} / {ALL_LESSONS.length}
+            </span>
             <button
               type="button"
               className="btn btn-sm"
@@ -780,6 +803,17 @@ export function LessonView({
             </button>
           )}
         </nav>
+
+        {showTopBtn && (
+          <button
+            type="button"
+            className="scroll-top-fab"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Scroll back to top"
+          >
+            <ArrowUp size={15} /> Top
+          </button>
+        )}
       </main>
     </div>
   );
