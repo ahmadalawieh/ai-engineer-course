@@ -101,7 +101,7 @@ export function JobWorkBench() {
           <p style={{ color: 'var(--ink-2)', fontSize: '0.96rem', marginTop: 8 }}>
             Learn what hired AI/ML Engineers actually do Monday–Friday: set up Python &amp; Git from zero,
             solve realistic Slack/Jira production tickets, catch bugs in Pull Requests, debug RAG traces,
-            and build 6 downloadable GitHub-ready capstones with tests, deploy guides &amp; project journals.
+            and build {GUIDED_PROJECTS.length} downloadable GitHub-ready capstones with tests, deploy guides &amp; project journals.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 14 }}>
             <span className="track-badge">

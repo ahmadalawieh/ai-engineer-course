@@ -43,8 +43,9 @@ export async function pushToCloudKV(syncKey: string, progress: CourseProgress): 
   }
 
   try {
-    const pullRes = await fetch(`/api/sync?key=${encodeURIComponent(cleanKey)}`, {
+    const pullRes = await fetch('/api/sync', {
       method: 'GET',
+      headers: { 'x-sync-key': cleanKey },
       cache: 'no-store',
     });
 
@@ -66,7 +67,7 @@ export async function pushToCloudKV(syncKey: string, progress: CourseProgress): 
 
     const pushRes = await fetch('/api/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-sync-key': cleanKey },
       body: JSON.stringify({ key: cleanKey, progress: merged }),
     });
 
@@ -94,8 +95,9 @@ export async function pullFromCloudKV(
   }
 
   try {
-    const res = await fetch(`/api/sync?key=${encodeURIComponent(cleanKey)}`, {
+    const res = await fetch('/api/sync', {
       method: 'GET',
+      headers: { 'x-sync-key': cleanKey },
       cache: 'no-store',
     });
 

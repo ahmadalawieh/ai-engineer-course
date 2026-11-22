@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local python audit venv
+# local python audit venv & test artifacts
 .venv-audit/
 .audit-tmp/
+.audit-sync-tmp/
+test-results/
+playwright-report/
