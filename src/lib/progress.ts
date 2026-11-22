@@ -43,7 +43,7 @@ export function createInitialProgress(): CourseProgress {
     xp: 0,
     streakDays: 1,
     lastActiveDate: '',
-    lastVisitedLessonId: '1-0',
+    lastVisitedLessonId: '0-1',
     updatedAt: 0,
   };
 }

@@ -1,3 +1,4 @@
+import { module0 } from './modules/module0';
 import { module1 } from './modules/module1';
 import { module2 } from './modules/module2';
 import { module3 } from './modules/module3';
@@ -9,6 +10,7 @@ import { module8 } from './modules/module8';
 import type { CourseModule, Lesson } from '@/types/course';
 
 export const COURSE_MODULES: CourseModule[] = [
+  module0,
   module1,
   module2,
   module3,
