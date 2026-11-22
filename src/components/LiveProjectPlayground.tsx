@@ -443,7 +443,7 @@ function AgentLiveApp() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8 }}>
+      <div className="agent-inputs-grid">
         <label className="live-slider-label">
           <span>Customer Message</span>
           <input
