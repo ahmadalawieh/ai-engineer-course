@@ -12,7 +12,8 @@ export const module6: CourseModule = {
   title: 'Applied AI Engineering: LLM APIs, RAG, Caching & Fine-Tuning',
   subtitle: 'Build reliable LLM API wrappers, typed tool-calling loops, hybrid vector RAG pipelines, tenant-safe caches, multilingual RTL workflows, and LoRA/QLoRA fine-tuning.',
   track: 'ai-eng',
-  estimatedHours: 7.5,
+  recommendedPath: 'ai-eng',
+  estimatedHours: 7.3,
   capstoneDeliverable: 'Build a streaming/retry LLM adapter, multi-tenant Hybrid RRF + Cross-Encoder RAG pipeline, semantic cache, and QLoRA weight merger.',
   lessons: [
     lesson6_0,

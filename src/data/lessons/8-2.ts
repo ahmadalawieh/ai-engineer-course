@@ -3,7 +3,7 @@ import type { Lesson } from '@/types/course';
 export const lesson8_2: Lesson = {
   id: '8-2',
   moduleId: 'mod-8',
-  number: '9.2',
+  number: '8.2',
   title: 'ML Theory & Data Science Case Studies: Churn, Uplift & A/B Tests',
   subtitle: 'Connect bias-variance theory, imbalanced evaluation metrics, uplift treatment targeting, and online A/B experimentation to nail ML and Product DS interviews.',
   durationMinutes: 80,

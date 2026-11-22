@@ -10,6 +10,7 @@ export const module4: CourseModule = {
   title: 'Deep Learning, PyTorch & Neural Architectures',
   subtitle: 'Backpropagation from scratch, PyTorch tensors/autograd/nn.Module loops, normalization, BF16, CNNs/ViT transfer learning, sequence bottlenecks, and AI Engineer scoping.',
   track: 'core',
+  recommendedPath: 'ml-depth',
   estimatedHours: 5.4,
   capstoneDeliverable: 'Implement pure-NumPy XOR backpropagation, token-wise LayerNorm/RMSNorm, 2D convolutions, and an LSTM memory cell alongside production PyTorch training templates.',
   lessons: [

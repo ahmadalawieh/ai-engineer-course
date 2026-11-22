@@ -38,6 +38,16 @@ function trackLabel(track: TrackTag): string {
   return 'Core ML/AI';
 }
 
+function pathBadgeLabel(
+  path: 'foundation' | 'ml-depth' | 'ai-eng' | 'career' | undefined,
+  learningTrack: 'ai-eng-fast' | 'ai-eng-full' | 'dual-ml-ai'
+): string {
+  if (path === 'foundation') return 'Foundation';
+  if (path === 'ml-depth') return learningTrack === 'dual-ml-ai' ? 'ML Core' : 'Optional ML Depth';
+  if (path === 'career') return 'Career & Prep';
+  return 'Core AI Eng';
+}
+
 export function HomeView({
   onSelectLesson,
   onOpenWork,
@@ -49,11 +59,12 @@ export function HomeView({
   onOpenArena: () => void;
   onOpenSync: () => void;
 }) {
-  const { progress, authUser, setTargetLevel } = useCourseApp();
+  const { progress, authUser, setTargetLevel, setLearningTrack } = useCourseApp();
   const [trackFilter, setTrackFilter] = useState<'all' | TrackTag>('all');
   const [activeExam, setActiveExam] = useState<TimedExamSpec | null>(null);
 
   const activeLevelId: LevelId = progress.targetLevel || 'junior';
+  const activeLearningTrack = progress.learningTrack || 'ai-eng-full';
   const levelEval = useMemo(
     () => evaluateLevelReadiness(activeLevelId, progress, TOTAL_LABS),
     [activeLevelId, progress]
@@ -78,11 +89,15 @@ export function HomeView({
   }, [progress.lastVisitedLessonId, progress.completedLessons]);
 
   const filteredModules = useMemo(() => {
-    if (trackFilter === 'all') return COURSE_MODULES;
-    return COURSE_MODULES.filter(
+    const byTrack =
+      activeLearningTrack === 'ai-eng-fast'
+        ? COURSE_MODULES.filter((m) => m.recommendedPath !== 'foundation')
+        : COURSE_MODULES;
+    if (trackFilter === 'all') return byTrack;
+    return byTrack.filter(
       (m) => m.track === trackFilter || m.lessons.some((l) => l.track === trackFilter)
     );
-  }, [trackFilter]);
+  }, [activeLearningTrack, trackFilter]);
 
   return (
     <main className="container">
@@ -331,45 +346,79 @@ export function HomeView({
             </p>
           </div>
 
-          <div className="pill-tabs" role="tablist" aria-label="Filter by skill pillar">
-            <button
-              type="button"
-              className={`pill-tab ${trackFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setTrackFilter('all')}
-            >
-              All Modules ({COURSE_MODULES.length})
-            </button>
-            <button
-              type="button"
-              className={`pill-tab ${trackFilter === 'core' ? 'active' : ''}`}
-              onClick={() => setTrackFilter('core')}
-            >
-              Python &amp; Foundations
-            </button>
-            <button
-              type="button"
-              className={`pill-tab ${trackFilter === 'ds' ? 'active' : ''}`}
-              onClick={() => setTrackFilter('ds')}
-            >
-              SQL &amp; Tabular ML
-            </button>
-            <button
-              type="button"
-              className={`pill-tab ${trackFilter === 'ai-eng' ? 'active' : ''}`}
-              onClick={() => setTrackFilter('ai-eng')}
-            >
-              LLMs, RAG &amp; Agents
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+            <div className="pill-tabs" role="tablist" aria-label="Choose learning track">
+              <button
+                type="button"
+                className={`pill-tab ${activeLearningTrack === 'ai-eng-fast' ? 'active' : ''}`}
+                onClick={() => setLearningTrack('ai-eng-fast')}
+                title="Skips Foundation Modules 0-1 and marks Modules 2-4 as Optional ML Depth"
+              >
+                AI Engineer Fast Track
+              </button>
+              <button
+                type="button"
+                className={`pill-tab ${activeLearningTrack === 'ai-eng-full' ? 'active' : ''}`}
+                onClick={() => setLearningTrack('ai-eng-full')}
+                title="Zero-to-hire AI Engineering path including Foundation 0-1; Modules 2-4 optional ML Depth"
+              >
+                AI Engineer Zero-to-Hire
+              </button>
+              <button
+                type="button"
+                className={`pill-tab ${activeLearningTrack === 'dual-ml-ai' ? 'active' : ''}`}
+                onClick={() => setLearningTrack('dual-ml-ai')}
+                title="All 12 modules including full Tabular ML & Deep Learning foundations"
+              >
+                Full Dual-Track (ML + AI)
+              </button>
+            </div>
+
+            <div className="pill-tabs" role="tablist" aria-label="Filter by skill pillar">
+              <button
+                type="button"
+                className={`pill-tab ${trackFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setTrackFilter('all')}
+              >
+                All Shown ({filteredModules.length})
+              </button>
+              <button
+                type="button"
+                className={`pill-tab ${trackFilter === 'core' ? 'active' : ''}`}
+                onClick={() => setTrackFilter('core')}
+              >
+                Python &amp; Foundations
+              </button>
+              <button
+                type="button"
+                className={`pill-tab ${trackFilter === 'ds' ? 'active' : ''}`}
+                onClick={() => setTrackFilter('ds')}
+              >
+                SQL &amp; Tabular ML
+              </button>
+              <button
+                type="button"
+                className={`pill-tab ${trackFilter === 'ai-eng' ? 'active' : ''}`}
+                onClick={() => setTrackFilter('ai-eng')}
+              >
+                LLMs, RAG &amp; Agents
+              </button>
+            </div>
           </div>
         </div>
 
-        {progress.fastTrackUnlocked && (
+        {(progress.fastTrackUnlocked || activeLearningTrack === 'ai-eng-fast') && (
           <div className="callout key-takeaway" style={{ marginBottom: 16 }}>
             <div className="callout-title">
-              <Zap size={15} color="var(--success)" /> Fast Track for Developers Unlocked (Placement {progress.placementScore?.score}/{progress.placementScore?.total})
+              <Zap size={15} color="var(--success)" />{' '}
+              {activeLearningTrack === 'ai-eng-fast'
+                ? 'AI Engineer Fast Track Active (Modules 0–1 hidden; Modules 2–4 marked Optional ML Depth)'
+                : `Fast Track for Developers Unlocked (Placement ${progress.placementScore?.score}/${progress.placementScore?.total})`}
             </div>
             <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)' }}>
-              Beginner Terminal/Git (Module 0) &amp; Python syntax basics (`1.0–1.2`) prerequisites are auto-cleared. Jump straight to <strong>Math, pandas/SQL, ML, Deep Learning, LLMs, Software Engineering &amp; Interviews</strong>—or revisit any foundation lesson anytime.
+              {activeLearningTrack === 'ai-eng-fast'
+                ? 'Foundation Modules 0–1 (Terminal, Git & Python syntax) are skipped—switch back to "AI Engineer Zero-to-Hire" anytime to revisit them. Focus on Core AI Eng Modules 5–11 and pick Optional ML Depth Modules 2–4 as needed.'
+                : 'Beginner Terminal/Git (Module 0) & Python syntax basics (`1.0–1.2`) prerequisites are auto-cleared. Jump straight to Applied AI Engineering, Software Engineering & Interviews—or revisit any foundation lesson anytime.'}
             </p>
           </div>
         )}
@@ -379,13 +428,32 @@ export function HomeView({
             const modDone = mod.lessons.filter((l) => progress.completedLessons.includes(l.id)).length;
             const modExam = progress.moduleExamScores?.[mod.id];
             const modExamPassed = modExam && modExam.bestScore >= Math.ceil(modExam.total * 0.7);
+            const pathBadge = pathBadgeLabel(mod.recommendedPath, activeLearningTrack);
             return (
               <article key={mod.id} className="module-card">
-                <div className="module-top">
+                <div className="module-top" style={{ gap: 6, flexWrap: 'wrap' }}>
                   <span className="module-num">
                     MODULE {String(mod.number).padStart(2, '0')} · {modDone}/{mod.lessons.length} DONE
                   </span>
-                  <span className={`track-badge track-${mod.track}`}>{trackLabel(mod.track)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span
+                      className="track-badge"
+                      style={{
+                        background:
+                          mod.recommendedPath === 'ml-depth' && activeLearningTrack !== 'dual-ml-ai'
+                            ? 'var(--surface-2)'
+                            : 'var(--accent-soft)',
+                        color:
+                          mod.recommendedPath === 'ml-depth' && activeLearningTrack !== 'dual-ml-ai'
+                            ? 'var(--ink-muted)'
+                            : 'var(--accent)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      {pathBadge}
+                    </span>
+                    <span className={`track-badge track-${mod.track}`}>{trackLabel(mod.track)}</span>
+                  </div>
                 </div>
 
                 <div>

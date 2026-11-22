@@ -10,6 +10,7 @@ export const module7: CourseModule = {
   title: 'AI Agents, Golden Evals & Production MLOps',
   subtitle: 'Harden ReAct agents with HITL and budgets, automate CI evaluation gates, optimize vLLM latency and span traces, and monitor production drift safely.',
   track: 'ai-eng',
+  recommendedPath: 'ai-eng',
   estimatedHours: 5,
   capstoneDeliverable: 'Build a budget-guarded agent with HITL policies, debias LLM-as-a-Judge in CI, trace spans, and automate PSI/canary rollback.',
   lessons: [

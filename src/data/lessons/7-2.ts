@@ -16,6 +16,8 @@ export const lesson7_2: Lesson = {
     'llm-as-judge',
     'ci-regression-gates',
   ],
+  competencies: ['jr-basic-evals', 'mid-eval-gates', 'sr-org-evals'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Structure the 3-tier eval pyramid: Level 1 deterministic code checks, Level 2 retrieval metrics (`Recall@k`, `MRR`), and Level 3 calibrated LLM-as-a-Judge.',
     'Diagnose whether a bad RAG answer came from Retrieval failure (`Context Recall`), Hallucination (`Faithfulness`), or Instruction drift (`Answer Relevance`).',

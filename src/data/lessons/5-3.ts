@@ -16,16 +16,18 @@ export const lesson5_3: Lesson = {
     'sparse-moe-routing',
     'flash-attention-io',
   ],
+  competencies: ['mid-observability-cost', 'sr-sys-architecture'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Compute exact GPU VRAM needed for model weights (`FP32`, `BF16`, `INT8`, `INT4`), KV cache, and AdamW optimizer training states.',
-    'Explain Chinchilla compute-optimal pretraining (`~20 tokens/param`) vs inference-optimal overtraining (`Llama-3-8B` trained on `15T` tokens).',
+    'Explain Chinchilla compute-optimal pretraining (`~20 tokens/param`) vs inference-optimal overtraining (`Local Open-Weights` 8B class trained on `15T` tokens).',
     'Implement Sparse Mixture-of-Experts (MoE) top-k gating and quantify active vs total parameter trade-offs.',
     'Explain how IO-aware FlashAttention tiling keeps Softmax in fast SRAM to cut HBM memory reads from `O(N^2)` down to `O(N)`.',
   ],
   checkWithoutNotes: [
     'Add up the exact 16 bytes per parameter required during full `BF16` mixed-precision AdamW training (`weights + gradients + FP32 optimizer states`).',
     'Why does a 70B `INT4`-quantized checkpoint (`~35 GB` weights) still risk running out of memory on a single 40 GB GPU once batch size and 32k context KV cache grow?',
-    'Contrast Chinchilla pretraining (`~20 tokens per param`) with inference-optimal overtraining—why did Llama-3-8B train on 15 trillion tokens instead of 160 billion?',
+    'Contrast Chinchilla pretraining (`~20 tokens per param`) with inference-optimal overtraining—why did compact `8B` `local-open-weights` models train on 15 trillion tokens instead of 160 billion?',
     'In a `8 x 7B` Mixtral-style MoE activating Top-2 experts per token, why does VRAM scale with TOTAL parameters while per-token latency/FLOPs scale with ACTIVE parameters?',
   ],
   blocks: [
@@ -72,7 +74,7 @@ export const lesson5_3: Lesson = {
       type: 'callout',
       variant: 'key-takeaway',
       title: 'Chinchilla vs Inference-Optimal Overtraining',
-      body: 'DeepMind’s Chinchilla scaling law established that for a fixed **training compute budget**, optimal pretraining feeds roughly **~20 tokens per parameter** (`1.4T` tokens for `70B`, `160B` tokens for `8B`). However, **inference runs millions of times per day!** Modern open-weight families (`Llama-3-8B` trained on `15 trillion` tokens — nearly `1,875` tokens per parameter!) intentionally pay higher one-time training FLOPs so a small, fast `8B` checkpoint achieves accuracy previously reserved for giant slow models.',
+      body: 'DeepMind’s Chinchilla scaling law established that for a fixed **training compute budget**, optimal pretraining feeds roughly **~20 tokens per parameter** (`1.4T` tokens for `70B`, `160B` tokens for `8B`). However, **inference runs millions of times per day!** Modern `local-open-weights` 8B families trained on `15 trillion` tokens (nearly `1,875` tokens per parameter!) intentionally pay higher one-time training FLOPs so a small, fast `8B` checkpoint achieves accuracy previously reserved for giant slow models.',
     },
     {
       type: 'prose',
@@ -86,6 +88,17 @@ export const lesson5_3: Lesson = {
         '6) Serving concurrent users with naive static batching (waiting for a 500-token response to finish before releasing the 20-token slot in the same batch): production engines (**vLLM**, **TGI**, **TensorRT-LLM**) use **continuous iteration-level batching**, swapping finished sequences out immediately at every single token step to keep GPU utilization high.',
         '7) Ignoring router load-balancing penalties when training Sparse MoE layers: without an auxiliary load-balancing loss encouraging uniform token distribution across experts, the router collapses onto two favorite experts and leaves 90% of parameter capacity idle ("routing collapse").',
         '8) Assuming decode latency depends solely on FLOP count rather than GPU memory bandwidth: reading `140 GB` of `BF16` weights per generated token means decode sits memory-bandwidth bound, which explains why `INT4` quantization and draft-model Speculative Decoding cut token latency sharply even on fast H100 cards.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Model Precision, Training & Serving Choices',
+      headers: ['Choice', 'Memory per Param', 'Speed & Accuracy Impact', 'When to Choose'],
+      rows: [
+        ['Full BF16 + AdamW Training', '~16 bytes/param (incl. FP32 master)', 'Highest weight fidelity; multi-GPU cluster needed', 'Pretraining or full-parameter continual training'],
+        ['QLoRA (NF4 base + BF16 LoRA)', '~0.55 bytes base + <1% adapters', 'Single-GPU friendly; matches full SFT on style/format', 'Task specialization without giant GPU clusters'],
+        ['Dense Model Inference (FP8/BF16)', '1-2 bytes/param + KV cache', 'Predictable latency; simpler serving topology', 'Sub-10B fast tiers or high-throughput batch APIs'],
+        ['Sparse MoE (e.g., 47B / 13B active)', 'All 47B weights must fit in VRAM', '13B active decode speed; needs higher total GPU RAM', 'Higher capability per decode FLOP when VRAM is available'],
       ],
     },
     {
@@ -193,7 +206,7 @@ def moe_top2_forward(x: np.ndarray, router_w: np.ndarray, expert_outputs: np.nda
       requires: ['chinchilla-inference-scaling'],
       title: 'Lab 5.3C: Fix Chinchilla vs High-Volume Inference Model Selector',
       prompt:
-        'A naive estimator picks model size strictly by Chinchilla ratio (`tokens / 20`) ignoring massive recurring inference volume! Fix `recommend_training_config(pretrain_tokens_trillions: float, expected_monthly_inference_requests_millions: float)` so: (1) Chinchilla parameter size is `round((pretrain_tokens_trillions * 1e12 / 20) / 1e9, 1)` billion params; (2) if `expected_monthly_inference_requests_millions >= 50.0`, return `"overtrain_compact_8B"` (favoring high token/param ratio like Llama-3-8B for serving economics) else return `"chinchilla_balanced"`. Return `{"chinchilla_params_b": ..., "strategy": ...}`.',
+        'A naive estimator picks model size strictly by Chinchilla ratio (`tokens / 20`) ignoring massive recurring inference volume! Fix `recommend_training_config(pretrain_tokens_trillions: float, expected_monthly_inference_requests_millions: float)` so: (1) Chinchilla parameter size is `round((pretrain_tokens_trillions * 1e12 / 20) / 1e9, 1)` billion params; (2) if `expected_monthly_inference_requests_millions >= 50.0`, return `"overtrain_compact_8B"` (favoring high token/param ratio like modern `local-open-weights` 8B decoders for serving economics) else return `"chinchilla_balanced"`. Return `{"chinchilla_params_b": ..., "strategy": ...}`.',
       starterCode: `def recommend_training_config(pretrain_tokens_trillions: float, expected_monthly_inference_requests_millions: float) -> dict:
     # BUG: divides by 2 only instead of 20 tokens/param, and always returns chinchilla_balanced!
     params_b = round((pretrain_tokens_trillions * 1e12 / 2.0) / 1e9, 1)
@@ -283,7 +296,7 @@ print("PASS: Scaling decision weighed pretraining optimality against downstream 
     {
       id: 'q5-3-6',
       type: 'predict-output',
-      question: 'Under DeepMind’s Chinchilla training-compute rule (`~20 tokens per parameter`), why did modern open models like `Llama-3-8B` intentionally train on `15 trillion` tokens instead of `160 billion`?',
+      question: 'Under DeepMind’s Chinchilla training-compute rule (`~20 tokens per parameter`), why did compact `8B` `local-open-weights` models intentionally train on `15 trillion` tokens instead of `160 billion`?',
       options: [
         'Because tokenizer errors dropped 14.8 trillion tokens during pre-cleaning before gradient steps started',
         'To intentionally overfit benchmark test answers inside the 8B embedding lookup matrix',

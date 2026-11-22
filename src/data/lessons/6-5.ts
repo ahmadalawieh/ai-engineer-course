@@ -15,6 +15,8 @@ export const lesson6_5: Lesson = {
     'model-routing',
     'multilingual-rtl',
   ],
+  competencies: ['mid-observability-cost', 'sr-finops-scale'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Design two-layer caching: exact canonicalized key caching AND tenant-scoped semantic similarity caching with safe similarity thresholds.',
     'Route simple queries to fast small models while reserving large frontier models for complex reasoning within latency and USD budgets.',
@@ -95,7 +97,7 @@ print("Cache hit:", hit["answer"] if hit else None)`,
       heading: 'Worked Example 2: Arabic Unicode Normalization, Multilingual Tokenizers & Mixed RTL/LTR Safety',
       paragraphs: [
         'Inspect how deterministic Arabic lexical normalization works before BM25 tokenization without relying on external libraries: normalize Unicode (`unicodedata.normalize("NFKC", text)`), remove combining diacritical marks (`unicodedata.category(ch) == "Mn"` or Arabic diacritic range `\\u064b-\\u065f`, plus Tatweel elongation `ـ` `\\u0640`), map `أ`, `إ`, `آ` to `ا`, and normalize final `ى` -> `ي`. Notice how `"الإعدادات"` and `"الاعدادات"` both map cleanly to `"الاعدادات"`, letting BM25 match user queries regardless of hamza style!',
-        'Meanwhile, remember that **display rendering** and **embedding models** have distinct requirements from BM25 indexing. For retrieval vectors across Arabic, English, French, or code-switched text (*"كيف أعمل reset للباسورد؟"*), choose a genuine multilingual embedding encoder (such as `bge-m3` or multilingual `text-embedding-3`) trained on cross-lingual pairs so queries in Arabic match English policy chunks and vice versa. In your UI, render chat bubbles using `dir="auto"` on paragraph blocks and wrap embedded technical tokens (`[doc_12]`, `ERR_4092`, file paths, or URLs) inside isolated `<bdi>` spans so the browser Bidirectional Algorithm never reverses brackets or scrambles punctuation order.',
+        'Meanwhile, remember that **display rendering** and **embedding models** have distinct requirements from BM25 indexing. For retrieval vectors across Arabic, English, French, or code-switched text (*"كيف أعمل reset للباسورد؟"*), choose a multilingual `Embedding` tier encoder from `MODEL_CATALOG` trained on cross-lingual pairs so queries in Arabic match English policy chunks and vice versa. In your UI, render chat bubbles using `dir="auto"` on paragraph blocks and wrap embedded technical tokens (`[doc_12]`, `ERR_4092`, file paths, or URLs) inside isolated `<bdi>` spans so the browser Bidirectional Algorithm never reverses brackets or scrambles punctuation order.',
       ],
     },
     {
@@ -143,6 +145,17 @@ print("Doc norm  :", normalize_arabic_for_search(doc_kw))`,
         '**Mistake 4 — Destroying original display text when normalizing for search:** Store normalized Arabic purely inside the search/index field while returning pristine original accented/hamza text to the generator and user interface.',
         '**Mistake 5 — Breaking provider-level KV Prefix Caching with dynamic timestamps at the top of `system`:** Many model APIs cache the attention Key-Value states of shared `system` prefixes automatically for huge input discounts, *only* when prefix tokens are byte-for-byte identical! Putting `Current time: 14:03:22` or dynamic request IDs at line 1 busts prefix caching on every request—move changing dates/user state to the bottom after static instructions.',
         '**Mistake 6 — Translating user queries into English silently before search when domain terms stay Arabic/local:** Lossy machine translation mangles legal titles, product names, and dialect phrases; prefer native multilingual retrieval models first.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Caching & Multilingual Pipeline Choices',
+      headers: ['Technique', 'Latency / Cost Gain', 'Primary Failure Risk', 'Required Guardrail'],
+      rows: [
+        ['Exact Canonical Cache', '<2 ms lookup; 100% LLM cost saved', 'Stale answers after doc updates', 'Include tenant_id, prompt_version, index_version in key'],
+        ['Semantic Vector Cache', 'Catches paraphrases without LLM call', 'False matches on opposites (min_sim too low)', 'Enforce tenant scope + cosine >= 0.95 + skip write tools'],
+        ['Complexity Model Router', 'Routes routine tickets to cheap fast tier', 'Hard queries misrouted to weak tier', 'Escalation fallback when classifier confidence is low'],
+        ['Arabic NFKC + Stem Norm', 'Rescues BM25 lexical recall across variants', 'Corrupting user display text or code IDs', 'Normalize search index fields only; isolate LTR with bdi'],
       ],
     },
     {

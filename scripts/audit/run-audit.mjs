@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { execFileSync, spawnSync } from 'node:child_process';
 import ts from 'typescript';
 import { runCapstoneVerification } from './test-capstones.mjs';
+import { runQualityGates } from './quality-gates.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -12,8 +13,9 @@ const TMP_DIR = path.join(ROOT, '.audit-tmp');
 const ARGS = new Set(process.argv.slice(2));
 const FULL_BUILD = ARGS.has('--full');
 const STRICT_ALL = ARGS.has('--strict-all');
+const STRICT_WORD_MIN = 800;
 
-// Rebuilt lessons held strictly to Section 2 targets (1200-2000 prose words, >=8 quiz Qs, >=3 labs)
+// Rebuilt & new lessons held strictly to prose minimum (>=800 prose words), >=8 quiz Qs, and quality/freshness gates
 const REBUILT_LESSON_IDS = new Set([
   '0-1', '0-2', '0-3',
   '1-0', '1-1', '1-2', '1-3', '1-4', '1-5', '1-6',
@@ -25,6 +27,8 @@ const REBUILT_LESSON_IDS = new Set([
   '7-1', '7-2', '7-3', '7-4',
   '9-1', '9-2', '9-3', '9-4',
   '8-1', '8-2', '8-3', '8-4', '8-5',
+  '10-1', '10-2', '10-3', '10-4', '10-5', '10-6',
+  '11-1', '11-2', '11-3', '11-4', '11-5', '11-6',
 ]);
 
 const EXTERNAL_URL_ALLOWLIST = [
@@ -159,6 +163,7 @@ function main() {
   compileTsProject();
   const { COURSE_MODULES, ALL_LESSONS } = require(path.join(TMP_DIR, 'data/curriculum.js'));
   const { WORKPLACE_TICKETS, GUIDED_PROJECTS } = require(path.join(TMP_DIR, 'data/jobWorkbench.js'));
+  const { MODEL_CATALOG } = require(path.join(TMP_DIR, 'data/modelCatalog.js'));
   const { getShuffledIndices } = require(path.join(TMP_DIR, 'lib/quizUtils.js'));
   console.log(`Loaded ${COURSE_MODULES.length} modules, ${ALL_LESSONS.length} lessons.`);
 
@@ -232,8 +237,8 @@ function main() {
   const rebuiltQs = rebuiltLessons.flatMap((l) => l.quiz);
   const rebuiltStats = analyzeSingleChoiceQuizzes(rebuiltQs);
 
-  if (rebuiltStats.strictlyLongestPct > 0.4) {
-    failures.push(`[QUIZ FAIL] Rebuilt lessons longest-option bias ${(rebuiltStats.strictlyLongestPct * 100).toFixed(1)}% > 40%`);
+  if (rebuiltStats.strictlyLongestPct > 0.30) {
+    failures.push(`[QUIZ FAIL] Rebuilt lessons longest-option bias ${(rebuiltStats.strictlyLongestPct * 100).toFixed(1)}% > 30%`);
   }
   for (let i = 0; i < 4; i++) {
     const pct = rebuiltStats.indexCounts[i] / Math.max(1, rebuiltStats.totalSingleChoice);
@@ -263,8 +268,8 @@ function main() {
     const qCount = l.quiz.length;
     const isStrict = STRICT_ALL || REBUILT_LESSON_IDS.has(l.id);
     if (isStrict) {
-      if (words < 1200) {
-        failures.push(`[WORD COUNT FAIL] Lesson ${l.id} has ${words} prose words (< 1200 minimum)`);
+      if (words < STRICT_WORD_MIN) {
+        failures.push(`[WORD COUNT FAIL] Lesson ${l.id} has ${words} prose words (< ${STRICT_WORD_MIN} minimum)`);
         strictLessonFails++;
       }
       if (qCount < 8) {
@@ -272,7 +277,7 @@ function main() {
         strictLessonFails++;
       }
       console.log(`      -> STRICT LESSON ${l.number} (${l.id}): ${words} prose words, ${qCount} quiz Qs`);
-    } else if (words < 1200 || qCount < 8) {
+    } else if (words < STRICT_WORD_MIN || qCount < 8) {
       legacyShort.push(`${l.number}(${words}w/${qCount}q)`);
     }
   }
@@ -314,11 +319,24 @@ function main() {
   // 7. Capstone starter zips & validator evidence.json verification
   try {
     const capRes = runCapstoneVerification();
-    console.log(`[7/7] Capstone starter repos (${capRes.length}/7 zips make test + make check -> evidence.json): PASS`);
+    console.log(`[7/8] Capstone starter repos (${capRes.length}/7 zips make test + make check -> evidence.json): PASS`);
   } catch (err) {
     failures.push(`[CAPSTONE FAIL] ${err instanceof Error ? err.message : String(err)}`);
-    console.log('[7/7] Capstone starter repos: FAIL');
+    console.log('[7/8] Capstone starter repos: FAIL');
   }
+
+  const qRes = runQualityGates({
+    rootDir: ROOT,
+    tmpDir: TMP_DIR,
+    lessons: ALL_LESSONS,
+    modelCatalog: MODEL_CATALOG,
+    referenceDateIso: '2026-11-22',
+  });
+  for (const w of qRes.warnings) console.warn('  ' + w);
+  failures.push(...qRes.failures);
+  console.log(
+    `[8/8] Quality & Freshness Gates (${qRes.aiEngChecked} ai-eng lessons, ${qRes.catalogChecked} MODEL_CATALOG roles): ${qRes.failures.length === 0 ? 'PASS' : `FAIL (${qRes.failures.length})`}`
+  );
 
   if (FULL_BUILD) {
     console.log('Running tsc, eslint, and next build...');

@@ -11,6 +11,7 @@ export const module3: CourseModule = {
   title: 'Classical Machine Learning Mastery',
   subtitle: 'Linear baselines, regularization, bias-variance tradeoff, XGBoost/GBDTs, unsupervised clustering/PCA, production CV/SHAP workflows, and when NOT to use ML.',
   track: 'ds',
+  recommendedPath: 'ml-depth',
   estimatedHours: 6.4,
   capstoneDeliverable: 'Train, cross-validate, calibrate, slice errors on, and ROI-justify a tabular ML pipeline against a deterministic rule baseline.',
   lessons: [

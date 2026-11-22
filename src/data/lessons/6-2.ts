@@ -17,6 +17,8 @@ export const lesson6_2: Lesson = {
     'hybrid-search',
     'reranking',
   ],
+  competencies: ['jr-basic-rag', 'mid-hybrid-rag'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Explain why pure dense embeddings miss exact error codes, SKUs, and acronyms—and how Hybrid Search + RRF solves both.',
     'Choose cleanly between FAISS (in-process index), Chroma (local dev/collections), and PostgreSQL `pgvector` (ACID metadata/ACL joins).',
@@ -69,8 +71,8 @@ export const lesson6_2: Lesson = {
       title: 'Two-Stage Retrieval Architecture: Bi-Encoder vs Cross-Encoder',
       headers: ['Stage', 'Model Type', 'Speed / Scale', 'Accuracy'],
       rows: [
-        ['1. First-stage retrieval (Top 50–100)', '**Bi-Encoder** + HNSW (`text-embedding-3`, `bge-m3`)', 'Precomputes doc vectors once; searches millions fast via ANN', 'Strong recall (compresses doc to 1 vector)'],
-        ['2. Reranking (Top 50 -> Top 5)', '**Cross-Encoder** (`bge-reranker`, Cohere Rerank)', 'Runs full query+doc token-by-token cross-attention on top 50 pairs', 'Sharper precision for RAG grounding'],
+        ['1. First-stage retrieval (Top 50–100)', '**Bi-Encoder** + HNSW (`Embedding tier` encoder)', 'Precomputes doc vectors once; searches millions fast via ANN', 'Strong recall (compresses doc to 1 vector)'],
+        ['2. Reranking (Top 50 -> Top 5)', '**Cross-Encoder** (`Reranker tier` cross-encoder)', 'Runs full query+doc token-by-token cross-attention on top 50 pairs', 'Sharper precision for RAG grounding'],
       ],
     },
     {
@@ -132,7 +134,7 @@ print(weighted_rrf(["docA", "docB", "docC"], ["docC", "docD", "docA"], k=60))`,
       heading: 'Common Mistakes & How to Debug Them',
       paragraphs: [
         '**Mistake 1 — Averaging raw BM25 scores with Cosine scores directly:** Because BM25 varies from `0` to `40+` depending on corpus IDF while cosine stays in `[-1, 1]`, raw sums let BM25 dominate blindly. Use rank-based RRF instead.',
-        '**Mistake 2 — Embedding documents with model A and querying with model B:** Vector spaces from different embedding models (`text-embedding-3-small` vs `bge-small`) are completely incompatible! Always store `embedding_model` metadata alongside collections and re-index when upgrading encoders.',
+        '**Mistake 2 — Embedding documents with model A and querying with model B:** Vector spaces from different `Embedding` tier encoders (`embed-provider-a` vs `embed-local-b`) are completely incompatible! Always store `embedding_model` metadata alongside collections and re-index when upgrading encoders.',
         '**Mistake 3 — Using HNSW with a tiny `ef_search` on restrictive metadata filters:** Filtering `WHERE tenant_id = "vip"` (only `1%` of rows) after or inside a low-`ef_search` graph traversal can starve results (`top_k` returns 1 doc instead of 5!). Use iterative pre-filtered scans (`pgvector 0.8+` iterative scan) or dedicated per-tenant partitions for tiny tenants.',
         '**Mistake 4 — Sending all 100 Stage-1 chunks directly to the LLM:** Overstuffing context raises latency, balloons token bills, and degrades attention in the middle of long prompts ("lost in the middle"). Always Stage-2 rerank down to the best 3–8 chunks.',
         '**Mistake 5 — Ignoring embedding dimensions & Matryoshka truncation costs:** Upgrading blindly from `384`-dim embeddings to `3072`-dim vectors multiplies HNSW RAM footprint by `8×` for only modest recall gains on many domains. Many modern encoders support **Matryoshka Representation Learning (MRL)**—letting you slice prefix dimensions (`[:512]` or `[:1024]`) and re-normalize to unit length while retaining strong retrieval accuracy at a fraction of the RAM and network cost.',

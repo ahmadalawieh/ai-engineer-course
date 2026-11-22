@@ -3,7 +3,7 @@ import type { Lesson } from '@/types/course';
 export const lesson9_1: Lesson = {
   id: '9-1',
   moduleId: 'mod-9',
-  number: '8.1',
+  number: '9.1',
   title: 'FastAPI Services, Request Validation, Auth Basics & Environment Config',
   subtitle: 'Turn standalone Python notebooks into typed FastAPI endpoints with Pydantic v2 schema validation, constant-time API authentication, 12-factor secrets config, and health probes.',
   durationMinutes: 85,
@@ -16,6 +16,8 @@ export const lesson9_1: Lesson = {
     'api-auth-rate-limiting',
     'env-config-12factor',
   ],
+  competencies: ['jr-python-http', 'jr-deploy'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Design typed FastAPI `POST` and `GET` endpoints separating `/healthz` liveness from `/readyz` dependency readiness probes.',
     'Enforce strict Pydantic v2 request bounds (`min_length`, `max_length`, temperature `[0, 2]`, role allowlists) returning clean HTTP `422` errors.',

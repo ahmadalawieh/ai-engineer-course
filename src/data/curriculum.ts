@@ -21,8 +21,8 @@ export const COURSE_MODULES: CourseModule[] = [
   module5,
   module6,
   module7,
-  module9,
   module8,
+  module9,
   module10,
   module11,
 ];

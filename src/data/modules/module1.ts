@@ -13,6 +13,7 @@ export const module1: CourseModule = {
   title: 'Python for Real Work, Linear Algebra & Statistics',
   subtitle: 'Master production Python (files, JSON, dataclasses, pytest, REST APIs, async), NumPy vectorization, linear algebra, gradients, and statistical evaluation.',
   track: 'core',
+  recommendedPath: 'foundation',
   estimatedHours: 8.5,
   capstoneDeliverable: 'Build typed JSONL parsers, concurrent mock REST clients, batch cosine search, finite-diff verified gradient descent, and A/B statistical eval helpers.',
   lessons: [

@@ -77,7 +77,7 @@ export const lesson4_1: Lesson = {
         ['**ReLU**', '`max(0, z)`', 'Exact `0` (risks Dying ReLU)', 'Classic CNNs, fast lightweight MLPs'],
         ['**LeakyReLU**', '`max(0.01*z, z)`', 'Small `0.01` slope (prevents death)', 'Vision GANs, robust small MLPs'],
         ['**GELU**', '`z * norm_cdf(z)` smooth curve', 'Smooth tiny negative curve', 'BERT, GPT-2/3, Vision Transformers'],
-        ['**SwiGLU**', '`SiLU(x W_g) * (x W_v)` gated bilinear', 'Smooth non-zero negative tail', 'Llama-3, Mistral, Qwen, Gemma FFNs'],
+        ['**SwiGLU**', '`SiLU(x W_g) * (x W_v)` gated bilinear', 'Smooth non-zero negative tail', 'Modern open-weights (`local-open-weights`) & frontier FFNs'],
       ],
     },
     {

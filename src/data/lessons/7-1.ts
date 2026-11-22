@@ -17,6 +17,8 @@ export const lesson7_1: Lesson = {
     'hitl-gates',
     'trace-debugging',
   ],
+  competencies: ['mid-agents-guardrails', 'sr-security-gov'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Choose cleanly between deterministic workflows (DAG routing, parallelization) and dynamic autonomous ReAct loops.',
     'Design multi-tier agent memory (short-term context scratchpad vs persistent episodic/semantic profile stores).',

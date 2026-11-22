@@ -106,7 +106,7 @@ const CORE_GLOSSARY_ITEMS: GlossaryItem[] = [
     track: 'core',
     category: 'Deep Learning',
     definition: 'Per-token normalization across the hidden dimension (not across the batch), keeping Transformer activations stable regardless of batch size.',
-    example: 'Pre-norm applied before Attention and SwiGLU blocks in Llama-3.',
+    example: 'Pre-norm applied before Attention and SwiGLU blocks in modern `local-open-weights` decoders.',
   },
   {
     term: 'BF16 (Brain Floating Point 16)',
@@ -130,7 +130,7 @@ const CORE_GLOSSARY_ITEMS: GlossaryItem[] = [
     track: 'ai-eng',
     category: 'Transformers',
     definition: 'Encodes token order by rotating Query and Key vector pairs proportional to index $m$ so their dot product depends naturally on relative distance $(m - n)$.',
-    example: 'Standard positional encoding across Llama, Mistral, Qwen, and Gemma.',
+    example: 'Standard positional encoding across open-weights decoder families (`local-open-weights`).',
   },
   {
     term: 'KV Cache',
@@ -146,7 +146,7 @@ const CORE_GLOSSARY_ITEMS: GlossaryItem[] = [
     track: 'ai-eng',
     category: 'Transformers',
     definition: 'Shares fewer Key/Value heads across groups of Query heads, cutting KV-cache size and memory-bandwidth load 4x–8x.',
-    example: '32 Query heads sharing 8 KV heads in Llama-3-8B.',
+    example: '32 Query heads sharing 8 KV heads in `local-open-weights` 8B-class models.',
   },
   {
     term: 'FlashAttention',

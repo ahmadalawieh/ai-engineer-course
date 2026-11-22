@@ -6,10 +6,11 @@ import { lesson9_4 } from '../lessons/9-4';
 
 export const module9: CourseModule = {
   id: 'mod-9',
-  number: 8,
+  number: 9,
   title: 'Software Engineering for AI Systems',
   subtitle: 'Package AI workloads into typed FastAPI services, hardened Docker containers, GitHub Actions CI, OWASP-resilient security controls, and free-tier live deployments.',
   track: 'ai-eng',
+  recommendedPath: 'ai-eng',
   estimatedHours: 5.4,
   capstoneDeliverable: 'Ship a containerized FastAPI AI service with auth, cost budgets, CI eval gates, live cloud deployment, README, and incident runbook.',
   lessons: [

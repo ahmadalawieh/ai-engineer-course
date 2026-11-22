@@ -3,7 +3,7 @@ import type { Lesson } from '@/types/course';
 export const lesson9_3: Lesson = {
   id: '9-3',
   moduleId: 'mod-9',
-  number: '8.3',
+  number: '9.3',
   title: 'OWASP LLM Security, Secrets Management & Cost Monitoring',
   subtitle: 'Defend AI apps against OWASP LLM Top-10 vulnerabilities (Prompt Injection, Insecure Output Handling, Secret/PII Leaks, Unbounded Spend) and enforce real-time dollar budgets.',
   durationMinutes: 80,
@@ -16,6 +16,8 @@ export const lesson9_3: Lesson = {
     'secrets-rotation-scrubber',
     'llm-cost-circuit-breaker',
   ],
+  competencies: ['jr-env-git', 'mid-agents-guardrails', 'sr-security-gov'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Identify and mitigate top OWASP LLM vulnerabilities: Prompt Injection (LLM01), Insecure Output Handling (LLM02), Sensitive Info Disclosure (LLM06), and Unbounded Consumption (LLM10).',
     'Treat raw LLM output strictly as untrusted user input—escaping HTML, parameterizing SQL, and blocking SSRF metadata IPs before execution.',

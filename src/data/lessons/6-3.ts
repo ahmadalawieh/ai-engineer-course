@@ -19,6 +19,8 @@ export const lesson6_3: Lesson = {
     'rag-citations',
     'rag-refusal',
   ],
+  competencies: ['jr-basic-rag', 'mid-hybrid-rag'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Design structure-aware contextual chunking pipelines with controlled overlap instead of blind character slicing.',
     'Implement Small-to-Big (parent-child) retrieval so search queries match sharp snippets while generators read full context.',

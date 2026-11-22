@@ -3,13 +3,13 @@ import type { Lesson } from '@/types/course';
 export const lesson8_4: Lesson = {
   id: '8-4',
   moduleId: 'mod-8',
-  number: '9.4',
+  number: '8.4',
   title: 'Behavioral Interviews (STAR), Take-Home Simulations & Code Review',
   subtitle: 'Deliver crisp STAR ownership stories backed by real metrics, execute timed AI take-home assignments cleanly without over-engineering, and ace live code-review follow-ups.',
   durationMinutes: 75,
   track: 'core',
-  prerequisites: ['7.2', '8.4'],
-  requires: ['golden-datasets', 'ragas-metrics', 'production-readme-craft', 'oncall-incident-runbooks'],
+  prerequisites: ['7.2', '8.3'],
+  requires: ['golden-datasets', 'ragas-metrics', 'incident-response', 'model-data-versioning'],
   teaches: [
     'behavioral-star-stories',
     'takehome-interview-execution',
@@ -105,8 +105,8 @@ export const lesson8_4: Lesson = {
       type: 'python-lab',
       labId: 'lab-8-4-takehome',
       difficulty: 'guided',
-      requires: ['production-readme-craft', 'golden-datasets'],
-      title: 'Lab 9.4A: Take-Home Submission Readiness Gate',
+      requires: ['golden-datasets', 'incident-response'],
+      title: 'Lab 8.4A: Take-Home Submission Readiness Gate',
       prompt:
         'Implement `audit_takehome_repo(checks: dict) -> tuple[bool, list[str]]`: evaluate a take-home dict with booleans `"has_readme"`, `"tests_pass_offline"`, `"has_env_example"`, `"no_hardcoded_paths"`, `"has_eval_metrics"`, plus integer `"commit_count"`. Collect clear failure strings (e.g., `"missing_readme"`, `"tests_require_network_key"`, `"missing_env_example"`, `"hardcoded_laptop_paths"`, `"missing_eval_metrics"`, `"single_dump_commit"` when `commit_count < 2`). Return `(len(issues) == 0, issues)`.',
       starterCode: `def audit_takehome_repo(checks: dict) -> tuple[bool, list[str]]:

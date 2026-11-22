@@ -16,6 +16,8 @@ export const lesson6_1: Lesson = {
     'tool-calling',
     'prompt-injection-defense',
   ],
+  competencies: ['jr-llm-client', 'mid-agents-guardrails'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Treat prompt templates like versioned code artifacts (`PROMPT_VERSION`, explicit input variables, few-shot examples, and regression diffs).',
     'Enforce valid JSON schemas via Constrained Decoding / Structured Outputs and validate parsed responses strictly.',
@@ -130,6 +132,17 @@ print(dispatch_tool_call(tc))`,
         '**Mistake 5 — Assuming JSON Schema catches factual hallucinations:** Constrained decoding enforces *syntax and types*, not truthfulness! An LLM can still emit `{"urgency": 5, "summary": "User loved the product"}` in valid JSON when the user actually reported a crash—always pair schemas with evaluation tests.',
         '**Mistake 6 — Forgetting schema `description` hints & optional `"unknown"` enums:** Whenever a classification schema leaves out an `"other"` or `"unknown"` option, constrained decoding forces the model to shoehorn off-topic user messages into one of your valid labels! Always supply an explicit fallback enum value and clear field descriptions inside Pydantic `Field(..., description=...)`.',
         '**Mistake 7 — Skipping trace logging on tool calls:** When an agent picks the wrong tool or invents malformed arguments in production, log the prompt version, chosen tool name, validated argument payload, execution time, and returned tool snippet so engineers can reproduce and convert failures straight into new golden test cases.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Prompting, Structured Output & Tool Execution Controls',
+      headers: ['Mechanism', 'What It Guarantees', 'What It Cannot Fix', 'Production Rule'],
+      rows: [
+        ['JSON Schema / Constrained Decode', '100% valid syntax, keys, and enum types', 'Factual accuracy or semantic hallucinations', 'Always pair schemas with fallback enums and golden evals'],
+        ['Delimited Untrusted Inputs', 'Clear separation between rules and user/PDF text', 'Sophisticated indirect injections alone', 'Enforce server-side tool allowlists and RBAC confirmation'],
+        ['Few-Shot Prompting', 'Strong formatting and edge-case tone guidance', 'Rapidly changing external private knowledge', 'Pin prompt_version in Git and track token budget'],
+        ['Bounded Tool Loop (max_hops)', 'Stops infinite retry loops and runaway bills', 'Bad schema design on tool arguments', 'Validate args with Pydantic before executing allowlisted funcs'],
       ],
     },
     {

@@ -3,17 +3,19 @@ import type { Lesson } from '@/types/course';
 export const lesson8_3: Lesson = {
   id: '8-3',
   moduleId: 'mod-8',
-  number: '9.3',
+  number: '8.3',
   title: 'AI System Design Interviews: End-to-End Worked Architectures',
   subtitle: 'Walk confidently through 45-minute AI System Design interviews with repeatable architecture pillars, unit-economics math, vector memory sizing, and graceful fallback design.',
   durationMinutes: 90,
   track: 'ai-eng',
   prerequisites: ['6.3', '7.1', '7.2', '8.2'],
-  requires: ['rag-chunking', 'acl-prefiltering', 'fastapi-endpoints', 'caching-and-async-queues'],
+  requires: ['rag-chunking', 'acl-prefiltering', 'llm-caching', 'model-routing'],
   teaches: [
     'ai-system-design-framework',
     'system-design-capacity-math',
   ],
+  competencies: ['sr-sys-architecture', 'sr-finops-scale'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Structure any 45-minute AI System Design interview cleanly across 5 pillars (Requirements/SLAs -> Data/Retrieval -> Routing/Caching/Guardrails -> Evals -> Failure Fallbacks).',
     'Present a complete worked architecture for an enterprise multi-tenant RAG + Support Agent copilot at 1M DAU.',
@@ -106,8 +108,8 @@ export const lesson8_3: Lesson = {
       type: 'python-lab',
       labId: 'lab-8-3-unit-econ',
       difficulty: 'guided',
-      requires: ['ai-system-design-framework', 'caching-and-async-queues'],
-      title: 'Lab 9.3A: AI System Unit-Economics & Cache/Router Savings Estimator',
+      requires: ['ai-system-design-framework', 'llm-caching'],
+      title: 'Lab 8.3A: AI System Unit-Economics & Cache/Router Savings Estimator',
       prompt:
         'Implement `estimate_daily_cost(daily_turns: int, cache_hit_rate: float, mini_share: float, avg_in_tokens: int, avg_out_tokens: int) -> dict`: compute naive uncached daily USD cost if 100% of turns hit a frontier model (`$2.50/1M in`, `$10.00/1M out`), vs optimized daily USD cost where `cache_hit_rate` fraction costs `$0`, `mini_share` of remaining uncached turns use the mini model (`$0.15/1M in`, `$0.60/1M out`), and the rest use frontier. Return `{"naive_usd": round(..., 2), "optimized_usd": round(..., 2), "savings_pct": round(..., 1)}`.',
       starterCode: `def estimate_daily_cost(daily_turns: int, cache_hit_rate: float, mini_share: float, avg_in_tokens: int, avg_out_tokens: int) -> dict:
@@ -181,8 +183,8 @@ def plan_vector_cluster(num_vectors: int, dim: int, bytes_per_dim: int = 4, over
       type: 'python-lab',
       labId: 'lab-8-3-router',
       difficulty: 'debug',
-      requires: ['ai-system-design-framework', 'fastapi-endpoints'],
-      title: 'Lab 9.3C: Fix Missing Graceful Fallback in Model Cascade Router',
+      requires: ['ai-system-design-framework', 'python-dicts'],
+      title: 'Lab 8.3C: Fix Missing Graceful Fallback in Model Cascade Router',
       prompt:
         'A broken AI router `select_inference_path(complexity: float, cache_hit: bool, upstream_healthy: bool) -> str` crashes or sends traffic into a broken upstream LLM whenever `upstream_healthy` is `False`! Fix it cleanly: (1) if `cache_hit` is `True`, return `"semantic_cache"` regardless of upstream health; (2) if `upstream_healthy` is `False`, degrade gracefully to `"bm25_doc_fallback"`; (3) otherwise return `"frontier_model"` when `complexity >= 0.7`, else `"mini_8b_model"`.',
       starterCode: `def select_inference_path(complexity: float, cache_hit: bool, upstream_healthy: bool) -> str:

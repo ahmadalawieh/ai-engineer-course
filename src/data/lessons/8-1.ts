@@ -3,7 +3,7 @@ import type { Lesson } from '@/types/course';
 export const lesson8_1: Lesson = {
   id: '8-1',
   moduleId: 'mod-8',
-  number: '9.1',
+  number: '8.1',
   title: 'Coding Interview Basics: Arrays, Strings, Hash Maps, Recursion & Big-O',
   subtitle: 'Pass live Python coding screens confidently using hash maps, two-pointer sliding windows, recursive tree traversal, and clear Big-O time/space explanations.',
   durationMinutes: 85,

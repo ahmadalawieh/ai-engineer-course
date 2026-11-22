@@ -15,6 +15,8 @@ export const lesson6_4: Lesson = {
     'lora-qlora',
     'sft-datasets',
   ],
+  competencies: ['mid-hybrid-rag', 'sr-sys-architecture'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Apply the Senior Escalation Ladder to choose cleanly between Prompting, RAG, and Fine-Tuning.',
     'Derive LoRA ($W = W_0 + \\frac{\\alpha}{r} B A$) parameter counts and QLoRA (4-bit NF4 base + BF16 adapters) VRAM budgets explicitly.',
@@ -118,6 +120,17 @@ print("Max diff unmerged vs merged:", float(np.max(np.abs(y_unmerged - y_merged)
         '**Mistake 5 — Running 10 epochs blindly when training loss hits 0.05:** Overfitting small SFT datasets memorizes exact training phrasings while hurting held-out generalization and instruction adherence! Track validation loss and downstream task accuracy every 50–100 optimizer steps, keep SFT runs short (`1–3` epochs typically), and activate **gradient checkpointing** if activation memory spikes on long contexts.',
         '**Mistake 6 — Guessing LoRA helped without running the identical golden eval suite:** Never eyeball five cherry-picked completions to declare a fine-tune successful. Evaluate the merged adapter side-by-side against your baseline prompt and RAG pipeline across the exact same held-out accuracy, latency, and USD cost benchmarks before shipping.',
         '**Mistake 7 — Confusing Supervised Fine-Tuning (SFT) with Preference Alignment (DPO):** SFT teaches *demonstrations* (prompt -> desired answer), whereas **Direct Preference Optimization (DPO)** teaches pairwise *preferences* (`chosen` answer vs `rejected` answer) to suppress subtle verbosity, unwanted refusals, or formatting quirks once an SFT checkpoint already generates strong responses. Always save immutable adapter checkpoints tagged with the exact dataset commit hash.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Prompting vs RAG vs LoRA/QLoRA Fine-Tuning',
+      headers: ['Approach', 'Best Problem Fit', 'Update Speed', 'Operational Complexity'],
+      rows: [
+        ['Prompting + Few-Shot', 'General logic, classification, schema baseline', 'Minutes (edit string + eval)', 'Lowest (zero training or model hosting)'],
+        ['Hybrid RAG + Citations', 'Private, live, or frequently changing facts', 'Seconds (re-index updated docs)', 'Medium (chunking, vector + BM25 index, evals)'],
+        ['LoRA / QLoRA SFT', 'Strict style/format, domain jargon, latency distillation', 'Hours (curate JSONL + GPU run)', 'High (leak-free dataset curation, replay mix, eval gates)'],
+        ['Full Fine-Tuning', 'Deep continual pretraining or heavy shift', 'Days across multi-GPU clusters', 'Highest (16 bytes/param VRAM, catastrophic forgetting risk)'],
       ],
     },
     {

@@ -16,6 +16,8 @@ export const lesson7_3: Lesson = {
     'speculative-decoding',
     'span-tracing',
   ],
+  competencies: ['mid-observability-cost', 'sr-finops-scale'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Separate compute-bound **Prefill (TTFT)** from memory-bandwidth-bound **Decode (TPOT)** so optimization targets the real bottleneck.',
     'Explain how **Continuous Batching** and **PagedAttention (vLLM)** eliminate GPU idle wait and KV-cache fragmentation waste.',
@@ -115,6 +117,17 @@ print(summarize_trace(req))`,
         '**Mistake 5 — Ignoring Speculative Decoding acceptance rate on narrow domain tasks:** If a generic tiny draft model disagrees with your specialized SQL or Arabic target model (`acceptance < 40%`), verification wastes compute rather than speeding decode! Benchmark actual end-to-end `p50` and `p95` TPOT on representative production prompts before enabling speculative decoding.',
         '**Mistake 6 — Over-provisioning GPU replicas for peak without autoscaling & graceful load-shedding:** Measure active KV-cache saturation and queue wait duration to scale replicas cleanly and fail fast (`HTTP 503`) before queues explode.',
         '**Mistake 7 — Letting huge 32K prefill jobs stall active streaming decode users:** Enable **Chunked Prefill** in serving engines like vLLM so long incoming documents slice into smaller compute chunks interleaved smoothly with ongoing decode steps, keeping TPOT steady for concurrent chatters.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Inference Bottlenecks & Optimization Levers',
+      headers: ['Lever', 'Targets Phase', 'Throughput / Latency Effect', 'Caveat to Watch'],
+      rows: [
+        ['Prompt Prefix Caching', 'Prefill (TTFT)', 'Skips recomputing static system/tool KV pages', 'Dynamic values at prompt line 1 break prefix match'],
+        ['PagedAttention + Cont. Batch', 'Decode Concurrency', 'Packs variable-length KV blocks without OOM waste', 'Needs explicit concurrency caps & queue depth alerts'],
+        ['AWQ / FP8 Weight Quant', 'Decode (TPOT)', 'Cuts HBM weight bytes moved per output token', 'Can degrade tiny <=3B models on strict JSON/math'],
+        ['Speculative Decoding', 'Decode (TPOT)', 'Verifies k draft tokens in parallel; exact output math', 'Wastes compute if draft acceptance drops under ~40%'],
       ],
     },
     {

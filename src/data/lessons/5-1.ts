@@ -16,6 +16,8 @@ export const lesson5_1: Lesson = {
     'rope-positional-encoding',
     'token-budget-hygiene',
   ],
+  competencies: ['jr-llm-client'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Trace Byte-Pair Encoding (BPE) pair counting and iterative subword merges from UTF-8 bytes up to modern 50k–128k vocabularies.',
     'Explain tokenization failure modes: letter-counting blind spots, inconsistent number splitting, non-English token inflation, and trailing-space prompt bugs.',
@@ -87,6 +89,17 @@ export const lesson5_1: Lesson = {
         '7) Forgetting that embedding vocabularies grow slowly on multilingual or domain jargon: technical medical terms (`"electrocardiogram"` -> 4–5 pieces) and non-Latin UTF-8 scripts consume 2x–3x more context window tokens per sentence than everyday English, raising latency and shrinking effective RAG document budget unless measured directly.',
         '8) Assuming `max_tokens` inside LLM API requests measures total context size: `max_tokens` caps ONLY the generated output completion, while `input_tokens + max_tokens` must fit inside the model’s combined context window or the server rejects the payload with HTTP 400.',
         '9) Mixing tokenizer files (`tokenizer.json`) across model versions when exporting local weights: even two checkpoints from the exact same model family occasionally revise reserved chat tokens or vocabulary sizes (`128,000 -> 128,256`), shifting every downstream embedding row index unless model weights, config files, and matching `tokenizer` artifacts stay pinned together.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Subword Schemes & Positional Encodings',
+      headers: ['Choice', 'Mechanism', 'Key Advantage', 'Main Limitation'],
+      rows: [
+        ['Byte-Level BPE', 'Merges frequent UTF-8 byte pairs bottom-up', 'Zero <UNK> tokens on arbitrary text or code', '2x-4x more tokens on non-Latin scripts than English'],
+        ['Word / Character Split', 'Whitespace words or raw characters', 'Tiny vocab (chars) or intuitive split (words)', 'Giant OOV tables (words) or huge seq length (chars)'],
+        ['Sinusoidal / Learned Abs', 'Adds fixed/learned vector per index m', 'Simple vector addition at layer 0', 'Fails cleanly when extrapolating past training length'],
+        ['RoPE (Rotary)', 'Rotates Q, K pairs by angle m * theta', 'Dot product depends strictly on relative offset (m - n)', 'Needs NTK/YaRN base scaling for 10x context extension'],
       ],
     },
     {

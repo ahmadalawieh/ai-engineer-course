@@ -11,6 +11,7 @@ export const module2: CourseModule = {
   title: 'Data Science Foundations & Statistical Inference',
   subtitle: 'Master analytical SQL, Pandas EDA & time series, A/B experimentation, leak-free feature pipelines, and ROI-driven evaluation metrics.',
   track: 'ds',
+  recommendedPath: 'ml-depth',
   estimatedHours: 6.8,
   capstoneDeliverable: 'Design a leak-free SQL + Pandas feature pipeline, run an SRM-checked A/B evaluation, and tune a cost-optimal imbalanced threshold.',
   lessons: [

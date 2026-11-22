@@ -16,6 +16,8 @@ export const lesson6_0: Lesson = {
     'llm-retries-cost',
     'mock-llm-client',
   ],
+  competencies: ['jr-llm-client', 'jr-python-http'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Construct explicit multi-role `messages` lists (`system`, `user`, `assistant`) and pick appropriate `temperature` and `max_tokens` limits.',
     'Accumulate Server-Sent Event (SSE) streaming token deltas reliably while capturing final token usage metadata.',

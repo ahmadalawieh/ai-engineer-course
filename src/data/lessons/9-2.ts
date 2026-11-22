@@ -3,7 +3,7 @@ import type { Lesson } from '@/types/course';
 export const lesson9_2: Lesson = {
   id: '9-2',
   moduleId: 'mod-9',
-  number: '8.2',
+  number: '9.2',
   title: 'Docker Containers, GitHub Actions CI, Logging, Caching & Queues',
   subtitle: 'Package reproducible non-root Docker images, enforce CI quality and eval gates in GitHub Actions, log structured RED telemetry, cache repeated inferences, and offload slow work to queues.',
   durationMinutes: 85,
@@ -16,6 +16,8 @@ export const lesson9_2: Lesson = {
     'structured-logging-metrics',
     'caching-and-async-queues',
   ],
+  competencies: ['jr-deploy', 'mid-observability-cost', 'mid-incidents-design'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Write optimized, non-root `Dockerfile`s (`requirements.txt` layer caching + `.dockerignore`) and `docker-compose.yml` local stacks.',
     'Configure GitHub Actions CI pipelines running lint (`ruff`/`eslint`), unit tests (`pytest`), and deterministic golden LLM eval gates.',
@@ -261,9 +263,9 @@ def build_log_record(trace_id: str, tenant_id: str, api_key: str, query: str, la
     # BUG: leaks api_key and raw user query PII into log aggregation!
     return json.dumps({"trace_id": trace_id, "api_key": api_key, "query": query})`,
       testCode: `import json
-k1 = make_cache_key("acme", "gpt-4o-mini", "  Q3 revenue? ")
-k2 = make_cache_key("beta", "gpt-4o-mini", "Q3 revenue?")
-k3 = make_cache_key("acme", "gpt-4o-mini", "q3 revenue?")
+k1 = make_cache_key("acme", "small-fast", "  Q3 revenue? ")
+k2 = make_cache_key("beta", "small-fast", "Q3 revenue?")
+k3 = make_cache_key("acme", "small-fast", "q3 revenue?")
 assert k1 == k3 and k1 != k2, "Same tenant/model normalized queries must match; cross-tenant must differ!"
 raw = build_log_record("tr_9", "acme", "sk-secret-999", "My SSN is 123", 42.5, 180, False)
 obj = json.loads(raw)

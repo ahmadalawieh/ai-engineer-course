@@ -16,6 +16,8 @@ export const lesson5_2: Lesson = {
     'multi-head-gqa',
     'kv-cache',
   ],
+  competencies: ['jr-llm-client', 'mid-observability-cost'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Trace `softmax((Q @ K.T) / sqrt(d_k) + M_causal) @ V` numerically by hand and implement it cleanly in NumPy.',
     'Explain mathematically why dividing by `sqrt(d_k)` prevents Softmax gradient saturation on wide head dimensions.',
@@ -55,7 +57,7 @@ export const lesson5_2: Lesson = {
         { symbol: 'M_{\\text{causal}}', meaning: 'Strict upper triangle ($j > i$) set to $-\\infty$ so token $i$ cannot cheat by reading future tokens' },
       ],
       intuition:
-        '**Multi-Head Attention** runs $h$ parallel subspaces (`d_head = d_model / h`) so Head 1 tracks syntax, Head 2 tracks pronouns, and Head 3 matches code brackets. **GQA (Grouped-Query Attention)** lets groups of Query heads share fewer Key/Value heads—slashing KV-cache VRAM and memory traffic cleanly (`4x–8x`) inside Llama-3, Mistral, and Qwen!',
+        '**Multi-Head Attention** runs $h$ parallel subspaces (`d_head = d_model / h`) so Head 1 tracks syntax, Head 2 tracks pronouns, and Head 3 matches code brackets. **GQA (Grouped-Query Attention)** lets groups of Query heads share fewer Key/Value heads—slashing KV-cache VRAM and memory traffic cleanly (`4x–8x`) inside modern `local-open-weights` decoders!',
     },
     {
       type: 'prose',
@@ -89,7 +91,7 @@ export const lesson5_2: Lesson = {
       heading: 'Worked Example 2: KV Cache Arithmetic & Grouped-Query Attention (GQA)',
       paragraphs: [
         'Without **KV Caching**, generating token `1,001` requires passing all `1,001` tokens back through every Query, Key, Value projection and computing a full `1001 x 1001` matrix—even though tokens `1..1000` already produced identical `K` and `V` vectors one step earlier! With KV caching, during **decode**, only the **single newest token** `x_t` enters projections to produce `q_t, k_t, v_t` of shape `(1, d_head)`. We append `k_t, v_t` onto cached `K_cache, V_cache` `(t, d_head)` in VRAM and attend strictly `(1, d_head) @ (d_head, t)`—turning `O(N^2)` per step down to `O(N)`!',
-        'Look at the exact VRAM math for KV Cache: every cached token stores **2 tensors (`K` and `V`)** across every layer and every KV head. Under classic **MHA** (`32` Query heads = `32` KV heads, `32` layers, `d_head = 128`, `BF16 = 2 bytes`), 1 token costs `2 * 32 * 32 * 128 * 2 = 524,288 bytes = 0.5 MB`! At `8,192` tokens across `16` concurrent users, KV cache alone consumes `8192 * 16 * 0.5 MB = 64 GB`! Switching to **GQA** (`32` Query heads sharing `8` KV heads — group size 4) cuts KV cache cleanly by **4x** (`128 KB/token -> 16 GB` total), which is why virtually all modern serving models (`Llama-3`, `Qwen`, `Mistral`) adopt GQA.',
+        'Look at the exact VRAM math for KV Cache: every cached token stores **2 tensors (`K` and `V`)** across every layer and every KV head. Under classic **MHA** (`32` Query heads = `32` KV heads, `32` layers, `d_head = 128`, `BF16 = 2 bytes`), 1 token costs `2 * 32 * 32 * 128 * 2 = 524,288 bytes = 0.5 MB`! At `8,192` tokens across `16` concurrent users, KV cache alone consumes `8192 * 16 * 0.5 MB = 64 GB`! Switching to **GQA** (`32` Query heads sharing `8` KV heads — group size 4) cuts KV cache cleanly by **4x** (`128 KB/token -> 16 GB` total), which is why virtually all modern `local-open-weights` serving models adopt GQA.',
       ],
     },
     {
@@ -110,6 +112,17 @@ export const lesson5_2: Lesson = {
         '4) Confusing bidirectional **Encoder** attention (`BERT` embeddings where every token sees all tokens without causal mask) with causal **Decoder** attention (`GPT`, `Llama`, `Claude`): embedding models intentionally allow left-and-right context mixing, whereas generative LLMs forbid peeking ahead.',
         '5) Ignoring batch-padding masks alongside the causal mask during batched prefill: when packing a 5-token prompt and a 20-token prompt in the same batch, add `-inf` onto `<PAD>` columns too so real words never attend to meaningless pad embeddings!',
         '6) Breaking Prefix KV Caching accidentally by placing dynamic timestamps (`"Current time: 2026-11-21T20:30:01Z"`) or per-user IDs at line 1 of a system prompt: mutating byte 1 invalidates the entire 3,000-token prefix hash! Always keep static system instructions, tool JSON schemas, and shared few-shot examples strictly at the very top of your messages list, appending volatile session dates and user queries at the very end.',
+      ],
+    },
+    {
+      type: 'table',
+      title: 'Trade-Off Comparison: Attention Variants & KV Caching',
+      headers: ['Architecture', 'KV Heads per 32 Q Heads', 'KV VRAM Footprint', 'Quality & Serving Fit'],
+      rows: [
+        ['MHA (Multi-Head)', '32 KV heads', 'Highest (1.0x baseline)', 'Rich capacity; hits VRAM limits fast at high concurrency'],
+        ['GQA (Grouped-Query)', '4-8 KV heads', '4x-8x smaller KV cache', 'Default production sweet spot with near-zero quality drop'],
+        ['MQA (Multi-Query)', '1 shared KV head', '32x smaller KV cache', 'Maximum batch concurrency; slight drop on dense reasoning'],
+        ['Prefix KV Cache (vLLM/API)', 'Shared read-only prefix blocks', 'Reuses prompt prefix once across traffic', 'Requires static system/tool prefix placed strictly at line 1'],
       ],
     },
     {
@@ -303,7 +316,7 @@ def decode_step_with_cache(q_new: np.ndarray, k_new: np.ndarray, v_new: np.ndarr
     {
       id: 'q5-2-3',
       type: 'multiple-choice',
-      question: 'Why do Llama-3, Mistral, and Qwen adopt Grouped-Query Attention (GQA) instead of full Multi-Head Attention (MHA)?',
+      question: 'Why do modern `local-open-weights` LLMs adopt Grouped-Query Attention (GQA) instead of full Multi-Head Attention (MHA)?',
       options: [
         'GQA shares fewer KV heads across Q heads, cutting KV-cache VRAM and bandwidth',
         'Because GQA eliminates Query projections completely, turning every layer into a linear feed-forward block',

@@ -3,13 +3,13 @@ import type { Lesson } from '@/types/course';
 export const lesson8_5: Lesson = {
   id: '8-5',
   moduleId: 'mod-8',
-  number: '9.5',
+  number: '8.5',
   title: 'Resume, GitHub, LinkedIn, Portfolio Strategy & Junior vs Freelance Launch',
   subtitle: 'Transform your deployed capstones into ATS-friendly resumes, 60-second GitHub profiles, targeted LinkedIn outreach, and a clear roadmap for junior full-time vs freelance AI contracts.',
   durationMinutes: 75,
   track: 'core',
-  prerequisites: ['8.4', '9.4'],
-  requires: ['free-tier-cloud-deployment', 'oncall-incident-runbooks', 'behavioral-star-stories'],
+  prerequisites: ['8.4'],
+  requires: ['incident-response', 'shadow-rollback', 'behavioral-star-stories'],
   teaches: [
     'resume-portfolio-strategy',
     'junior-vs-freelance-launch',
@@ -196,8 +196,8 @@ print("PASS: Freelance pilot quoter enforced client-owned billing keys, risk buf
       type: 'python-lab',
       labId: 'lab-8-5-portfolio',
       difficulty: 'debug',
-      requires: ['free-tier-cloud-deployment', 'oncall-incident-runbooks'],
-      title: 'Lab 9.5C: Fix Toy-Notebook Trap in Portfolio Readiness Scorer',
+      requires: ['incident-response', 'shadow-rollback'],
+      title: 'Lab 8.5C: Fix Toy-Notebook Trap in Portfolio Readiness Scorer',
       prompt:
         'A broken portfolio evaluator `is_portfolio_hire_ready(projects: list[dict]) -> tuple[bool, int]` approves candidates merely for having `>= 4` total repos—even if every repo is a bare Jupyter notebook lacking a live deployment, tests, evals, or README! Fix it cleanly: count ONLY projects where ALL four boolean fields (`"has_live_url"`, `"has_tests"`, `"has_eval_metrics"`, `"has_readme"`) are `True`. Return `(qualified_count >= 4, qualified_count)`.',
       starterCode: `def is_portfolio_hire_ready(projects: list[dict]) -> tuple[bool, int]:

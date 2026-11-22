@@ -10,6 +10,7 @@ export const module5: CourseModule = {
   title: 'Transformers & LLMs Under the Hood',
   subtitle: 'BPE tokenization, RoPE, Causal Self-Attention, GQA & KV caching, GPU VRAM & MoE math, FlashAttention, SFT masking, DPO, and decoding controls.',
   track: 'ai-eng',
+  recommendedPath: 'ai-eng',
   estimatedHours: 5.2,
   capstoneDeliverable: 'Implement BPE merging, 2D RoPE rotation, Causal Self-Attention + KV-cache decoding, Top-2 MoE routing, and Top-p Nucleus sampling in Python/NumPy.',
   lessons: [

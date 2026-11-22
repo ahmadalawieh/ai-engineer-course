@@ -16,6 +16,8 @@ export const lesson5_4: Lesson = {
     'reasoning-rl-grpo',
     'decoding-temp-topp',
   ],
+  competencies: ['jr-llm-client', 'sr-sys-architecture'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Explain the 3-stage LLM post-training pipeline: Pretraining -> Supervised Fine-Tuning (SFT) -> Preference / Verifiable-Reward RL.',
     'Implement assistant-only SFT loss masking (`labels = -100` on user prompt and padding tokens) cleanly.',
@@ -87,7 +89,7 @@ export const lesson5_4: Lesson = {
         '2) Applying high `temperature = 0.9` onto strict JSON extraction or function-calling endpoints: occasional creative tokens break closing braces or invent fake enum keys, failing schema parsers unnecessarily. Always run structured extraction and tool routing at `temperature = 0.0` alongside JSON Schema / constrained decoding.',
         '3) Training DPO without a frozen reference model KL anchor (`pi_ref`) or setting `beta` too small (`0.001`): the policy exploits length bias cleanly—generating 900-word rambling sycophantic replies that maximize raw preference logits while drifting far from coherent fluent language ("reward hacking").',
         '4) Expecting a non-reasoning model or short `max_tokens` cap (`200` tokens) to work on `<think>` reasoning models: if a model spends 350 tokens thinking inside `<think>...</think>` and gets truncated at token `200`, your parser receives zero final answer! Budget sufficient `max_tokens` headroom cleanly.',
-        '5) Applying the wrong chat template during local SFT or vLLM serving (for instance feeding ChatML `<|im_start|>` tokens to a Llama-3 model trained strictly on `<|begin_of_text|><|start_header_id|>`): mismatched special tokens confuse stop detection immediately, causing endless garbled repetitions until `max_tokens` expires.',
+        '5) Applying the wrong chat template during local SFT or vLLM serving (for instance feeding ChatML `<|im_start|>` tokens to a `local-open-weights` model trained on `<|begin_of_text|><|start_header_id|>`): mismatched special tokens confuse stop detection immediately, causing endless garbled repetitions until `max_tokens` expires.',
         '6) Skipping **Constrained / Structured Decoding** (`Outlines`, `xgrammar`, or `response_format` JSON Schema) when strict schema adherence is non-negotiable: constrained finite-state token masking zeroes out logits for syntax-breaking characters at each decode step, guaranteeing `100%` parseable JSON structure without sacrificing underlying semantic accuracy.',
         '7) Confusing **Top-k**, **Top-p**, and **Min-p** sampling during low-temperature creative tasks: when logits spread gently, setting fixed `Top-k=50` still lets weak junk tokens sneak through occasionally; `Top-p` (`0.90–0.95`) or **Min-p** (dropping tokens below `p_min * max_prob`) preserves creative diversity cleanly without coherent derailments.',
         '8) Assuming single-shot greedy generation is your ceiling on tough verifiable tasks: generating `N = 4` candidate code patches at `temperature = 0.6` and picking whichever passes automated `pytest` verification (**Best-of-N / test-time verification**) routinely lifts pass rates sharply without retraining weights.',

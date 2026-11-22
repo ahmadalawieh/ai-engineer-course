@@ -3,7 +3,7 @@ import type { Lesson } from '@/types/course';
 export const lesson9_4: Lesson = {
   id: '9-4',
   moduleId: 'mod-9',
-  number: '8.4',
+  number: '9.4',
   title: 'Cloud Deployment to Free Hosts, Production READMEs & Incident Runbooks',
   subtitle: 'Deploy FastAPI and Next.js AI apps live onto free-tier cloud hosts with strict CORS, smoke tests, portfolio-grade READMEs, and actionable on-call runbooks.',
   durationMinutes: 75,
@@ -16,6 +16,8 @@ export const lesson9_4: Lesson = {
     'production-readme-craft',
     'oncall-incident-runbooks',
   ],
+  competencies: ['jr-deploy', 'mid-incidents-design'],
+  lastReviewed: '2026-11-22',
   objectives: [
     'Deploy a live two-tier AI stack (Next.js UI on Vercel + Dockerized FastAPI backend on Render/Fly.io/Railway free tier) cleanly.',
     'Configure strict CORS origin allowlists (`allow_origins=["myapp.vercel.app"]`) without wildcards paired with credentials.',
@@ -51,7 +53,7 @@ export const lesson9_4: Lesson = {
       heading: 'Worked Example 1: Zero-Dollar Cloud Deployment Architecture & CORS Hygiene',
       paragraphs: [
         'Trace a concrete end-to-end free-tier deployment checklist step by step. **Step 1 (Containerize Backend):** verify your non-root `Dockerfile` binds `--host 0.0.0.0 --port ${PORT:-8000}` because cloud PaaS hosts assign the external port dynamically via the `$PORT` environment variable (hardcoding `8000` only fails health checks when Render injects `PORT=10000`!). **Step 2 (CORS Allowlist):** parse `ALLOWED_ORIGINS` from env (`"app.example.com,localhost:3000"`) into an explicit list, raising an error on startup if `"*"` appears alongside `allow_credentials=True` or if unencrypted non-local `http` origins slip into production settings.',
-        '**Step 3 (Free-Tier Constraints & Cold Starts):** free backend instances often sleep after 15 minutes of idle traffic (taking 15–40 seconds to wake on the first ping) and cap RAM tightly (`512 MB` on Render free tier). Avoid loading giant 1.5 GB PyTorch/sentence-transformer weights inside a 512 MB container! Call hosted embedding APIs (`text-embedding-3-small`) or tiny quantized ONNX/TF-IDF retrievers in RAM, configure `/healthz` + `/readyz` probes cleanly, and display a helpful `"Waking backend instance..."` banner on your frontend if the first cold request takes a few seconds.',
+        '**Step 3 (Free-Tier Constraints & Cold Starts):** free backend instances often sleep after 15 minutes of idle traffic (taking 15–40 seconds to wake on the first ping) and cap RAM tightly (`512 MB` on Render free tier). Avoid loading giant 1.5 GB PyTorch/sentence-transformer weights inside a 512 MB container! Call hosted `Embedding` tier APIs from `MODEL_CATALOG` or tiny quantized ONNX/TF-IDF retrievers in RAM, configure `/healthz` + `/readyz` probes cleanly, and display a helpful `"Waking backend instance..."` banner on your frontend if the first cold request takes a few seconds.',
         '**Step 4 (Automated Post-Deploy Smoke Check):** never mark a deploy "done" just because CI green-checked earlier on mock fixtures. Missing secrets in the Render/Vercel dashboard, wrong CORS origin typos, or stale migration scripts break live releases even when unit tests passed. Immediately run a 5-check HTTP smoke script against the live URL confirming: `/healthz -> 200`, `/readyz -> 200`, unauthenticated `POST /v1/ask -> 401`, invalid JSON `POST /v1/ask -> 422`, and valid authenticated request `-> 200` returning required JSON fields.',
       ],
     },

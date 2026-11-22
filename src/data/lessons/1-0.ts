@@ -138,7 +138,7 @@ print("Mean high   :", round(mean_high, 2))`,
       headers: ['Expression', 'Input Example', 'Result', 'Common On-the-Job Use'],
       rows: [
         ['`s.strip()`', `'"  hi \\n"'`, `'"hi"'`, 'Clean user queries and CSV cells before parsing'],
-        ['`s.lower()`', `'"GPT-4o"'`, `'"gpt-4o"'`, 'Normalize model names, tags, or email addresses'],
+        ['`s.lower()`', `'"Small-Fast"'`, `'"small-fast"'`, 'Normalize model role tags or email addresses'],
         ['`s.split(",")`', `'"a,b,c"'`, `'["a", "b", "c"]'`, 'Break delimited rows or space-separated words into lists'],
         ['`", ".join(xs)`', `'["rag", "ml"]'`, `'"rag, ml"'`, 'Format prompt lists cleanly for LLMs and logs'],
         ['`int("12")` / `float("1.5")`', `'"12"' / '"1.5"'`, '`12` / `1.5`', 'Convert env vars or parsed text into math values'],

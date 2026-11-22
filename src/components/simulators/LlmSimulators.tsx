@@ -179,7 +179,7 @@ export function LlmVramSim() {
         <label className="sim-control">
           <span>Model Size: {paramsB}B params</span>
           <select className="input" value={paramsB} onChange={(e) => setParamsB(+e.target.value)}>
-            <option value={8}>8B (Llama-3 / Qwen)</option>
+            <option value={8}>8B (Compact Open-Weights)</option>
             <option value={32}>32B (Mid-tier)</option>
             <option value={70}>70B (Flagship Dense)</option>
             <option value={405}>405B (Frontier Dense)</option>
@@ -206,7 +206,7 @@ export function LlmVramSim() {
           <select className="input" value={gqaRatio} onChange={(e) => setGqaRatio(+e.target.value)}>
             <option value={1}>MHA (1x — Legacy)</option>
             <option value={4}>GQA 4x</option>
-            <option value={8}>GQA 8x (Modern Llama-3)</option>
+            <option value={8}>GQA 8x (Modern Open-Weights)</option>
           </select>
         </label>
       </div>

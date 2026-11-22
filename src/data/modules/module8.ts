@@ -7,10 +7,11 @@ import { lesson8_5 } from '../lessons/8-5';
 
 export const module8: CourseModule = {
   id: 'mod-8',
-  number: 9,
+  number: 8,
   title: 'Coding Interviews, System Design & Career Launch',
   subtitle: 'Master Python coding interviews, ML & DS product case studies, 5-pillar AI System Design, STAR take-homes, and resume/portfolio launch for full-time or freelance roles.',
   track: 'core',
+  recommendedPath: 'career',
   estimatedHours: 6.8,
   capstoneDeliverable: 'Pass the timed coding, ML theory, and system design simulations and publish 4-6 deployed portfolio capstones.',
   lessons: [
