@@ -23,6 +23,8 @@ import { ALL_LESSONS, COURSE_MODULES, getAdjacentLessons, getLessonById, getModu
 import { useCourseApp } from './ThemeProgressProvider';
 import { MathFormula, RichText } from './MathAndProse';
 import { InteractiveSimulatorCard } from './InteractiveSimulators';
+import { VisualDiagramBlock } from './VisualDiagrams';
+import { ConceptReelPlayer } from './ConceptReelPlayer';
 import { PythonLab } from './PythonLab';
 import { LessonQuiz } from './LessonQuiz';
 import type { ContentBlock } from '@/types/course';
@@ -488,6 +490,27 @@ function renderContentBlock(block: ContentBlock, idx: number) {
           prompt={block.prompt}
           lines={block.lines}
           explanation={block.explanation}
+        />
+      );
+
+    case 'visual-diagram':
+      return (
+        <VisualDiagramBlock
+          key={idx}
+          diagramId={block.diagramId}
+          title={block.title}
+          caption={block.caption}
+        />
+      );
+
+    case 'concept-reel':
+      return (
+        <ConceptReelPlayer
+          key={idx}
+          reelId={block.reelId}
+          title={block.title}
+          description={block.description}
+          externalVideos={block.externalVideos}
         />
       );
 

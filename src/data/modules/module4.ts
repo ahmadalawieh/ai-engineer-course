@@ -33,6 +33,12 @@ export const module4: CourseModule = {
           ],
         },
         {
+          type: 'visual-diagram',
+          diagramId: 'neural-backprop',
+          title: 'Visual Architecture: Forward Pass Predictions & Backpropagation Gradients',
+          caption: 'Data flows left-to-right to make a prediction, error is measured at Loss, and gradients flow backward to nudge every weight.',
+        },
+        {
           type: 'simulator',
           simulatorId: 'neural-net',
           title: 'Interactive Lab: Live Neural Network Decision Boundary Playground',

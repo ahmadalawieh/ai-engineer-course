@@ -5,6 +5,7 @@ import { TopNav, type AppView } from './TopNav';
 import { HomeView } from './HomeView';
 import { LessonView } from './LessonView';
 import { PracticeArena } from './PracticeArena';
+import { JobWorkBench } from './JobWorkBench';
 import { SearchModal } from './SearchModal';
 import { SyncModal } from './SyncModal';
 import { useCourseApp } from './ThemeProgressProvider';
@@ -13,7 +14,7 @@ export function CourseAppShell() {
   const { progress } = useCourseApp();
   const [view, setView] = useState<AppView>('home');
   const [activeLessonId, setActiveLessonId] = useState<string>('1-0');
-  const [arenaTab, setArenaTab] = useState<'flashcards' | 'interview' | 'glossary' | 'certificate'>('flashcards');
+  const [arenaTab, setArenaTab] = useState<'flashcards' | 'interview' | 'glossary' | 'notes' | 'certificate'>('flashcards');
   const [searchOpen, setSearchOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
 
@@ -27,6 +28,8 @@ export function CourseAppShell() {
         setView('lesson');
       } else if (v === 'arena') {
         setView('arena');
+      } else if (v === 'work') {
+        setView('work');
       } else if (progress.lastVisitedLessonId) {
         setActiveLessonId(progress.lastVisitedLessonId);
       }
@@ -68,6 +71,7 @@ export function CourseAppShell() {
       {view === 'home' && (
         <HomeView
           onSelectLesson={openLesson}
+          onOpenWork={() => setView('work')}
           onOpenArena={() => {
             setArenaTab('flashcards');
             setView('arena');
@@ -83,6 +87,8 @@ export function CourseAppShell() {
           onBackHome={() => setView('home')}
         />
       )}
+
+      {view === 'work' && <JobWorkBench />}
 
       {view === 'arena' && <PracticeArena key={arenaTab} initialTab={arenaTab} onSelectLesson={openLesson} />}
 

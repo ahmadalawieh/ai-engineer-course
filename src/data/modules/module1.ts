@@ -28,8 +28,28 @@ export const module1: CourseModule = {
           type: 'prose',
           heading: 'Coding Is Just Giving Clear Recipes to a Computer',
           paragraphs: [
-            'Writing code is just writing a crystal-clear step-by-step recipe—similar to setting rules in a spreadsheet or automating a checklist. In Python, there are only **4 building blocks** you need on Day 1:',
-            '1) **Variables** (`score = 85`): a labeled box holding a value. 2) **Lists** (`scores = [60, 85, 92]`): an ordered row of values inside square brackets `[...]`. 3) **Loops** (`for s in scores:`): visit each item one by one. 4) **Decisions** (`if s >= 80:`): take an action only when a rule is true.',
+            'Writing code is just writing a crystal-clear step-by-step recipe—similar to setting rules in a spreadsheet or automating a checklist. In Python, there are only **4 core building blocks** you need on Day 1:',
+            '1) **Variables** (`score = 85`): a labeled box holding a value. 2) **Lists & Dictionaries**: a **List** (`scores = [60, 85, 92]`) holds ordered rows inside `[...]`; a **Dictionary** (`ticket = {"user": "Ada", "tier": "pro"}`) holds labeled key-value pairs inside `{...}`—this exact format (JSON) is how every AI API sends responses! 3) **Loops** (`for s in scores:`): visit each item one by one. 4) **Decisions** (`if s >= 80:`): take an action only when a rule is true.',
+          ],
+        },
+        {
+          type: 'visual-diagram',
+          diagramId: 'python-blocks',
+          title: 'Visual Map: The 4 Building Blocks of Every Python & AI Script',
+          caption: 'Every complex AI pipeline—even ChatGPT agents—is built from Variables, Lists/Dictionaries, Loops, and `if` Decisions.',
+        },
+        {
+          type: 'concept-reel',
+          reelId: 'python-loop-reel',
+          title: 'Animated Walkthrough: Watch a Python Loop Filter Scores Step-by-Step',
+          description: 'Press Play to watch how Python moves through `[0.45, 0.88, 0.92]` one item at a time.',
+          externalVideos: [
+            {
+              title: 'Python for Beginners – Full Course (freeCodeCamp)',
+              creator: 'freeCodeCamp.org',
+              url: 'https://www.youtube.com/watch?v=rfscVS0vtbw',
+              duration: '4h (watch first 45m for basics)',
+            },
           ],
         },
         {
@@ -445,6 +465,20 @@ def top_k_similar(q: np.ndarray, docs: np.ndarray, k: int) -> np.ndarray:
           ],
           intuition:
             '**Momentum** adds a rolling average of past gradients (like a heavy ball rolling through small bumps). **Adam** tracks both the first moment (momentum) AND second moment (gradient variance) per parameter—automatically shrinking steps in steep directions and boosting steps in flat ones.',
+        },
+        {
+          type: 'concept-reel',
+          reelId: 'gradient-descent-reel',
+          title: 'Animated Walkthrough: Watch Gradient Descent Slide Down an Error Valley',
+          description: 'See step-by-step how subtracting `lr * gradient` shrinks steep errors automatically into the bottom minimum.',
+          externalVideos: [
+            {
+              title: 'Gradient descent, how neural networks learn',
+              creator: '3Blue1Brown (Grant Sanderson)',
+              url: 'https://www.youtube.com/watch?v=IHZwWFHWa-w',
+              duration: '21 min',
+            },
+          ],
         },
         {
           type: 'simulator',

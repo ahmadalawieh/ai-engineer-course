@@ -398,6 +398,12 @@ def group_mean_impute(groups: np.ndarray, values: np.ndarray) -> np.ndarray:
           ],
         },
         {
+          type: 'visual-diagram',
+          diagramId: 'ml-pipeline',
+          title: 'Production Architecture: The Leak-Free Machine Learning Pipeline',
+          caption: 'Every job-ready ML system separates raw SQL cleaning, the Train/Test split firewall, `sklearn.Pipeline`, and ROI evaluation.',
+        },
+        {
           type: 'python-lab',
           labId: 'lab-2-3',
           title: 'Lab 2.3: Leak-Free Train/Test Scaling',

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import Image from 'next/image';
 import {
   ArrowRight,
   Award,
+  Briefcase,
   CheckCircle2,
   Circle,
   Clock,
@@ -13,6 +15,7 @@ import {
   PlayCircle,
 } from 'lucide-react';
 import { ALL_LESSONS, COURSE_MODULES, TOTAL_LABS, getLessonById, getTotalCourseMinutes } from '@/data/curriculum';
+import { WORKPLACE_TICKETS } from '@/data/jobWorkbench';
 import { useCourseApp } from './ThemeProgressProvider';
 import type { TrackTag } from '@/types/course';
 
@@ -24,10 +27,12 @@ function trackLabel(track: TrackTag): string {
 
 export function HomeView({
   onSelectLesson,
+  onOpenWork,
   onOpenArena,
   onOpenSync,
 }: {
   onSelectLesson: (lessonId: string) => void;
+  onOpenWork: () => void;
   onOpenArena: () => void;
   onOpenSync: () => void;
 }) {
@@ -65,8 +70,9 @@ export function HomeView({
             Starting completely from scratch with zero coding experience? Every concept builds
             from first principles—guiding you step-by-step from your very first Python variable
             through interactive SQL, scikit-learn &amp; XGBoost, Deep Learning, Transformers,
-            Hybrid RAG, Agents, and AI Evals with <strong>19 live visual simulators</strong>,{' '}
-            <strong>code puzzles</strong>, and <strong>in-browser Python &amp; SQL labs</strong>.
+            Hybrid RAG, Agents, and real workplace tickets with <strong>19 live visual simulators</strong>,{' '}
+            <strong>animated walkthroughs</strong>, <strong>architecture diagrams</strong>, and{' '}
+            <strong>in-browser Python &amp; SQL labs</strong>.
           </p>
           <div className="hero-actions">
             <button
@@ -80,14 +86,29 @@ export function HomeView({
                 ? `Start Lesson ${resumeLesson.number}: ${resumeLesson.title}`
                 : `Resume ${resumeLesson.number}: ${resumeLesson.title}`}
             </button>
+            <button type="button" className="btn" onClick={onOpenWork}>
+              <Briefcase size={16} />
+              Real Work &amp; Projects
+            </button>
             <button type="button" className="btn" onClick={onOpenArena}>
               <Award size={16} />
-              Flashcards &amp; Mock Interview
+              Arena &amp; Interviews
             </button>
           </div>
         </div>
 
         <aside className="hero-card" aria-label="Course progress summary">
+          <div className="hero-illustration-wrap">
+            <Image
+              src="/images/ai-roadmap-hero.jpg"
+              alt="From foundational blocks to neural networks and production AI engineering"
+              width={960}
+              height={540}
+              priority
+              className="hero-illustration-img"
+            />
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <span className="mono" style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent)' }}>
               YOUR MASTERY PROGRESS
@@ -110,12 +131,14 @@ export function HomeView({
               <div className="stat-label">Python &amp; SQL Labs</div>
             </div>
             <div className="stat-box">
-              <div className="stat-val">{progress.xp}</div>
-              <div className="stat-label">Total XP Earned</div>
+              <div className="stat-val">
+                {(progress.completedTickets || []).length}/{WORKPLACE_TICKETS.length}
+              </div>
+              <div className="stat-label">Workplace Tickets</div>
             </div>
             <div className="stat-box">
-              <div className="stat-val">~{totalHours}h</div>
-              <div className="stat-label">Distilled Study Time</div>
+              <div className="stat-val">{progress.xp} XP</div>
+              <div className="stat-label">~{totalHours}h Total Path</div>
             </div>
           </div>
 
@@ -143,7 +166,7 @@ export function HomeView({
           >
             <span>
               <Code2 size={13} style={{ display: 'inline', marginRight: 4 }} />
-              {COURSE_MODULES.length} Modules · {totalLessons} Lessons · {TOTAL_LABS} Labs
+              {COURSE_MODULES.length} Modules · {totalLessons} Lessons · {TOTAL_LABS} Labs · {WORKPLACE_TICKETS.length} Job Tickets
             </span>
             <button type="button" className="btn btn-sm" onClick={onOpenSync}>
               <Cloud size={13} /> {authUser ? `Synced (${authUser.name.split(' ')[0]})` : 'Google / Direct Sync'}

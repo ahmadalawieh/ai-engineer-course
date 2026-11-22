@@ -468,7 +468,7 @@ export function PracticeArena({
               Awarded to <strong style={{ fontSize: '1.25rem', color: 'var(--ink)' }}>{progress.learnerName}</strong>
             </p>
 
-            <div className="stat-grid" style={{ maxWidth: 540, margin: '0 auto 22px' }}>
+            <div className="stat-grid" style={{ maxWidth: 620, margin: '0 auto 22px' }}>
               <div className="stat-box">
                 <div className="stat-val">{lessonsDone}/{ALL_LESSONS.length}</div>
                 <div className="stat-label">Lessons (Need 24+)</div>
@@ -480,6 +480,14 @@ export function PracticeArena({
               <div className="stat-box">
                 <div className="stat-val">{interviewsDone}/{MOCK_INTERVIEW_QUESTIONS.length}</div>
                 <div className="stat-label">Mock Interviews (Need 6+)</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">{(progress.completedTickets || []).length}/6</div>
+                <div className="stat-label">Workplace Tickets</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">{(progress.completedPrReviews || []).length}/5</div>
+                <div className="stat-label">PR Bug Hunts</div>
               </div>
               <div className="stat-box">
                 <div className="stat-val">{progress.xp}</div>

@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Award, BookOpen, Cloud, Compass, Moon, Search, Sun } from 'lucide-react';
+import { Award, BookOpen, Briefcase, Cloud, Compass, Moon, Search, Sun } from 'lucide-react';
 import { useCourseApp } from './ThemeProgressProvider';
 import { ALL_LESSONS } from '@/data/curriculum';
 
-export type AppView = 'home' | 'lesson' | 'arena';
+export type AppView = 'home' | 'lesson' | 'work' | 'arena';
 
 export function TopNav({
   activeView,
@@ -51,11 +51,19 @@ export function TopNav({
           </button>
           <button
             type="button"
+            className={`nav-tab ${activeView === 'work' ? 'active' : ''}`}
+            onClick={() => onNavigate('work')}
+          >
+            <Briefcase size={15} />
+            <span>Real Work</span>
+          </button>
+          <button
+            type="button"
             className={`nav-tab ${activeView === 'arena' ? 'active' : ''}`}
             onClick={() => onNavigate('arena')}
           >
             <Award size={15} />
-            <span>Practice Arena</span>
+            <span>Arena</span>
           </button>
         </nav>
 

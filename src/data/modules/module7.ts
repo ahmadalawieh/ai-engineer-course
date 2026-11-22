@@ -33,6 +33,18 @@ export const module7: CourseModule = {
           ],
         },
         {
+          type: 'visual-diagram',
+          diagramId: 'agent-guardrails',
+          title: 'Production Agent Loop with Prompt Shield, Router & HITL Safety Gate',
+          caption: 'Real companies never expose raw `eval()` or unlimited tool loops—every action passes input isolation, schema bounds, and HITL rules.',
+        },
+        {
+          type: 'concept-reel',
+          reelId: 'agent-ticket-reel',
+          title: 'Animated Walkthrough: How a Hardened Support Agent Stops a $5,000 Injection Attack',
+          description: 'See how untrusted user notes are sandboxed while real read-only lookups and policy gates run deterministically.',
+        },
+        {
           type: 'simulator',
           simulatorId: 'react-agent',
           title: 'Interactive Lab: ReAct Agent Execution & Budget Tracer',

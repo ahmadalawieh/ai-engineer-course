@@ -122,6 +122,32 @@ export const module5: CourseModule = {
             '**Multi-Head Attention** runs $h$ parallel attention heads with smaller projections so Head 1 tracks syntax, Head 2 tracks pronouns, and Head 3 tracks code brackets. **GQA (Grouped-Query Attention)** shares Key/Value heads across groups of Query heads—slashing KV-cache VRAM by 4–8× in Llama-3 and Qwen!',
         },
         {
+          type: 'visual-diagram',
+          diagramId: 'transformer-attention',
+          title: 'Inside One Transformer Block: BPE → Q/K/V Attention + KV Cache → Next Token',
+          caption: 'Every modern LLM (GPT, Claude, Llama, Gemini) repeats this exact block dozens of times per forward pass.',
+        },
+        {
+          type: 'concept-reel',
+          reelId: 'attention-reel',
+          title: 'Animated Walkthrough: How "it" Finds "animal" Using Q, K, and V',
+          description: 'Step through Query-Key scoring, causal masking, and probability blending in 4 scenes.',
+          externalVideos: [
+            {
+              title: 'Attention in Transformers, Visually Explained',
+              creator: '3Blue1Brown (Grant Sanderson)',
+              url: 'https://www.youtube.com/watch?v=eMlx5fFNoYc',
+              duration: '26 min',
+            },
+            {
+              title: "Let's Build GPT: From Scratch, in Code",
+              creator: 'Andrej Karpathy',
+              url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY',
+              duration: '1h 56m (deep dive)',
+            },
+          ],
+        },
+        {
           type: 'simulator',
           simulatorId: 'attention-map',
           title: 'Interactive Lab: Self-Attention Heatmap & Causal Mask Inspector',

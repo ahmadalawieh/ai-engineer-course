@@ -17,6 +17,8 @@ interface PythonLabProps {
   packages?: string[];
   language?: 'python' | 'sql';
   setupCode?: string;
+  onPass?: () => void;
+  xpLabel?: string;
 }
 
 export function PythonLab({
@@ -30,6 +32,8 @@ export function PythonLab({
   packages = ['numpy'],
   language = 'python',
   setupCode,
+  onPass,
+  xpLabel = 'Passed (+60 XP)',
 }: PythonLabProps) {
   const { progress, markLabComplete, saveLabDraft, clearLabDraft } = useCourseApp();
   const isCompleted = progress.completedLabs.includes(labId);
@@ -95,7 +99,11 @@ else:
 
     if (withTests && res.ok && res.passedTests) {
       setPassed(true);
-      markLabComplete(labId);
+      if (onPass) {
+        onPass();
+      } else {
+        markLabComplete(labId);
+      }
     }
   };
 
@@ -140,7 +148,7 @@ else:
               className="track-badge"
               style={{ background: 'var(--success-soft)', color: 'var(--success)' }}
             >
-              <CheckCircle2 size={12} style={{ marginRight: 4 }} /> Passed (+60 XP)
+              <CheckCircle2 size={12} style={{ marginRight: 4 }} /> {xpLabel}
             </span>
           )}
         </div>

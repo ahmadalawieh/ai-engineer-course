@@ -21,6 +21,21 @@ export type SimulatorId =
   | 'latency-economics'
   | 'drift-monitor';
 
+export type DiagramId =
+  | 'python-blocks'
+  | 'ml-pipeline'
+  | 'neural-backprop'
+  | 'transformer-attention'
+  | 'hybrid-rag'
+  | 'agent-guardrails';
+
+export type ConceptReelId =
+  | 'python-loop-reel'
+  | 'gradient-descent-reel'
+  | 'attention-reel'
+  | 'rag-pipeline-reel'
+  | 'agent-ticket-reel';
+
 export type ContentBlock =
   | {
       type: 'prose';
@@ -76,6 +91,24 @@ export type ContentBlock =
       title?: string;
       headers: string[];
       rows: string[][];
+    }
+  | {
+      type: 'visual-diagram';
+      diagramId: DiagramId;
+      title: string;
+      caption: string;
+    }
+  | {
+      type: 'concept-reel';
+      reelId: ConceptReelId;
+      title: string;
+      description: string;
+      externalVideos?: {
+        title: string;
+        creator: string;
+        url: string;
+        duration: string;
+      }[];
     }
   | {
       type: 'simulator';
@@ -183,6 +216,10 @@ export interface CourseProgress {
   completedLessons: string[];
   completedLabs: string[];
   completedPuzzles: string[];
+  completedTickets: string[];
+  completedPrReviews: string[];
+  completedSetupSteps: string[];
+  completedProjectSteps: string[];
   labDrafts: Record<string, string>;
   quizScores: Record<string, { score: number; total: number; bestScore: number }>;
   notes: Record<string, string>;

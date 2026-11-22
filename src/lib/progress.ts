@@ -15,6 +15,10 @@ export function createInitialProgress(): CourseProgress {
     completedLessons: [],
     completedLabs: [],
     completedPuzzles: [],
+    completedTickets: [],
+    completedPrReviews: [],
+    completedSetupSteps: [],
+    completedProjectSteps: [],
     labDrafts: {},
     quizScores: {},
     notes: {},
@@ -41,6 +45,10 @@ export function loadLocalProgress(): CourseProgress {
       completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : [],
       completedLabs: Array.isArray(parsed.completedLabs) ? parsed.completedLabs : [],
       completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
+      completedTickets: Array.isArray(parsed.completedTickets) ? parsed.completedTickets : [],
+      completedPrReviews: Array.isArray(parsed.completedPrReviews) ? parsed.completedPrReviews : [],
+      completedSetupSteps: Array.isArray(parsed.completedSetupSteps) ? parsed.completedSetupSteps : [],
+      completedProjectSteps: Array.isArray(parsed.completedProjectSteps) ? parsed.completedProjectSteps : [],
       labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
       quizScores: parsed.quizScores && typeof parsed.quizScores === 'object' ? parsed.quizScores : {},
       notes: parsed.notes && typeof parsed.notes === 'object' ? parsed.notes : {},
@@ -104,7 +112,7 @@ export function updateStreak(progress: CourseProgress): CourseProgress {
 
 /**
  * Conflict-free merge between two devices:
- * - Unions completed lessons, labs, puzzles, bookmarks, and interview questions
+ * - Unions completed lessons, labs, puzzles, tickets, PR reviews, setup/project steps, bookmarks, and interview questions
  * - Keeps highest bestScore for quizzes
  * - Takes newer notes/labDrafts/SRS by updatedAt (while preserving keys only present on one device)
  */
@@ -132,6 +140,10 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
   const completedLessons = union(local.completedLessons, remote.completedLessons);
   const completedLabs = union(local.completedLabs, remote.completedLabs);
   const completedPuzzles = union(local.completedPuzzles || [], remote.completedPuzzles || []);
+  const completedTickets = union(local.completedTickets || [], remote.completedTickets || []);
+  const completedPrReviews = union(local.completedPrReviews || [], remote.completedPrReviews || []);
+  const completedSetupSteps = union(local.completedSetupSteps || [], remote.completedSetupSteps || []);
+  const completedProjectSteps = union(local.completedProjectSteps || [], remote.completedProjectSteps || []);
   const interviewCompleted = union(local.interviewCompleted, remote.interviewCompleted);
 
   const mergedXp = Math.max(
@@ -140,6 +152,10 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
     completedLessons.length * 100 +
       completedLabs.length * 60 +
       completedPuzzles.length * 25 +
+      completedTickets.length * 80 +
+      completedPrReviews.length * 45 +
+      completedSetupSteps.length * 15 +
+      completedProjectSteps.length * 20 +
       interviewCompleted.length * 40
   );
 
@@ -149,6 +165,10 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
     completedLessons,
     completedLabs,
     completedPuzzles,
+    completedTickets,
+    completedPrReviews,
+    completedSetupSteps,
+    completedProjectSteps,
     labDrafts: { ...(older.labDrafts || {}), ...(newer.labDrafts || {}) },
     quizScores: mergedQuizzes,
     notes: { ...older.notes, ...newer.notes },
@@ -194,6 +214,10 @@ export function decodePortableToken(token: string): CourseProgress | null {
       ...createInitialProgress(),
       ...parsed,
       completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
+      completedTickets: Array.isArray(parsed.completedTickets) ? parsed.completedTickets : [],
+      completedPrReviews: Array.isArray(parsed.completedPrReviews) ? parsed.completedPrReviews : [],
+      completedSetupSteps: Array.isArray(parsed.completedSetupSteps) ? parsed.completedSetupSteps : [],
+      completedProjectSteps: Array.isArray(parsed.completedProjectSteps) ? parsed.completedProjectSteps : [],
       labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
     };
   } catch {

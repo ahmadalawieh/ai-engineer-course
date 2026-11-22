@@ -254,6 +254,18 @@ print("PASS: RRF fused lexical & semantic rankings accurately!")`,
           ],
         },
         {
+          type: 'visual-diagram',
+          diagramId: 'hybrid-rag',
+          title: 'Production Multi-Tenant Hybrid RAG Blueprint',
+          caption: 'Mandatory `tenant_id` ACL pre-filtering protects privacy before BM25 + Vector RRF fusion and Cross-Encoder reranking.',
+        },
+        {
+          type: 'concept-reel',
+          reelId: 'rag-pipeline-reel',
+          title: 'Animated Walkthrough: Trace a Customer Question Through Production RAG',
+          description: 'Watch how a question with an exact error code (`E-402`) survives ACL filtering, hybrid search, reranking, and citation checks.',
+        },
+        {
           type: 'table',
           title: 'RAG Failure Modes & Exact Fixes',
           headers: ['Symptom', 'Root Cause', 'Exact Production Fix'],

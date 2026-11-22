@@ -43,6 +43,10 @@ interface AppContextValue {
   markLessonComplete: (lessonId: string) => void;
   markLabComplete: (labId: string) => void;
   markPuzzleComplete: (puzzleId: string) => void;
+  markTicketComplete: (ticketId: string) => void;
+  markPrReviewComplete: (prId: string) => void;
+  toggleSetupStep: (stepId: string) => void;
+  toggleProjectStep: (stepId: string) => void;
   saveLabDraft: (labId: string, code: string) => void;
   clearLabDraft: (labId: string) => void;
   recordQuizScore: (lessonId: string, score: number, total: number) => void;
@@ -411,6 +415,66 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
     [commitProgress]
   );
 
+  const markTicketComplete = useCallback(
+    (ticketId: string) => {
+      commitProgress((prev) => {
+        const existing = prev.completedTickets || [];
+        if (existing.includes(ticketId)) return prev;
+        return {
+          ...prev,
+          completedTickets: [...existing, ticketId],
+          xp: prev.xp + 80,
+        };
+      });
+    },
+    [commitProgress]
+  );
+
+  const markPrReviewComplete = useCallback(
+    (prId: string) => {
+      commitProgress((prev) => {
+        const existing = prev.completedPrReviews || [];
+        if (existing.includes(prId)) return prev;
+        return {
+          ...prev,
+          completedPrReviews: [...existing, prId],
+          xp: prev.xp + 45,
+        };
+      });
+    },
+    [commitProgress]
+  );
+
+  const toggleSetupStep = useCallback(
+    (stepId: string) => {
+      commitProgress((prev) => {
+        const existing = prev.completedSetupSteps || [];
+        const has = existing.includes(stepId);
+        return {
+          ...prev,
+          completedSetupSteps: has ? existing.filter((s) => s !== stepId) : [...existing, stepId],
+          xp: has ? prev.xp : prev.xp + 15,
+        };
+      });
+    },
+    [commitProgress]
+  );
+
+  const toggleProjectStep = useCallback(
+    (stepId: string) => {
+      commitProgress((prev) => {
+        const existing = prev.completedProjectSteps || [];
+        const has = existing.includes(stepId);
+        return {
+          ...prev,
+          completedProjectSteps: has ? existing.filter((s) => s !== stepId) : [...existing, stepId],
+          xp: has ? prev.xp : prev.xp + 20,
+        };
+      });
+    },
+    [commitProgress]
+  );
+
   const saveLabDraft = useCallback(
     (labId: string, code: string) => {
       commitProgress((prev) => ({
@@ -592,6 +656,10 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
         markLessonComplete,
         markLabComplete,
         markPuzzleComplete,
+        markTicketComplete,
+        markPrReviewComplete,
+        toggleSetupStep,
+        toggleProjectStep,
         saveLabDraft,
         clearLabDraft,
         recordQuizScore,
