@@ -12,10 +12,21 @@ import {
   Cloud,
   Code2,
   Flame,
+  GraduationCap,
+  Lock,
   PlayCircle,
+  Zap,
 } from 'lucide-react';
 import { ALL_LESSONS, COURSE_MODULES, TOTAL_LABS, getLessonById, getTotalCourseMinutes } from '@/data/curriculum';
 import { WORKPLACE_TICKETS } from '@/data/jobWorkbench';
+import {
+  PLACEMENT_EXAM,
+  buildFinalComprehensiveAssessment,
+  buildModuleExam,
+  type TimedExamSpec,
+} from '@/data/exams';
+import { getUnmetPrerequisites } from '@/lib/prerequisites';
+import { TimedExamModal } from './TimedExamModal';
 import { useCourseApp } from './ThemeProgressProvider';
 import type { TrackTag } from '@/types/course';
 
@@ -38,6 +49,7 @@ export function HomeView({
 }) {
   const { progress, authUser } = useCourseApp();
   const [trackFilter, setTrackFilter] = useState<'all' | TrackTag>('all');
+  const [activeExam, setActiveExam] = useState<TimedExamSpec | null>(null);
 
   const completedCount = progress.completedLessons.length;
   const totalLessons = ALL_LESSONS.length;
@@ -88,11 +100,21 @@ export function HomeView({
             </button>
             <button type="button" className="btn" onClick={onOpenWork}>
               <Briefcase size={16} />
-              Real Work &amp; Projects
+              Real Work &amp; 6 Capstones
             </button>
             <button type="button" className="btn" onClick={onOpenArena}>
               <Award size={16} />
               Arena &amp; Interviews
+            </button>
+            <button type="button" className="btn" onClick={() => setActiveExam(PLACEMENT_EXAM)}>
+              <Zap size={15} color={progress.fastTrackUnlocked ? 'var(--success)' : 'var(--accent)'} />
+              {progress.fastTrackUnlocked ? 'Fast Track Active ✓' : 'Developer Placement Test'}
+            </button>
+            <button type="button" className="btn" onClick={() => setActiveExam(buildFinalComprehensiveAssessment())}>
+              <GraduationCap size={15} />
+              {progress.moduleExamScores?.['final-assessment']
+                ? `Final Exam: ${progress.moduleExamScores['final-assessment'].bestScore}/${progress.moduleExamScores['final-assessment'].total}`
+                : 'Final Assessment (25Q)'}
             </button>
           </div>
         </div>
@@ -178,9 +200,9 @@ export function HomeView({
       <section aria-labelledby="curriculum-heading">
         <div className="section-header">
           <div>
-            <h2 id="curriculum-heading">Complete 8-Module ML &amp; AI Engineer Path</h2>
+            <h2 id="curriculum-heading">Complete {COURSE_MODULES.length}-Module Zero-to-Job-Ready AI Engineer Path</h2>
             <p style={{ color: 'var(--ink-2)', fontSize: '0.95rem', marginTop: 4 }}>
-              Step-by-step from zero code to job-ready Python, SQL, scikit-learn, XGBoost, LLMs, RAG, and Agents.
+              Step-by-step from terminal &amp; zero code to Python, SQL, scikit-learn, XGBoost, PyTorch, Transformers, RAG, Agents, Production SwEng &amp; Interviews.
             </p>
           </div>
 
@@ -216,14 +238,27 @@ export function HomeView({
           </div>
         </div>
 
+        {progress.fastTrackUnlocked && (
+          <div className="callout key-takeaway" style={{ marginBottom: 16 }}>
+            <div className="callout-title">
+              <Zap size={15} color="var(--success)" /> Fast Track for Developers Unlocked (Placement {progress.placementScore?.score}/{progress.placementScore?.total})
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)' }}>
+              Beginner Terminal/Git (Module 0) &amp; Python syntax basics (`1.0–1.2`) prerequisites are auto-cleared. Jump straight to <strong>Math, pandas/SQL, ML, Deep Learning, LLMs, Software Engineering &amp; Interviews</strong>—or revisit any foundation lesson anytime.
+            </p>
+          </div>
+        )}
+
         <div className="module-grid">
           {filteredModules.map((mod) => {
             const modDone = mod.lessons.filter((l) => progress.completedLessons.includes(l.id)).length;
+            const modExam = progress.moduleExamScores?.[mod.id];
+            const modExamPassed = modExam && modExam.bestScore >= Math.ceil(modExam.total * 0.7);
             return (
               <article key={mod.id} className="module-card">
                 <div className="module-top">
                   <span className="module-num">
-                    MODULE 0{mod.number} · {modDone}/{mod.lessons.length} DONE
+                    MODULE {String(mod.number).padStart(2, '0')} · {modDone}/{mod.lessons.length} DONE
                   </span>
                   <span className={`track-badge track-${mod.track}`}>{trackLabel(mod.track)}</span>
                 </div>
@@ -239,16 +274,26 @@ export function HomeView({
                   {mod.lessons.map((lesson) => {
                     const done = progress.completedLessons.includes(lesson.id);
                     const qBest = progress.quizScores[lesson.id];
+                    const softLocked =
+                      !done &&
+                      getUnmetPrerequisites(
+                        lesson.id,
+                        progress.completedLessons,
+                        Boolean(progress.fastTrackUnlocked)
+                      ).unmetLessons.length > 0;
                     return (
                       <button
                         key={lesson.id}
                         type="button"
                         className="lesson-row"
                         onClick={() => onSelectLesson(lesson.id)}
+                        title={softLocked ? 'Prerequisites recommended (click to view or unlock)' : undefined}
                       >
                         <div className="lesson-row-left">
                           {done ? (
                             <CheckCircle2 size={16} color="var(--success)" style={{ flexShrink: 0 }} />
+                          ) : softLocked ? (
+                            <Lock size={15} color="var(--accent-warm)" style={{ flexShrink: 0 }} />
                           ) : (
                             <Circle size={16} color="var(--ink-muted)" style={{ flexShrink: 0 }} />
                           )}
@@ -276,26 +321,45 @@ export function HomeView({
                     fontSize: '0.8rem',
                     color: 'var(--ink-muted)',
                     gap: 8,
+                    flexWrap: 'wrap',
                   }}
                 >
                   <span>
                     <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />~{mod.estimatedHours}h ·{' '}
                     {mod.capstoneDeliverable}
                   </span>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-ghost"
-                    style={{ color: 'var(--accent)', flexShrink: 0 }}
-                    onClick={() => onSelectLesson(mod.lessons[0].id)}
-                  >
-                    Open <ArrowRight size={13} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      style={{
+                        borderColor: modExamPassed ? 'var(--success)' : undefined,
+                        color: modExamPassed ? 'var(--success)' : undefined,
+                      }}
+                      onClick={() => setActiveExam(buildModuleExam(mod))}
+                    >
+                      <GraduationCap size={12} />
+                      {modExam ? `Exam ${modExam.bestScore}/${modExam.total}` : '20Q Exam'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      style={{ color: 'var(--accent)' }}
+                      onClick={() => onSelectLesson(mod.lessons[0].id)}
+                    >
+                      Open <ArrowRight size={13} />
+                    </button>
+                  </div>
                 </div>
               </article>
             );
           })}
         </div>
       </section>
+
+      {activeExam && (
+        <TimedExamModal exam={activeExam} onClose={() => setActiveExam(null)} />
+      )}
     </main>
   );
 }

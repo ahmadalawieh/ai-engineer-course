@@ -1,6 +1,7 @@
 import type { FlashcardItem } from '@/types/course';
+import { EXTRA_FLASHCARDS } from './extraFlashcards';
 
-export const FLASHCARDS: FlashcardItem[] = [
+const CORE_FLASHCARDS: FlashcardItem[] = [
   {
     id: 'fc-1',
     moduleId: 'mod-1',
@@ -1210,4 +1211,9 @@ export const FLASHCARDS: FlashcardItem[] = [
     front: 'Why do 4–6 deployed, evaluated capstones beat 25 forked Jupyter notebooks?',
     back: 'Hiring managers scan profiles in under two minutes: live demos, automated tests, eval tables, and Project Journals prove end-to-end production readiness immediately.',
   },
+];
+
+export const FLASHCARDS: FlashcardItem[] = [
+  ...CORE_FLASHCARDS,
+  ...EXTRA_FLASHCARDS,
 ];

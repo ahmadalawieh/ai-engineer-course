@@ -55,6 +55,9 @@ interface AppContextValue {
   toggleBookmark: (lessonId: string) => void;
   setLastVisitedLesson: (lessonId: string) => void;
   setLearnerName: (name: string) => void;
+  unlockFastTrack: (score: number, total: number) => void;
+  recordModuleExamScore: (moduleId: string, score: number, total: number) => void;
+  saveProjectJournal: (projectId: string, text: string) => void;
   reviewFlashcard: (cardId: string, quality: 1 | 2 | 3 | 4) => void;
   markInterviewComplete: (questionId: string) => void;
   updateSyncConfig: (next: SyncConfig) => void;
@@ -617,6 +620,53 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
     [commitProgress]
   );
 
+  const unlockFastTrack = useCallback(
+    (score: number, total: number) => {
+      commitProgress((prev) => ({
+        ...prev,
+        fastTrackUnlocked: score >= Math.ceil(total * 0.8),
+        placementScore: { score, total },
+        xp: prev.xp + (prev.placementScore ? 0 : 150),
+      }));
+    },
+    [commitProgress]
+  );
+
+  const recordModuleExamScore = useCallback(
+    (moduleId: string, score: number, total: number) => {
+      commitProgress((prev) => {
+        const cur = prev.moduleExamScores?.[moduleId];
+        const prevBest = cur?.bestScore || 0;
+        return {
+          ...prev,
+          moduleExamScores: {
+            ...(prev.moduleExamScores || {}),
+            [moduleId]: {
+              score,
+              total,
+              bestScore: Math.max(prevBest, score),
+            },
+          },
+          xp: prev.xp + (score > prevBest ? (score - prevBest) * 25 : 0),
+        };
+      });
+    },
+    [commitProgress]
+  );
+
+  const saveProjectJournal = useCallback(
+    (projectId: string, text: string) => {
+      commitProgress((prev) => ({
+        ...prev,
+        projectJournals: {
+          ...(prev.projectJournals || {}),
+          [projectId]: text,
+        },
+      }));
+    },
+    [commitProgress]
+  );
+
   const updateSyncConfig = useCallback((next: SyncConfig) => {
     setSyncConfig(next);
     saveSyncConfig(next);
@@ -671,6 +721,9 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
         toggleBookmark,
         setLastVisitedLesson,
         setLearnerName,
+        unlockFastTrack,
+        recordModuleExamScore,
+        saveProjectJournal,
         reviewFlashcard,
         markInterviewComplete,
         updateSyncConfig,

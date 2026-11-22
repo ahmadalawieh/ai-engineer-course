@@ -4,11 +4,13 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   AlertTriangle,
+  BookOpen,
   Briefcase,
   Check,
   CheckCircle2,
   Circle,
   Copy,
+  Download,
   FileCode2,
   FolderGit2,
   GitPullRequest,
@@ -41,6 +43,7 @@ export function JobWorkBench() {
     markPrReviewComplete,
     toggleSetupStep,
     toggleProjectStep,
+    saveProjectJournal,
   } = useCourseApp();
 
   const [tab, setTab] = useState<WorkTab>('day-in-life');
@@ -98,7 +101,7 @@ export function JobWorkBench() {
           <p style={{ color: 'var(--ink-2)', fontSize: '0.96rem', marginTop: 8 }}>
             Learn what hired AI/ML Engineers actually do Monday–Friday: set up Python &amp; Git from zero,
             solve realistic Slack/Jira production tickets, catch bugs in Pull Requests, debug RAG traces,
-            and build 3 GitHub-ready portfolio projects.
+            and build 6 downloadable GitHub-ready capstones with tests, deploy guides &amp; project journals.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 14 }}>
             <span className="track-badge">
@@ -624,7 +627,7 @@ export function JobWorkBench() {
           </div>
 
           <section className="lab-card">
-            <div className="lab-header">
+            <div className="lab-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <span className="lab-badge">
                   <FolderGit2 size={12} style={{ display: 'inline', marginRight: 5 }} />
@@ -633,6 +636,14 @@ export function JobWorkBench() {
                 <h2 style={{ fontSize: '1.25rem', marginTop: 4 }}>{activeProject.title}</h2>
                 <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)', marginTop: 2 }}>{activeProject.subtitle}</p>
               </div>
+              <a
+                href={`/capstones/${activeProject.id}.zip`}
+                download={`${activeProject.id}.zip`}
+                className="btn btn-sm btn-primary"
+                style={{ flexShrink: 0, textDecoration: 'none' }}
+              >
+                <Download size={14} /> Download Starter .zip
+              </a>
             </div>
 
             <div className="lab-body">
@@ -718,11 +729,76 @@ export function JobWorkBench() {
                 <div className="code-card">
                   <div className="code-header">
                     <span>{activeProjectFile.filename}</span>
-                    <span>READY TO SAVE LOCALLY</span>
+                    <span>INCLUDED IN .ZIP STARTER KIT</span>
                   </div>
                   <pre className="code-pre">
                     <code>{activeProjectFile.content}</code>
                   </pre>
+                </div>
+              </div>
+
+              {/* Grading Rubric + Deployment Guide + README Template */}
+              <div style={{ display: 'grid', gap: 16, marginTop: 20 }}>
+                <div style={{ padding: 14, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
+                  <div className="mono" style={{ fontSize: '0.73rem', fontWeight: 700, color: 'var(--accent)', marginBottom: 8 }}>
+                    GRADING RUBRIC &amp; PASS STANDARDS
+                  </div>
+                  <div className="table-wrap">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Criterion</th>
+                          <th>Weight</th>
+                          <th>Passing Bar</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeProject.gradingRubric.map((r) => (
+                          <tr key={r.criterion}>
+                            <td><strong>{r.criterion}</strong></td>
+                            <td className="mono">{r.weight}</td>
+                            <td><RichText text={r.passBar} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div style={{ padding: 14, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
+                    <span className="mono" style={{ fontSize: '0.73rem', fontWeight: 700, color: 'var(--accent)' }}>
+                      LOCAL RUN &amp; CLOUD DEPLOYMENT GUIDE
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => copyText(`${activeProject.id}-readme`, activeProject.readmeTemplate)}
+                    >
+                      {copiedId === `${activeProject.id}-readme` ? <Check size={13} /> : <Copy size={13} />}
+                      {copiedId === `${activeProject.id}-readme` ? 'Copied README Template' : 'Copy README Template'}
+                    </button>
+                  </div>
+                  <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.86rem', color: 'var(--ink-2)', fontFamily: 'inherit', margin: 0 }}>
+                    {activeProject.deploymentGuide}
+                  </pre>
+                </div>
+
+                {/* Synced Project Journal */}
+                <div style={{ padding: 14, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span className="mono" style={{ fontSize: '0.73rem', fontWeight: 700, color: 'var(--accent)' }}>
+                      <BookOpen size={13} style={{ display: 'inline', marginRight: 5 }} />
+                      PROJECT JOURNAL (WHAT BROKE &amp; HOW YOU FIXED IT — AUTO-SYNCED)
+                    </span>
+                  </div>
+                  <textarea
+                    className="input mono"
+                    rows={5}
+                    style={{ fontSize: '0.82rem' }}
+                    value={progress.projectJournals?.[activeProject.id] ?? activeProject.journalTemplate}
+                    onChange={(e) => saveProjectJournal(activeProject.id, e.target.value)}
+                  />
                 </div>
               </div>
 

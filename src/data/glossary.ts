@@ -1,6 +1,7 @@
 import type { GlossaryItem } from '@/types/course';
+import { EXTRA_GLOSSARY_ITEMS } from './extraGlossary';
 
-export const GLOSSARY_ITEMS: GlossaryItem[] = [
+const CORE_GLOSSARY_ITEMS: GlossaryItem[] = [
   {
     term: 'Broadcasting (NumPy / PyTorch)',
     moduleId: 'mod-1',
@@ -252,4 +253,9 @@ export const GLOSSARY_ITEMS: GlossaryItem[] = [
     definition: 'Symmetric KL-like metric quantifying how much an input feature distribution shifted between training baseline and live production (`>0.25` = major drift).',
     example: 'Triggering an automated retraining alert when incoming loan applicant ages shift.',
   },
+];
+
+export const GLOSSARY_ITEMS: GlossaryItem[] = [
+  ...CORE_GLOSSARY_ITEMS,
+  ...EXTRA_GLOSSARY_ITEMS,
 ];

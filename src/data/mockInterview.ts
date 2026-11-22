@@ -1,6 +1,7 @@
 import type { InterviewQuestion } from '@/types/course';
+import { EXTRA_INTERVIEW_QUESTIONS } from './extraMockInterview';
 
-export const MOCK_INTERVIEW_QUESTIONS: InterviewQuestion[] = [
+const CORE_INTERVIEW_QUESTIONS: InterviewQuestion[] = [
   {
     id: 'iq-1',
     role: 'Both',
@@ -233,4 +234,9 @@ export const MOCK_INTERVIEW_QUESTIONS: InterviewQuestion[] = [
       'Pre-normalize all 50,000 document vectors once (`docs / np.linalg.norm(docs, axis=1, keepdims=True)`) using float32. At query time, normalize `q` once and compute all 50,000 cosine similarities in one compiled C/BLAS matrix-vector multiply (`sims = docs_normed @ q_normed`) plus `np.argpartition`/`np.argsort`—dropping 40 seconds down to a few milliseconds. Beyond ~1M vectors, move to an HNSW vector index.',
     followUp: 'Why does `docs[0:10]` in NumPy share memory with `docs`, and when can that cause a bug?',
   },
+];
+
+export const MOCK_INTERVIEW_QUESTIONS: InterviewQuestion[] = [
+  ...CORE_INTERVIEW_QUESTIONS,
+  ...EXTRA_INTERVIEW_QUESTIONS,
 ];

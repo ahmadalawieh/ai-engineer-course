@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/build-zips.mjs",
     "build": "next build",
+    "build:zips": "node scripts/build-zips.mjs",
     "start": "next start",
     "lint": "eslint",
     "audit": "node scripts/audit/run-audit.mjs",

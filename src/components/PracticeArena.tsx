@@ -468,7 +468,7 @@ export function PracticeArena({
               Awarded to <strong style={{ fontSize: '1.25rem', color: 'var(--ink)' }}>{progress.learnerName}</strong>
             </p>
 
-            <div className="stat-grid" style={{ maxWidth: 620, margin: '0 auto 22px' }}>
+            <div className="stat-grid" style={{ maxWidth: 660, margin: '0 auto 22px' }}>
               <div className="stat-box">
                 <div className="stat-val">{lessonsDone}/{ALL_LESSONS.length}</div>
                 <div className="stat-label">Lessons (Need 24+)</div>
@@ -482,12 +482,18 @@ export function PracticeArena({
                 <div className="stat-label">Mock Interviews (Need 6+)</div>
               </div>
               <div className="stat-box">
-                <div className="stat-val">{(progress.completedTickets || []).length}/6</div>
-                <div className="stat-label">Workplace Tickets</div>
+                <div className="stat-val">
+                  {Object.values(progress.moduleExamScores || {}).filter((e) => e.bestScore >= Math.ceil(e.total * 0.7)).length}/10
+                </div>
+                <div className="stat-label">Timed Module Exams</div>
               </div>
               <div className="stat-box">
-                <div className="stat-val">{(progress.completedPrReviews || []).length}/5</div>
-                <div className="stat-label">PR Bug Hunts</div>
+                <div className="stat-val">
+                  {progress.moduleExamScores?.['final-assessment']
+                    ? `${progress.moduleExamScores['final-assessment'].bestScore}/${progress.moduleExamScores['final-assessment'].total}`
+                    : 'Pending'}
+                </div>
+                <div className="stat-label">Final Exam (25 Qs)</div>
               </div>
               <div className="stat-box">
                 <div className="stat-val">{progress.xp}</div>
@@ -498,7 +504,7 @@ export function PracticeArena({
             {isCertified ? (
               <div>
                 <p style={{ color: 'var(--success)', fontWeight: 700, marginBottom: 14 }}>
-                  Congratulations — you met all Mid-Senior Mastery Milestones across Python, SQL, Classical ML, LLMs, RAG, Agents &amp; System Design!
+                  Congratulations — you met all Mid-Senior Mastery Milestones across Python, SQL, Classical ML, LLMs, RAG, Agents, SwEng &amp; System Design!
                 </p>
                 <button type="button" className="btn btn-primary" onClick={() => window.print()}>
                   <Printer size={15} /> Print / Save PDF Certificate

@@ -522,6 +522,125 @@ function AgentLiveApp() {
   );
 }
 
+function FastApiDockerLiveApp() {
+  const [token, setToken] = useState('sk-demo-valid-secret-16chars');
+  const [query, setQuery] = useState('Explain /readyz vs /healthz');
+  const [topK, setTopK] = useState(3);
+  const [hitsUsed, setHitsUsed] = useState(1);
+
+  const authOk = token.trim() === 'sk-demo-valid-secret-16chars';
+  const schemaOk = query.trim().length > 0 && query.length <= 500 && topK >= 1 && topK <= 10;
+  const rateOk = hitsUsed < 4;
+
+  const statusCode = !authOk ? 401 : !schemaOk ? 422 : !rateOk ? 429 : 200;
+
+  return (
+    <div style={{ padding: 16, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface-2)', display: 'grid', gap: 12 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <input className="input mono" style={{ flex: '1 1 220px' }} value={token} onChange={(e) => setToken(e.target.value)} aria-label="Bearer API Key" placeholder="Bearer key" />
+        <input className="input" style={{ flex: '2 1 240px' }} value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Prompt payload" placeholder="Query string" />
+        <input className="input mono" type="number" style={{ width: 88 }} value={topK} onChange={(e) => setTopK(Number(e.target.value))} aria-label="top_k" />
+        <button type="button" className="btn btn-sm" onClick={() => setHitsUsed((h) => (h >= 5 ? 0 : h + 1))}>
+          Simulate Request ({hitsUsed}/4 min)
+        </button>
+      </div>
+      <div className="mono" style={{ padding: '10px 12px', borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--border)', fontSize: '0.84rem' }}>
+        <strong style={{ color: statusCode === 200 ? 'var(--success)' : 'var(--error)' }}>HTTP {statusCode}</strong> ·{' '}
+        {statusCode === 401 && '{"error": "unauthorized"} — hmac.compare_digest rejected token BEFORE running LLM'}
+        {statusCode === 422 && '{"error": "validation_error"} — Pydantic v2 rejected empty query or out-of-range top_k'}
+        {statusCode === 429 && '{"error": "rate_limited", "Retry-After": 15} — Per-tenant sliding window blocked burst'}
+        {statusCode === 200 && `{"status": "ok", "top_k": ${topK}, "trace_id": "tr_91a8", "latency_ms": 142}`}
+      </div>
+    </div>
+  );
+}
+
+function EvalHarnessLiveApp() {
+  const [forwardPick, setForwardPick] = useState<'A' | 'B'>('A');
+  const [reversePick, setReversePick] = useState<'A' | 'B'>('B');
+  const [candPassRate, setCandPassRate] = useState(92);
+
+  const debiased =
+    (forwardPick === 'A' && reversePick === 'B')
+      ? 'A (Consistent Win)'
+      : (forwardPick === 'B' && reversePick === 'A')
+        ? 'B (Consistent Win)'
+        : 'TIE (Position Bias Detected & Cancelled!)';
+  const gatePass = candPassRate >= 90;
+
+  return (
+    <div style={{ padding: 16, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface-2)', display: 'grid', gap: 12 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+        <label className="mono" style={{ fontSize: '0.8rem' }}>
+          Pass 1 (A, B) Judge Pick:{' '}
+          <select className="input" style={{ width: 'auto', marginLeft: 4 }} value={forwardPick} onChange={(e) => setForwardPick(e.target.value as 'A' | 'B')}>
+            <option value="A">Slot 1 (A)</option>
+            <option value="B">Slot 2 (B)</option>
+          </select>
+        </label>
+        <label className="mono" style={{ fontSize: '0.8rem' }}>
+          Swapped (B, A) Judge Pick:{' '}
+          <select className="input" style={{ width: 'auto', marginLeft: 4 }} value={reversePick} onChange={(e) => setReversePick(e.target.value as 'A' | 'B')}>
+            <option value="A">Slot 1 (B)</option>
+            <option value="B">Slot 2 (A)</option>
+          </select>
+        </label>
+        <label className="mono" style={{ fontSize: '0.8rem' }}>
+          Golden Pass Rate: {candPassRate}%{' '}
+          <input type="range" min={75} max={100} value={candPassRate} onChange={(e) => setCandPassRate(Number(e.target.value))} />
+        </label>
+      </div>
+      <div className="mono" style={{ padding: '10px 12px', borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--border)', fontSize: '0.84rem' }}>
+        Debiased Verdict: <strong>{debiased}</strong> · CI Gate (Threshold 90%):{' '}
+        <strong style={{ color: gatePass ? 'var(--success)' : 'var(--error)' }}>
+          {gatePass ? 'PASS (Exit Code 0 — Merge Allowed)' : 'FAIL (Exit Code 1 — PR Blocked)'}
+        </strong>
+      </div>
+    </div>
+  );
+}
+
+function BilingualLiveApp() {
+  const [queryText, setQueryText] = useState('سياسه الارجاع');
+  const [useArNorm, setUseArNorm] = useState(true);
+
+  const normalizeAr = (s: string) =>
+    useArNorm
+      ? s.normalize('NFKC').replace(/[\u0640\u064b-\u065f\u0670]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase()
+      : s.toLowerCase();
+
+  const docs = [
+    { id: 'ar_policy', text: 'سياسةُ الإرجاعِ خلال ١٤ يوماً للفواتير' },
+    { id: 'en_policy', text: 'Customer refund SLA is 14 days for enterprise SKUs.' },
+  ];
+  const qNorm = normalizeAr(queryText);
+  const matched = docs.filter((d) =>
+    qNorm.split(/\s+/).some((w) => w.length > 1 && normalizeAr(d.text).includes(w))
+  );
+
+  return (
+    <div style={{ padding: 16, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface-2)', display: 'grid', gap: 10 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+        <input className="input" dir="auto" style={{ flex: '1 1 240px' }} value={queryText} onChange={(e) => setQueryText(e.target.value)} aria-label="Bilingual search query" />
+        <button type="button" className={`btn btn-sm ${useArNorm ? 'btn-primary' : ''}`} onClick={() => setUseArNorm((v) => !v)}>
+          Arabic Orthographic Normalization: {useArNorm ? 'ON' : 'OFF'}
+        </button>
+      </div>
+      <div style={{ fontSize: '0.86rem', padding: '10px 12px', borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--border)' }} dir="auto">
+        {matched.length > 0 ? (
+          matched.map((d) => (
+            <div key={d.id}>
+              <strong className="mono" style={{ color: 'var(--success)' }}>[{d.id}]</strong> {d.text}
+            </div>
+          ))
+        ) : (
+          <span style={{ color: 'var(--error)' }}>0 hits — without Alef/Tashkeel/Ta-Marbuta normalization, spelling variants miss exact matches!</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function LiveProjectPlayground({ projectId }: { projectId: string }) {
   return (
     <div style={{ marginTop: 14, marginBottom: 18 }}>
@@ -534,6 +653,9 @@ export function LiveProjectPlayground({ projectId }: { projectId: string }) {
       {projectId === 'proj-churn' && <ChurnLiveApp />}
       {projectId === 'proj-rag' && <RagLiveApp />}
       {projectId === 'proj-agent' && <AgentLiveApp />}
+      {projectId === 'proj-fastapi-docker' && <FastApiDockerLiveApp />}
+      {projectId === 'proj-eval-harness' && <EvalHarnessLiveApp />}
+      {projectId === 'proj-bilingual' && <BilingualLiveApp />}
     </div>
   );
 }

@@ -14,13 +14,16 @@ import {
   Circle,
   Copy,
   Lightbulb,
+  Lock,
   Menu,
   RotateCcw,
   Sparkles,
   Target,
+  Unlock,
   X,
 } from 'lucide-react';
 import { ALL_LESSONS, COURSE_MODULES, getAdjacentLessons, getLessonById, getModuleById } from '@/data/curriculum';
+import { getUnmetPrerequisites } from '@/lib/prerequisites';
 import { useCourseApp } from './ThemeProgressProvider';
 import { MathFormula, RichText } from './MathAndProse';
 import { InteractiveSimulatorCard } from './InteractiveSimulators';
@@ -572,6 +575,14 @@ export function LessonView({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
   const [showTopBtn, setShowTopBtn] = useState(false);
+  const [softUnlocked, setSoftUnlocked] = useState<Record<string, boolean>>({});
+
+  const { unmetLessons } = getUnmetPrerequisites(
+    lesson.id,
+    progress.completedLessons,
+    Boolean(progress.fastTrackUnlocked)
+  );
+  const hasSoftLock = unmetLessons.length > 0 && !softUnlocked[lesson.id];
 
   useEffect(() => {
     setLastVisitedLesson(lesson.id);
@@ -655,6 +666,13 @@ export function LessonView({
                   {mod.lessons.map((l) => {
                     const done = progress.completedLessons.includes(l.id);
                     const active = l.id === lesson.id;
+                    const softLocked =
+                      !done &&
+                      getUnmetPrerequisites(
+                        l.id,
+                        progress.completedLessons,
+                        Boolean(progress.fastTrackUnlocked)
+                      ).unmetLessons.length > 0;
                     return (
                       <button
                         key={l.id}
@@ -667,6 +685,8 @@ export function LessonView({
                       >
                         {done ? (
                           <CheckCircle2 size={14} color="var(--success)" style={{ flexShrink: 0 }} />
+                        ) : softLocked ? (
+                          <Lock size={13} color="var(--accent-warm)" style={{ flexShrink: 0 }} />
                         ) : (
                           <Circle size={14} color="var(--ink-muted)" style={{ flexShrink: 0 }} />
                         )}
@@ -737,6 +757,38 @@ export function LessonView({
             </button>
           </div>
         </div>
+
+        {hasSoftLock && (
+          <aside className="callout warning block" role="status" aria-label="Recommended prerequisites notice">
+            <div className="callout-title" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Lock size={15} /> Prerequisites Recommended Before Starting
+              </span>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => setSoftUnlocked((prevMap) => ({ ...prevMap, [lesson.id]: true }))}
+              >
+                <Unlock size={13} /> Unlock &amp; Study Anyway
+              </button>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)', marginBottom: 8 }}>
+              This lesson builds directly on concepts taught earlier. Complete these recommended prerequisites first (or unlock immediately if you already know them):
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {unmetLessons.map((reqLesson) => (
+                <button
+                  key={reqLesson.id}
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => onSelectLesson(reqLesson.id)}
+                >
+                  {reqLesson.number} {reqLesson.title} <ArrowRight size={12} />
+                </button>
+              ))}
+            </div>
+          </aside>
+        )}
 
         <header className="lesson-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
