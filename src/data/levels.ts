@@ -206,6 +206,7 @@ export const LEVEL_PATHS: LevelPath[] = [
       'proj-fastapi-docker',
       'proj-eval-harness',
       'proj-bilingual',
+      'proj-woocommerce-bilingual',
     ],
     requiredScenarios: ['scen-sysdesign-rag', 'scen-incident-postmortem', 'scen-adr-routing'],
     competencyIds: COMPETENCIES.map((c) => c.id),

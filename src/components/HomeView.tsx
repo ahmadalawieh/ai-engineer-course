@@ -112,7 +112,7 @@ export function HomeView({
             </button>
             <button type="button" className="btn" onClick={onOpenWork}>
               <Briefcase size={16} />
-              Real Work &amp; 6 Capstones
+              Real Work &amp; 7 Capstones
             </button>
             <button type="button" className="btn" onClick={onOpenArena}>
               <Award size={16} />

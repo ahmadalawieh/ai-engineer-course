@@ -101,7 +101,10 @@ function compileWorkbench() {
   fs.rmSync(TMP_DIR, { recursive: true, force: true });
   fs.mkdirSync(TMP_DIR, { recursive: true });
   const program = ts.createProgram(
-    [path.join(ROOT, 'src/data/jobWorkbench.ts')],
+    [
+      path.join(ROOT, 'src/data/jobWorkbench.ts'),
+      path.join(ROOT, 'src/data/capstoneStarterKit.ts'),
+    ],
     {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.CommonJS,
@@ -120,14 +123,40 @@ function compileWorkbench() {
     for (const d of diags) {
       console.error(ts.flattenDiagnosticMessageText(d.messageText, '\n'));
     }
-    throw new Error('Failed compiling jobWorkbench.ts for zip export');
+    throw new Error('Failed compiling jobWorkbench.ts / capstoneStarterKit.ts for zip export');
   }
+  const walkJs = (dir) => {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) walkJs(full);
+      else if (ent.name.endsWith('.js')) {
+        let code = fs.readFileSync(full, 'utf8');
+        code = code.replace(/require\("@\/([^"]+)"\)/g, (_, target) => {
+          let rel = path.relative(path.dirname(full), path.join(TMP_DIR, target)).replace(/\\/g, '/');
+          if (!rel.startsWith('.')) rel = './' + rel;
+          return `require("${rel}")`;
+        });
+        fs.writeFileSync(full, code, 'utf8');
+      }
+    }
+  };
+  walkJs(TMP_DIR);
 }
 
 function main() {
   compileWorkbench();
   const { GUIDED_PROJECTS } = require(path.join(TMP_DIR, 'data/jobWorkbench.js'));
+  const {
+    getSharedRealBuildFiles,
+    buildCommonEnvExample,
+    buildRealBuildSetupNotes,
+  } = require(path.join(TMP_DIR, 'data/capstoneStarterKit.js'));
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
+  // Remove stale zips before generating fresh set
+  for (const f of fs.readdirSync(OUT_DIR)) {
+    if (f.endsWith('.zip')) fs.unlinkSync(path.join(OUT_DIR, f));
+  }
 
   for (const proj of GUIDED_PROJECTS) {
     const prefix = `${proj.id}/`;
@@ -135,6 +164,27 @@ function main() {
     for (const f of proj.files) {
       fileMap.set(`${prefix}${f.filename}`, f.content);
     }
+
+    // Inject Real Build Track starter kit files (without clobbering custom docker-compose.yml if present)
+    for (const kf of getSharedRealBuildFiles(proj.id)) {
+      const key = `${prefix}${kf.filename}`;
+      if (!fileMap.has(key)) {
+        fileMap.set(key, kf.content);
+      }
+    }
+
+    // Enrich .env.example cleanly with OpenAI-compatible + Ollama config
+    const existingEnv = fileMap.get(`${prefix}.env.example`) || '';
+    const commonEnv = buildCommonEnvExample('offline_fixture');
+    fileMap.set(
+      `${prefix}.env.example`,
+      existingEnv ? `${existingEnv.trimEnd()}\n\n${commonEnv}` : commonEnv
+    );
+
+    // Enrich README.md cleanly with Real Build Track commands & API cost honesty note
+    const existingReadme = fileMap.get(`${prefix}README.md`) || `# ${proj.title}\n`;
+    fileMap.set(`${prefix}README.md`, `${existingReadme.trimEnd()}\n${buildRealBuildSetupNotes()}`);
+
     if (!fileMap.has(`${prefix}DEPLOY.md`) && proj.deploymentGuide) {
       fileMap.set(`${prefix}DEPLOY.md`, `# Deployment Guide — ${proj.title}\n\n${proj.deploymentGuide}\n`);
     }

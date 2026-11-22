@@ -849,7 +849,12 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from xgboost import XGBClassifier
+
+try:
+    from xgboost import XGBClassifier
+except ImportError:
+    from sklearn.ensemble import GradientBoostingClassifier
+    XGBClassifier = None
 
 def make_sample_dataset(n: int = 400, seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
@@ -871,9 +876,14 @@ def build_pipeline(num_cols: list[str], cat_cols: list[str]) -> Pipeline:
         ("num", Pipeline([("imp", SimpleImputer(strategy="median")), ("sc", StandardScaler())]), num_cols),
         ("cat", Pipeline([("imp", SimpleImputer(strategy="most_frequent")), ("ohe", OneHotEncoder(handle_unknown="ignore"))]), cat_cols),
     ])
+    clf = (
+        XGBClassifier(n_estimators=150, max_depth=4, learning_rate=0.05, eval_metric="logloss", random_state=42)
+        if XGBClassifier is not None
+        else GradientBoostingClassifier(n_estimators=80, max_depth=3, random_state=42)
+    )
     return Pipeline([
         ("pre", pre),
-        ("clf", XGBClassifier(n_estimators=150, max_depth=4, learning_rate=0.05, eval_metric="logloss", random_state=42)),
+        ("clf", clf),
     ])
 
 def choose_best_threshold(y_true: np.ndarray, probs: np.ndarray, save_value: float = 120.0, offer_cost: float = 20.0):

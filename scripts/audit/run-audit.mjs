@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { execFileSync, spawnSync } from 'node:child_process';
 import ts from 'typescript';
+import { runCapstoneVerification } from './test-capstones.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -308,7 +309,16 @@ function main() {
   if (!syncRouteTxt.includes('cleaned.length < 16')) {
     failures.push('[SECURITY FAIL] /api/sync sanitizeKey must enforce minimum length >= 16');
   }
-  console.log('[6/6] Vendored Pyodide & >=16-char sync key checks: PASS');
+  console.log('[6/7] Vendored Pyodide & >=16-char sync key checks: PASS');
+
+  // 7. Capstone starter zips & validator evidence.json verification
+  try {
+    const capRes = runCapstoneVerification();
+    console.log(`[7/7] Capstone starter repos (${capRes.length}/7 zips make test + make check -> evidence.json): PASS`);
+  } catch (err) {
+    failures.push(`[CAPSTONE FAIL] ${err instanceof Error ? err.message : String(err)}`);
+    console.log('[7/7] Capstone starter repos: FAIL');
+  }
 
   if (FULL_BUILD) {
     console.log('Running tsc, eslint, and next build...');
