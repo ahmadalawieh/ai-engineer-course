@@ -13,7 +13,11 @@ const FULL_BUILD = ARGS.has('--full');
 const STRICT_ALL = ARGS.has('--strict-all');
 
 // Rebuilt lessons held strictly to Section 2 targets (1200-2000 prose words, >=8 quiz Qs, >=3 labs)
-const REBUILT_LESSON_IDS = new Set(['0-1', '0-2', '0-3', '6-3']);
+const REBUILT_LESSON_IDS = new Set([
+  '0-1', '0-2', '0-3',
+  '1-0', '1-1', '1-2', '1-3', '1-4', '1-5', '1-6',
+  '6-3',
+]);
 
 const EXTERNAL_URL_ALLOWLIST = [
   'https://accounts.google.com/o/oauth2/v2/auth',
