@@ -132,20 +132,6 @@ export const module5: CourseModule = {
           reelId: 'attention-reel',
           title: 'Animated Walkthrough: How "it" Finds "animal" Using Q, K, and V',
           description: 'Step through Query-Key scoring, causal masking, and probability blending in 4 scenes.',
-          externalVideos: [
-            {
-              title: 'Attention in Transformers, Visually Explained',
-              creator: '3Blue1Brown (Grant Sanderson)',
-              url: 'https://www.youtube.com/watch?v=eMlx5fFNoYc',
-              duration: '26 min',
-            },
-            {
-              title: "Let's Build GPT: From Scratch, in Code",
-              creator: 'Andrej Karpathy',
-              url: 'https://www.youtube.com/watch?v=kCc8FmEb1nY',
-              duration: '1h 56m (deep dive)',
-            },
-          ],
         },
         {
           type: 'simulator',

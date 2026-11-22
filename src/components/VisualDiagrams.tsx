@@ -15,25 +15,25 @@ function DiagramSvg({ diagramId }: { diagramId: DiagramId }) {
               <path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)" />
             </marker>
           </defs>
-          {/* 1. Variable */}
+          {/* 1. Variable & Type */}
           <rect x="16" y="34" width="155" height="156" rx="12" fill="var(--surface-2)" stroke="var(--border-strong)" strokeWidth="1.5" />
-          <text x="93" y="60" textAnchor="middle" fill="var(--accent)" fontSize="11" fontWeight="700" fontFamily="monospace">1. VARIABLE</text>
+          <text x="93" y="60" textAnchor="middle" fill="var(--accent)" fontSize="11" fontWeight="700" fontFamily="monospace">1. VAR &amp; TYPES</text>
           <rect x="34" y="76" width="118" height="44" rx="8" fill="var(--surface)" stroke="var(--accent)" strokeWidth="1.5" />
           <text x="93" y="103" textAnchor="middle" fill="var(--ink)" fontSize="13" fontWeight="700" fontFamily="monospace">threshold = 0.8</text>
-          <text x="93" y="152" textAnchor="middle" fill="var(--ink-2)" fontSize="11">A labeled box holding</text>
-          <text x="93" y="168" textAnchor="middle" fill="var(--ink-2)" fontSize="11">one reusable value</text>
+          <text x="93" y="152" textAnchor="middle" fill="var(--ink-2)" fontSize="11">int, float, str, bool</text>
+          <text x="93" y="168" textAnchor="middle" fill="var(--ink-2)" fontSize="11">stored in named boxes</text>
 
           <line x1="173" y1="112" x2="199" y2="112" stroke="var(--accent)" strokeWidth="2" markerEnd="url(#arr-py)" />
 
-          {/* 2. List & Dict */}
+          {/* 2. Ordered Lists */}
           <rect x="203" y="34" width="168" height="156" rx="12" fill="var(--surface-2)" stroke="var(--border-strong)" strokeWidth="1.5" />
-          <text x="287" y="60" textAnchor="middle" fill="var(--cobalt)" fontSize="11" fontWeight="700" fontFamily="monospace">2. LIST &amp; DICT</text>
+          <text x="287" y="60" textAnchor="middle" fill="var(--cobalt)" fontSize="11" fontWeight="700" fontFamily="monospace">2. ORDERED LISTS</text>
           <rect x="219" y="76" width="136" height="28" rx="6" fill="var(--surface)" stroke="var(--cobalt)" strokeWidth="1.2" />
           <text x="287" y="94" textAnchor="middle" fill="var(--ink)" fontSize="11" fontFamily="monospace">[0.45, 0.82, 0.91]</text>
           <rect x="219" y="110" width="136" height="28" rx="6" fill="var(--surface)" stroke="var(--cobalt)" strokeWidth="1.2" />
-          <text x="287" y="128" textAnchor="middle" fill="var(--ink)" fontSize="10.5" fontFamily="monospace">{'{"role":"ai","xp":95}'}</text>
-          <text x="287" y="160" textAnchor="middle" fill="var(--ink-2)" fontSize="11">Ordered rows (Lists) &amp;</text>
-          <text x="287" y="176" textAnchor="middle" fill="var(--ink-2)" fontSize="11">Key-Value JSON (Dicts)</text>
+          <text x="287" y="128" textAnchor="middle" fill="var(--ink)" fontSize="10.5" fontFamily="monospace">scores[0] -&gt; 0.45</text>
+          <text x="287" y="160" textAnchor="middle" fill="var(--ink-2)" fontSize="11">Hold many values in</text>
+          <text x="287" y="176" textAnchor="middle" fill="var(--ink-2)" fontSize="11">sequence for processing</text>
 
           <line x1="373" y1="112" x2="399" y2="112" stroke="var(--accent)" strokeWidth="2" markerEnd="url(#arr-py)" />
 

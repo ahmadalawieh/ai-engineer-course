@@ -17,7 +17,7 @@ function getKvCredentials(): { url: string; token: string } | null {
 function sanitizeKey(raw: string | null): string | null {
   if (!raw) return null;
   const cleaned = raw.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-  if (cleaned.length < 4 || cleaned.length > 64) return null;
+  if (cleaned.length < 16 || cleaned.length > 64) return null;
   return cleaned;
 }
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const key = sanitizeKey(req.nextUrl.searchParams.get('key'));
     if (!key) {
       return NextResponse.json(
-        { error: 'Invalid sync key. Must be 4-64 alphanumeric/dash characters.' },
+        { error: 'Invalid sync key. Must be 16-64 random alphanumeric/dash characters, or sign in with Google.' },
         { status: 400 }
       );
     }

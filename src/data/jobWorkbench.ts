@@ -185,8 +185,8 @@ export const LOCAL_SETUP_STEPS: SetupStepItem[] = [
     stepNumber: 1,
     title: 'Install Python 3.11+ & VS Code',
     whyNeeded: 'Every professional AI engineer writes code inside an editor like VS Code and runs it with Python locally.',
-    macLinuxCmd: 'python3 --version\n# Download VS Code: https://code.visualstudio.com\n# Download Python 3.11+: https://www.python.org/downloads/',
-    windowsCmd: 'python --version\n# Tip on Windows: check "Add python.exe to PATH" during install!',
+    macLinuxCmd: 'python3 --version && code --version\n# macOS (Homebrew): brew install python@3.12\n# Ubuntu/Debian: sudo apt update && sudo apt install -y python3 python3-venv',
+    windowsCmd: 'python --version; code --version\n# Windows (winget): winget install Python.Python.3.12 Microsoft.VisualStudioCode',
     verifyHint: 'If your terminal prints `Python 3.11.x` or `3.12.x`, check this step done!',
   },
   {
@@ -716,7 +716,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 rng = np.random.default_rng(42)
-n = 240
+n = 600
 days = rng.integers(1, 45, size=n)
 tix = rng.integers(0, 8, size=n)
 is_team = rng.choice([0, 1], size=n, p=[0.75, 0.25])
@@ -749,7 +749,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 rng = np.random.default_rng(42)
-n = 240
+n = 600
 days = rng.integers(1, 45, size=n)
 tix = rng.integers(0, 8, size=n)
 is_team = rng.choice([0, 1], size=n, p=[0.75, 0.25])

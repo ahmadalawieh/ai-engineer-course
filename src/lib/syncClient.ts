@@ -19,18 +19,27 @@ function normalizeSyncKey(key: string): string {
 }
 
 export function generateSyncKey(): string {
-  const adjectives = ['tensor', 'vector', 'neural', 'bayes', 'cosine', 'gradient', 'latent', 'logit'];
-  const nouns = ['matrix', 'kernel', 'atlas', 'orbit', 'beacon', 'ridge', 'spark', 'prism'];
-  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const noun = nouns[Math.floor(Math.random() * nouns.length)];
-  const num = Math.floor(1000 + Math.random() * 9000);
-  return `${adj}-${noun}-${num}`;
+  const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const len = 20;
+  let randomPart = '';
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(len);
+    crypto.getRandomValues(bytes);
+    for (let i = 0; i < len; i++) {
+      randomPart += alphabet[bytes[i] % alphabet.length];
+    }
+  } else {
+    for (let i = 0; i < len; i++) {
+      randomPart += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+  }
+  return `aimc-${randomPart.slice(0, 5)}-${randomPart.slice(5, 10)}-${randomPart.slice(10, 15)}-${randomPart.slice(15, 20)}`;
 }
 
 export async function pushToCloudKV(syncKey: string, progress: CourseProgress): Promise<SyncResult> {
   const cleanKey = normalizeSyncKey(syncKey);
-  if (cleanKey.length < 4) {
-    return { ok: false, message: 'Sync key must be at least 4 characters.' };
+  if (cleanKey.length < 16) {
+    return { ok: false, message: 'Sync key must be at least 16 characters (click Random to generate a secure key).' };
   }
 
   try {
@@ -80,8 +89,8 @@ export async function pullFromCloudKV(
   localProgress: CourseProgress
 ): Promise<SyncResult> {
   const cleanKey = normalizeSyncKey(syncKey);
-  if (cleanKey.length < 4) {
-    return { ok: false, message: 'Sync key must be at least 4 characters.' };
+  if (cleanKey.length < 16) {
+    return { ok: false, message: 'Sync key must be at least 16 characters.' };
   }
 
   try {

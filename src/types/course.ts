@@ -125,16 +125,34 @@ export type ContentBlock =
       testCode: string;
       solutionCode: string;
       hint: string;
+      hints?: [string, string, string];
+      difficulty?: 'guided' | 'spec' | 'debug' | 'challenge';
+      requires?: string[];
       packages?: string[];
       language?: 'python' | 'sql';
       setupCode?: string;
     };
 
+export type QuizQuestionType =
+  | 'multiple-choice'
+  | 'predict-output'
+  | 'spot-bug'
+  | 'multi-select'
+  | 'ordering'
+  | 'numeric';
+
 export interface QuizQuestion {
   id: string;
+  type?: QuizQuestionType;
+  code?: string;
   question: string;
   options: string[];
   correctIndex: number;
+  correctIndices?: number[];
+  items?: string[];
+  correctNumber?: number;
+  tolerance?: number;
+  unit?: string;
   explanation: string;
 }
 
@@ -147,7 +165,10 @@ export interface Lesson {
   durationMinutes: number;
   track: TrackTag;
   prerequisites: string[];
+  teaches?: string[];
+  requires?: string[];
   objectives: string[];
+  checkWithoutNotes?: string[];
   blocks: ContentBlock[];
   quiz: QuizQuestion[];
 }
@@ -213,6 +234,11 @@ export interface SyncConfig {
 export interface CourseProgress {
   version: number;
   learnerName: string;
+  quizSeed?: string;
+  fastTrackUnlocked?: boolean;
+  placementScore?: { score: number; total: number };
+  moduleExamScores?: Record<string, { score: number; total: number; bestScore: number }>;
+  projectJournals?: Record<string, string>;
   completedLessons: string[];
   completedLabs: string[];
   completedPuzzles: string[];

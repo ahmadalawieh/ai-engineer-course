@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-const PYODIDE_INDEX = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+const PYODIDE_INDEX = '/pyodide/v0.26.4/';
 let pyodidePromise: Promise<PyodideInstance> | null = null;
 const loadedPackages = new Set<string>();
 
@@ -49,7 +49,7 @@ export async function getPyodide(
   onStatus?: (msg: string) => void
 ): Promise<PyodideInstance> {
   if (!pyodidePromise) {
-    onStatus?.('Downloading Python WebAssembly runtime (~12 MB, cached in browser)...');
+    onStatus?.('Loading local Python 3.12 WebAssembly runtime (cached in browser)...');
     pyodidePromise = (async () => {
       await loadScriptOnce(`${PYODIDE_INDEX}pyodide.js`);
       if (!window.loadPyodide) {

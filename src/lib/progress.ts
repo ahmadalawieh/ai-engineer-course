@@ -8,10 +8,25 @@ export function getTodayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+export const CURRENT_PROGRESS_VERSION = 2;
+
+export function generateQuizSeed(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return 'default-learner-seed';
+}
+
 export function createInitialProgress(): CourseProgress {
   return {
-    version: 1,
+    version: CURRENT_PROGRESS_VERSION,
     learnerName: 'AI Engineer',
+    quizSeed: 'default-learner-seed',
+    fastTrackUnlocked: false,
+    moduleExamScores: {},
+    projectJournals: {},
     completedLessons: [],
     completedLabs: [],
     completedPuzzles: [],
@@ -33,30 +48,52 @@ export function createInitialProgress(): CourseProgress {
   };
 }
 
+export function migrateProgress(raw: unknown): CourseProgress {
+  const base = createInitialProgress();
+  if (!raw || typeof raw !== 'object') return base;
+  const parsed = raw as Partial<CourseProgress>;
+  return {
+    ...base,
+    ...parsed,
+    version: CURRENT_PROGRESS_VERSION,
+    learnerName: typeof parsed.learnerName === 'string' && parsed.learnerName ? parsed.learnerName : base.learnerName,
+    quizSeed: typeof parsed.quizSeed === 'string' && parsed.quizSeed ? parsed.quizSeed : base.quizSeed,
+    fastTrackUnlocked: Boolean(parsed.fastTrackUnlocked),
+    moduleExamScores:
+      parsed.moduleExamScores && typeof parsed.moduleExamScores === 'object' ? parsed.moduleExamScores : {},
+    projectJournals:
+      parsed.projectJournals && typeof parsed.projectJournals === 'object' ? parsed.projectJournals : {},
+    completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : [],
+    completedLabs: Array.isArray(parsed.completedLabs) ? parsed.completedLabs : [],
+    completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
+    completedTickets: Array.isArray(parsed.completedTickets) ? parsed.completedTickets : [],
+    completedPrReviews: Array.isArray(parsed.completedPrReviews) ? parsed.completedPrReviews : [],
+    completedSetupSteps: Array.isArray(parsed.completedSetupSteps) ? parsed.completedSetupSteps : [],
+    completedProjectSteps: Array.isArray(parsed.completedProjectSteps) ? parsed.completedProjectSteps : [],
+    labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
+    quizScores: parsed.quizScores && typeof parsed.quizScores === 'object' ? parsed.quizScores : {},
+    notes: parsed.notes && typeof parsed.notes === 'object' ? parsed.notes : {},
+    bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
+    flashcardSRS:
+      parsed.flashcardSRS && typeof parsed.flashcardSRS === 'object' ? parsed.flashcardSRS : {},
+    interviewCompleted: Array.isArray(parsed.interviewCompleted) ? parsed.interviewCompleted : [],
+    xp: typeof parsed.xp === 'number' && Number.isFinite(parsed.xp) ? parsed.xp : 0,
+    streakDays: typeof parsed.streakDays === 'number' && parsed.streakDays >= 1 ? parsed.streakDays : 1,
+    lastActiveDate: typeof parsed.lastActiveDate === 'string' ? parsed.lastActiveDate : '',
+    lastVisitedLessonId:
+      typeof parsed.lastVisitedLessonId === 'string' && parsed.lastVisitedLessonId
+        ? parsed.lastVisitedLessonId
+        : base.lastVisitedLessonId,
+    updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
+  };
+}
+
 export function loadLocalProgress(): CourseProgress {
   if (typeof window === 'undefined') return createInitialProgress();
   try {
     const raw = window.localStorage.getItem(PROGRESS_STORAGE_KEY);
     if (!raw) return createInitialProgress();
-    const parsed = JSON.parse(raw) as Partial<CourseProgress>;
-    return {
-      ...createInitialProgress(),
-      ...parsed,
-      completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : [],
-      completedLabs: Array.isArray(parsed.completedLabs) ? parsed.completedLabs : [],
-      completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
-      completedTickets: Array.isArray(parsed.completedTickets) ? parsed.completedTickets : [],
-      completedPrReviews: Array.isArray(parsed.completedPrReviews) ? parsed.completedPrReviews : [],
-      completedSetupSteps: Array.isArray(parsed.completedSetupSteps) ? parsed.completedSetupSteps : [],
-      completedProjectSteps: Array.isArray(parsed.completedProjectSteps) ? parsed.completedProjectSteps : [],
-      labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
-      quizScores: parsed.quizScores && typeof parsed.quizScores === 'object' ? parsed.quizScores : {},
-      notes: parsed.notes && typeof parsed.notes === 'object' ? parsed.notes : {},
-      bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
-      flashcardSRS:
-        parsed.flashcardSRS && typeof parsed.flashcardSRS === 'object' ? parsed.flashcardSRS : {},
-      interviewCompleted: Array.isArray(parsed.interviewCompleted) ? parsed.interviewCompleted : [],
-    };
+    return migrateProgress(JSON.parse(raw));
   } catch {
     return createInitialProgress();
   }
@@ -113,10 +150,12 @@ export function updateStreak(progress: CourseProgress): CourseProgress {
 /**
  * Conflict-free merge between two devices:
  * - Unions completed lessons, labs, puzzles, tickets, PR reviews, setup/project steps, bookmarks, and interview questions
- * - Keeps highest bestScore for quizzes
- * - Takes newer notes/labDrafts/SRS by updatedAt (while preserving keys only present on one device)
+ * - Keeps highest bestScore for quizzes & module exams
+ * - Takes newer notes/labDrafts/SRS/journals by updatedAt (while preserving keys only present on one device)
  */
-export function mergeProgress(local: CourseProgress, remote: CourseProgress): CourseProgress {
+export function mergeProgress(localRaw: CourseProgress, remoteRaw: CourseProgress): CourseProgress {
+  const local = migrateProgress(localRaw);
+  const remote = migrateProgress(remoteRaw);
   const remoteIsNewer = (remote.updatedAt || 0) >= (local.updatedAt || 0);
   const older = remoteIsNewer ? local : remote;
   const newer = remoteIsNewer ? remote : local;
@@ -135,6 +174,14 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
         bestScore: Math.max(prev.bestScore, q.bestScore),
       };
     }
+  }
+
+  const mergedExams: NonNullable<CourseProgress['moduleExamScores']> = { ...(older.moduleExamScores || {}) };
+  for (const [modId, ex] of Object.entries(newer.moduleExamScores || {})) {
+    const prev = mergedExams[modId];
+    mergedExams[modId] = prev
+      ? { score: ex.score, total: Math.max(prev.total, ex.total), bestScore: Math.max(prev.bestScore, ex.bestScore) }
+      : ex;
   }
 
   const completedLessons = union(local.completedLessons, remote.completedLessons);
@@ -160,8 +207,15 @@ export function mergeProgress(local: CourseProgress, remote: CourseProgress): Co
   );
 
   return {
-    version: 1,
+    version: CURRENT_PROGRESS_VERSION,
     learnerName: newer.learnerName || older.learnerName || 'AI Engineer',
+    quizSeed:
+      (local.quizSeed && local.quizSeed !== 'default-learner-seed' ? local.quizSeed : remote.quizSeed) ||
+      'default-learner-seed',
+    fastTrackUnlocked: Boolean(local.fastTrackUnlocked || remote.fastTrackUnlocked),
+    placementScore: newer.placementScore || older.placementScore,
+    moduleExamScores: mergedExams,
+    projectJournals: { ...(older.projectJournals || {}), ...(newer.projectJournals || {}) },
     completedLessons,
     completedLabs,
     completedPuzzles,
@@ -206,20 +260,11 @@ export function decodePortableToken(token: string): CourseProgress | null {
     const payload = extracted.startsWith('AIMC1_') ? extracted.slice(6) : extracted;
     const json = LZString.decompressFromEncodedURIComponent(payload);
     if (!json) return null;
-    const parsed = JSON.parse(json) as CourseProgress;
+    const parsed = JSON.parse(json) as Partial<CourseProgress>;
     if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.completedLessons)) {
       return null;
     }
-    return {
-      ...createInitialProgress(),
-      ...parsed,
-      completedPuzzles: Array.isArray(parsed.completedPuzzles) ? parsed.completedPuzzles : [],
-      completedTickets: Array.isArray(parsed.completedTickets) ? parsed.completedTickets : [],
-      completedPrReviews: Array.isArray(parsed.completedPrReviews) ? parsed.completedPrReviews : [],
-      completedSetupSteps: Array.isArray(parsed.completedSetupSteps) ? parsed.completedSetupSteps : [],
-      completedProjectSteps: Array.isArray(parsed.completedProjectSteps) ? parsed.completedProjectSteps : [],
-      labDrafts: parsed.labDrafts && typeof parsed.labDrafts === 'object' ? parsed.labDrafts : {},
-    };
+    return migrateProgress(parsed);
   } catch {
     return null;
   }

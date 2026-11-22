@@ -14,6 +14,8 @@ interface PythonLabProps {
   testCode: string;
   solutionCode: string;
   hint: string;
+  hints?: [string, string, string];
+  difficulty?: 'guided' | 'spec' | 'debug' | 'challenge';
   packages?: string[];
   language?: 'python' | 'sql';
   setupCode?: string;
@@ -29,6 +31,8 @@ export function PythonLab({
   testCode,
   solutionCode,
   hint,
+  hints,
+  difficulty,
   packages = ['numpy'],
   language = 'python',
   setupCode,
@@ -47,7 +51,9 @@ export function PythonLab({
   const [output, setOutput] = useState<string>('');
   const [hasError, setHasError] = useState(false);
   const [passed, setPassed] = useState(isCompleted);
-  const [showHint, setShowHint] = useState(false);
+  const [hintLevel, setHintLevel] = useState(0);
+
+  const hintSteps = hints && hints.length > 0 ? hints : [hint];
 
   const updateCode = (next: string) => {
     setLocalDraft(next);
@@ -125,6 +131,17 @@ else:
     }
   };
 
+  const difficultyLabel =
+    difficulty === 'guided'
+      ? 'Guided'
+      : difficulty === 'spec'
+        ? 'From Spec'
+        : difficulty === 'debug'
+          ? 'Debug Buggy Code'
+          : difficulty === 'challenge'
+            ? 'Open Mini-Challenge'
+            : null;
+
   return (
     <div className="lab-card block" id={`lab-${labId}`}>
       <div className="lab-header">
@@ -134,6 +151,7 @@ else:
             {language === 'sql'
               ? 'In-Browser Interactive SQL Lab (SQLite)'
               : `In-Browser Python + ${packages.length ? packages.join(', ') : 'Stdlib'} Lab`}
+            {difficultyLabel ? ` · ${difficultyLabel}` : ''}
           </span>
           <h3 style={{ fontSize: '1.08rem', marginTop: 2 }}>{title}</h3>
         </div>
@@ -201,10 +219,16 @@ else:
             <button
               type="button"
               className="btn btn-sm"
-              onClick={() => setShowHint((v) => !v)}
+              onClick={() =>
+                setHintLevel((lvl) => (lvl >= hintSteps.length ? 0 : lvl + 1))
+              }
             >
               <HelpCircle size={13} />
-              {showHint ? 'Hide Hint' : 'Hint'}
+              {hintLevel === 0
+                ? 'Stuck?'
+                : hintLevel < hintSteps.length
+                  ? `Next Hint (${hintLevel}/${hintSteps.length})`
+                  : 'Hide Hints'}
             </button>
             <button
               type="button"
@@ -222,6 +246,7 @@ else:
                 clearLabDraft(labId);
                 setOutput('');
                 setHasError(false);
+                setHintLevel(0);
               }}
             >
               <RotateCcw size={13} />
@@ -233,7 +258,7 @@ else:
           )}
         </div>
 
-        {showHint && (
+        {hintLevel > 0 && (
           <div
             style={{
               marginTop: 10,
@@ -242,9 +267,15 @@ else:
               background: 'var(--surface-2)',
               fontSize: '0.86rem',
               color: 'var(--ink-2)',
+              display: 'grid',
+              gap: 6,
             }}
           >
-            <strong>Hint:</strong> <RichText text={hint} />
+            {hintSteps.slice(0, hintLevel).map((hText, idx) => (
+              <div key={idx}>
+                <strong>Hint {idx + 1}:</strong> <RichText text={hText} />
+              </div>
+            ))}
           </div>
         )}
 

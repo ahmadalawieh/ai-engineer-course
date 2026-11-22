@@ -536,6 +536,8 @@ function renderContentBlock(block: ContentBlock, idx: number) {
           testCode={block.testCode}
           solutionCode={block.solutionCode}
           hint={block.hint}
+          hints={block.hints}
+          difficulty={block.difficulty}
           packages={block.packages}
           language={block.language}
           setupCode={block.setupCode}
@@ -761,6 +763,24 @@ export function LessonView({
         </header>
 
         {lesson.blocks.map((block, idx) => renderContentBlock(block, idx))}
+
+        {lesson.checkWithoutNotes && lesson.checkWithoutNotes.length > 0 && (
+          <section className="callout callout-key-takeaway block" aria-label="Check yourself without notes">
+            <div className="callout-title">
+              <Target size={16} /> Check Yourself Without Notes
+            </div>
+            <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)', marginBottom: 8 }}>
+              Before taking the quiz, cover the lesson above and answer these aloud in plain words:
+            </p>
+            <ol style={{ paddingLeft: 20, fontSize: '0.9rem', color: 'var(--ink-2)', display: 'grid', gap: 5 }}>
+              {lesson.checkWithoutNotes.map((item, idx) => (
+                <li key={idx}>
+                  <RichText text={item} />
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
 
         <LessonQuiz key={lesson.id} lessonId={lesson.id} questions={lesson.quiz} />
 

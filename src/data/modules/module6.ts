@@ -1,4 +1,5 @@
 import type { CourseModule } from '@/types/course';
+import { lesson6_3 } from '../lessons/6-3';
 
 export const module6: CourseModule = {
   id: 'mod-6',
@@ -6,7 +7,7 @@ export const module6: CourseModule = {
   title: 'Applied AI Engineering: Prompting, RAG & Fine-Tuning',
   subtitle: 'Build reliable structured LLM apps, hybrid vector search, production RAG pipelines, and LoRA/QLoRA fine-tuning.',
   track: 'ai-eng',
-  estimatedHours: 4,
+  estimatedHours: 5,
   capstoneDeliverable: 'Build a hybrid BM25 + Cosine Reciprocal Rank Fusion retriever & size a QLoRA run.',
   lessons: [
     {
@@ -113,6 +114,7 @@ class SupportTriage(BaseModel):
       durationMinutes: 17,
       track: 'ai-eng',
       prerequisites: ['1.2', '6.1'],
+      teaches: ['embeddings', 'vector-db', 'hybrid-search'],
       objectives: [
         'Explain why pure dense embeddings miss exact part numbers, error codes, and rare acronyms—and how Hybrid Search solves it.',
         'Combine keyword (BM25) + semantic (Cosine) rankings using Reciprocal Rank Fusion (RRF).',
@@ -230,98 +232,7 @@ print("PASS: RRF fused lexical & semantic rankings accurately!")`,
         },
       ],
     },
-    {
-      id: '6-3',
-      moduleId: 'mod-6',
-      number: '6.3',
-      title: 'Production RAG Architecture & Chunking Pipelines',
-      subtitle: 'Most RAG failures are retrieval failures, not LLM failures. Master chunking, HyDE, metadata filtering, and grounding.',
-      durationMinutes: 16,
-      track: 'ai-eng',
-      prerequisites: ['6.2'],
-      objectives: [
-        'Design document ingestion pipelines: PDF/HTML parsing, structure-aware chunking, overlap, and parent-child retrieval.',
-        'Apply Query Rewriting, Multi-Query Expansion, Metadata Pre-Filtering, and Contextual Retrieval.',
-        'Enforce inline citations and refusal when evidence is absent.',
-      ],
-      blocks: [
-        {
-          type: 'prose',
-          heading: '80% of RAG Quality Is Data Prep & Retrieval—Not Prompting',
-          paragraphs: [
-            'Naive RAG (`split every 500 chars -> embed -> top 3`) fails on real enterprise docs: tables get sliced in half, pronouns lose what header section they belong to, and multi-hop questions miss context.',
-            '**Five Production Upgrades**: 1) **Structure-Aware & Contextual Chunking**: split on Markdown headings/paragraphs, and prepend document + section title (`"[Doc: Q3 Billing Policy | Section: Refunds] ..."`) before embedding! 2) **Small-to-Big (Parent-Child) Retrieval**: embed small crisp 200-token chunks for sharp matching, then hand the LLM the full 1,000-token parent section. 3) **Metadata Pre-Filtering**: filter by `tenant_id`, `date`, `permission_role` *inside* the vector query (critical for multi-tenant security!). 4) **Query Rewriting / HyDE**: turn vague follow-ups like *"how much does that cost?"* into standalone queries using chat history. 5) **Reranking + Grounded Citations**: instruct the model to cite `[chunk_id]` and say *"Not found in provided context"* if unsupported.',
-          ],
-        },
-        {
-          type: 'visual-diagram',
-          diagramId: 'hybrid-rag',
-          title: 'Production Multi-Tenant Hybrid RAG Blueprint',
-          caption: 'Mandatory `tenant_id` ACL pre-filtering protects privacy before BM25 + Vector RRF fusion and Cross-Encoder reranking.',
-        },
-        {
-          type: 'concept-reel',
-          reelId: 'rag-pipeline-reel',
-          title: 'Animated Walkthrough: Trace a Customer Question Through Production RAG',
-          description: 'Watch how a question with an exact error code (`E-402`) survives ACL filtering, hybrid search, reranking, and citation checks.',
-        },
-        {
-          type: 'table',
-          title: 'RAG Failure Modes & Exact Fixes',
-          headers: ['Symptom', 'Root Cause', 'Exact Production Fix'],
-          rows: [
-            ['Retrieved chunks lack context (e.g. "It costs $40" without product name)', 'Chunk stripped away parent header', 'Contextual Retrieval (prepend doc/section header to chunk text before embedding)'],
-            ['Follow-up chat questions retrieve garbage', 'Query `"What about on enterprise?"` has no entity name', 'Query Contextualization step rewrites query using conversation history'],
-            ['Answers hallucinate numbers not in docs', 'LLM falls back on stale pretraining memory', 'Strict grounding prompt + `[source_id]` citations + Faithfulness eval check'],
-            ['User A sees User B’s confidential docs', 'Missing ACL metadata filter', 'Enforce mandatory `tenant_id` / `acl` pre-filter on every vector + BM25 query'],
-          ],
-        },
-        {
-          type: 'callout',
-          variant: 'interview',
-          title: 'What About Long-Context LLMs (1M–2M tokens)—Is RAG Dead?',
-          body: 'No! Stuffing 500k tokens into every prompt costs ~100× more per query, adds seconds of TTFT latency, suffers "lost-in-the-middle" degradation, and still fails at 10M+ enterprise docs. In practice, **RAG + Long Context work together**: retrieve the top 15–30 rich parent sections via Hybrid + Rerank, then let a strong context window synthesize cleanly.',
-        },
-      ],
-      quiz: [
-        {
-          id: 'q6-3-1',
-          question: 'In multi-tenant SaaS RAG, why MUST access control (`tenant_id` / permissions) be applied as a **pre-filter inside the vector index**, not filtered after retrieving top-10?',
-          options: [
-            'Post-filtering could return 0 results if all top-10 global matches belonged to other tenants—and risks leaking existence/counts across tenants',
-            'Vector databases cannot sort strings',
-            'Post-filtering doubles embedding dimensions',
-            'Pre-filtering disables cosine similarity',
-          ],
-          correctIndex: 0,
-          explanation: 'If User A asks a question and top-10 matches belong to Tenant B, post-filtering leaves an empty list! Pre-filtering guarantees top-$k$ within authorized docs only.',
-        },
-        {
-          id: 'q6-3-2',
-          question: 'What is the **Small-to-Big (Parent-Child)** RAG pattern?',
-          options: [
-            'Train a small LLM to generate prompts for a large LLM',
-            'Embed/index small focused child chunks for precise semantic matching, but pass their larger parent section to the LLM so it has complete surrounding context',
-            'Store only the first sentence of each PDF',
-            'Chunk by character instead of tokens',
-          ],
-          correctIndex: 1,
-          explanation: 'Small chunks keep vector embeddings sharp and un-diluted; larger parent windows give the generator complete tables, caveats, and explanations.',
-        },
-        {
-          id: 'q6-3-3',
-          question: 'A user asks *"Does it include SSO?"* right after asking about *"Pro Plan"*. Why does raw vector search fail here?',
-          options: [
-            'The pronoun `"it"` lacks `"Pro Plan"` in the embedding; a Query Rewriter must expand it to `"Does the Pro Plan include SSO?"` first',
-            'Cosine similarity ignores question marks',
-            'SSO is too short to tokenize',
-            'BM25 deletes pronouns',
-          ],
-          correctIndex: 0,
-          explanation: 'Conversational RAG requires rewriting coreferences using recent chat turns before querying the retriever.',
-        },
-      ],
-    },
+    lesson6_3,
     {
       id: '6-4',
       moduleId: 'mod-6',

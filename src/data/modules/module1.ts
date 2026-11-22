@@ -18,39 +18,32 @@ export const module1: CourseModule = {
       durationMinutes: 15,
       track: 'core',
       prerequisites: ['No prior coding experience required'],
+      teaches: ['python-variables', 'python-types', 'python-lists', 'python-loops', 'python-conditionals', 'python-print'],
+      requires: [],
       objectives: [
-        'Store numbers and text in Python variables and lists without prior coding experience.',
+        'Store numbers, strings, and booleans in Python variables and lists without prior coding experience.',
         'Make smart choices with `if / else` and repeat steps cleanly with `for` loops.',
-        'Solve an interactive tap-to-order puzzle and pass your first Python lab.',
+        'Solve an interactive tap-to-order puzzle and pass your first Python lab using only taught syntax.',
       ],
       blocks: [
         {
           type: 'prose',
           heading: 'Coding Is Just Giving Clear Recipes to a Computer',
           paragraphs: [
-            'Writing code is just writing a crystal-clear step-by-step recipe—similar to setting rules in a spreadsheet or automating a checklist. In Python, there are only **4 core building blocks** you need on Day 1:',
-            '1) **Variables** (`score = 85`): a labeled box holding a value. 2) **Lists & Dictionaries**: a **List** (`scores = [60, 85, 92]`) holds ordered rows inside `[...]`; a **Dictionary** (`ticket = {"user": "Ada", "tier": "pro"}`) holds labeled key-value pairs inside `{...}`—this exact format (JSON) is how every AI API sends responses! 3) **Loops** (`for s in scores:`): visit each item one by one. 4) **Decisions** (`if s >= 80:`): take an action only when a rule is true.',
+            'Writing code is writing a step-by-step recipe a computer executes strictly from top to bottom. On Day 1, start with six foundational pieces: **Variables** (labeled boxes holding a value), **Data Types** (`int` whole numbers like `85`, `float` decimals like `0.82`, `str` text inside quotes like `"Ada"`, and `bool` truth values `True`/`False`), **Lists** (ordered collections in square brackets like `[60, 85, 92]`), **Loops** (`for s in scores:` to step through items), **Decisions** (`if s >= 80:` to branch on a condition), and **`print(...)`** to display output. In Lesson 1.1 you will build on these with dictionaries (note: unlike JSON, Python dictionaries accept single quotes and use `True`/`False`/`None`), reusable functions (`def`), classes, and module imports.',
           ],
         },
         {
           type: 'visual-diagram',
           diagramId: 'python-blocks',
-          title: 'Visual Map: The 4 Building Blocks of Every Python & AI Script',
-          caption: 'Every complex AI pipeline—even ChatGPT agents—is built from Variables, Lists/Dictionaries, Loops, and `if` Decisions.',
+          title: 'Visual Map: Day-1 Python Flow (Variables, Lists, Loops & Decisions)',
+          caption: 'Trace data step-by-step from named variables and lists through `for` loops and `if` branches.',
         },
         {
           type: 'concept-reel',
           reelId: 'python-loop-reel',
-          title: 'Animated Walkthrough: Watch a Python Loop Filter Scores Step-by-Step',
+          title: 'Animated Walkthrough: Watch a Python Loop Count High Scores Step-by-Step',
           description: 'Press Play to watch how Python moves through `[0.45, 0.88, 0.92]` one item at a time.',
-          externalVideos: [
-            {
-              title: 'Python for Beginners – Full Course (freeCodeCamp)',
-              creator: 'freeCodeCamp.org',
-              url: 'https://www.youtube.com/watch?v=rfscVS0vtbw',
-              duration: '4h (watch first 45m for basics)',
-            },
-          ],
         },
         {
           type: 'code-builder',
@@ -78,29 +71,33 @@ export const module1: CourseModule = {
         {
           type: 'python-lab',
           labId: 'lab-1-0',
-          title: 'Lab 1.0: Filter Confident AI Predictions',
+          difficulty: 'guided',
+          requires: ['python-variables', 'python-lists', 'python-loops', 'python-conditionals'],
+          title: 'Lab 1.0: Count & Sum Confident AI Predictions',
           prompt:
-            'Imagine an AI model outputs confidence scores like `[0.45, 0.82, 0.91, 0.60]`. Write a function `filter_confident(scores, threshold)` that starts with an empty list `kept = []`, loops `for s in scores:`, appends `s` when `s >= threshold`, and returns `kept`.',
-          starterCode: `def filter_confident(scores, threshold):
-    kept = []
-    # Loop over every score in scores:
-    # if s >= threshold:
-    #     kept.append(s)
-    return kept
+            'We have a list `scores = [0.45, 0.82, 0.91, 0.60, 0.78]` and `threshold = 0.75`. Using ONLY a `for` loop and `if` statement (no functions needed yet!), update `confident_count` (add `1`) and `score_sum` (add `s`) for every score `>= threshold`.',
+          starterCode: `scores = [0.45, 0.82, 0.91, 0.60, 0.78]
+threshold = 0.75
+confident_count = 0
+score_sum = 0.0
 
-print(filter_confident([0.45, 0.82, 0.91, 0.60], 0.75))`,
-          testCode: `res1 = filter_confident([0.45, 0.82, 0.91, 0.60], 0.75)
-assert res1 == [0.82, 0.91], f"Expected [0.82, 0.91], got {res1}"
-res2 = filter_confident([0.2, 0.5], 0.8)
-assert res2 == [], f"Expected [], got {res2}"
-print("PASS: Nice work! Your first pure-Python loop & if-filter passed!")`,
-          solutionCode: `def filter_confident(scores, threshold):
-    kept = []
-    for s in scores:
-        if s >= threshold:
-            kept.append(s)
-    return kept`,
-          hint: 'Inside `filter_confident`, write `for s in scores:` followed by an indented `if s >= threshold:` and `kept.append(s)`.',
+# Loop through each score s in scores:
+# If s >= threshold, increment confident_count by 1 and add s to score_sum.
+
+print("Confident count:", confident_count, "Sum:", round(score_sum, 2))`,
+          testCode: `assert confident_count == 3, f"Expected confident_count == 3, got {confident_count}"
+assert abs(score_sum - (0.82 + 0.91 + 0.78)) < 1e-6, f"Expected 2.51, got {score_sum}"
+print("PASS: Your first pure-Python loop & if-statement lab passed!")`,
+          solutionCode: `scores = [0.45, 0.82, 0.91, 0.60, 0.78]
+threshold = 0.75
+confident_count = 0
+score_sum = 0.0
+
+for s in scores:
+    if s >= threshold:
+        confident_count = confident_count + 1
+        score_sum = score_sum + s`,
+          hint: 'Write `for s in scores:` then indent 4 spaces for `if s >= threshold:`, and indent 8 spaces for `confident_count = confident_count + 1` and `score_sum = score_sum + s`.',
           packages: [],
         },
       ],
@@ -140,6 +137,7 @@ print("PASS: Nice work! Your first pure-Python loop & if-filter passed!")`,
       durationMinutes: 18,
       track: 'core',
       prerequisites: ['1.0'],
+      teaches: ['python-functions', 'numpy-arrays'],
       objectives: [
         'Package reusable Python steps into clean functions (`def`) and dictionaries (`{key: value}`).',
         'See how NumPy transforms an entire column of numbers at once—just like a spreadsheet formula.',
@@ -298,6 +296,7 @@ def boost_and_cap(scores: np.ndarray, bonus: float) -> np.ndarray:
       durationMinutes: 18,
       track: 'core',
       prerequisites: ['1.1'],
+      teaches: ['vectors', 'matrices', 'cosine-similarity'],
       objectives: [
         'Interpret vectors as points/directions in semantic feature space (embeddings).',
         'Compute dot product and cosine similarity and know when to use each.',
@@ -471,14 +470,6 @@ def top_k_similar(q: np.ndarray, docs: np.ndarray, k: int) -> np.ndarray:
           reelId: 'gradient-descent-reel',
           title: 'Animated Walkthrough: Watch Gradient Descent Slide Down an Error Valley',
           description: 'See step-by-step how subtracting `lr * gradient` shrinks steep errors automatically into the bottom minimum.',
-          externalVideos: [
-            {
-              title: 'Gradient descent, how neural networks learn',
-              creator: '3Blue1Brown (Grant Sanderson)',
-              url: 'https://www.youtube.com/watch?v=IHZwWFHWa-w',
-              duration: '21 min',
-            },
-          ],
         },
         {
           type: 'simulator',

@@ -50,7 +50,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
   const [tab, setTab] = useState<'google' | 'direct' | 'cloud' | 'gist'>(
     syncConfig.mode === 'github-gist' ? 'gist' : syncConfig.mode === 'cloud-kv' ? 'cloud' : 'google'
   );
-  const [syncKeyInput, setSyncKeyInput] = useState(syncConfig.syncKey || 'tensor-atlas-4092');
+  const [syncKeyInput, setSyncKeyInput] = useState(syncConfig.syncKey || '');
   const [gistTokenInput, setGistTokenInput] = useState(syncConfig.gistToken || '');
   const [gistIdInput, setGistIdInput] = useState(syncConfig.gistId || '');
   const [pasteToken, setPasteToken] = useState('');
@@ -69,7 +69,14 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
   const callbackUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/api/auth/google/callback`
-      : 'https://ai-engineer-course-one.vercel.app/api/auth/google/callback';
+      : '/api/auth/google/callback';
+
+  useEffect(() => {
+    if (open && tab === 'cloud' && !syncKeyInput) {
+      const raf = requestAnimationFrame(() => setSyncKeyInput(generateSyncKey()));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [open, tab, syncKeyInput]);
 
   useEffect(() => {
     if (!open || tab !== 'direct' || !shareUrl || !qrCanvasRef.current) return;
@@ -405,8 +412,8 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
         {tab === 'cloud' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)' }}>
-              Auto-syncs without Google using a personal Sync Key backed by Vercel KV / Upstash Redis (requires{' '}
-              <code className="inline-code">UPSTASH_REDIS_REST_URL</code> &amp;{' '}
+              Auto-syncs without Google using a high-entropy Sync Key (16–64 random characters) backed by Vercel KV /
+              Upstash Redis (requires <code className="inline-code">UPSTASH_REDIS_REST_URL</code> &amp;{' '}
               <code className="inline-code">UPSTASH_REDIS_REST_TOKEN</code> env vars on Vercel).
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -415,7 +422,7 @@ export function SyncModal({ open, onClose }: { open: boolean; onClose: () => voi
                 style={{ flex: '1 1 180px', minWidth: 0 }}
                 value={syncKeyInput}
                 onChange={(e) => setSyncKeyInput(e.target.value)}
-                placeholder="e.g. tensor-atlas-4912"
+                placeholder="aimc-xxxxx-xxxxx-xxxxx-xxxxx (min 16 chars)"
               />
               <button
                 type="button"

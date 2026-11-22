@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit": "node scripts/audit/run-audit.mjs",
+    "audit:ci": "node scripts/audit/run-audit.mjs --full"
   },
   "dependencies": {
     "katex": "^0.19.1",

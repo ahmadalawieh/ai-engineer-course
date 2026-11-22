@@ -215,4 +215,25 @@ export const FLASHCARDS: FlashcardItem[] = [
     front: 'Why can targeting the highest churn-risk customers with coupons hurt ROI?',
     back: 'Raw churn risk includes "lost causes" who will churn regardless. Uplift / incremental targeting focuses incentives on persuadable users whose behavior changes due to treatment.',
   },
+  {
+    id: 'fc-6-3-1',
+    moduleId: 'mod-6',
+    track: 'ai-eng',
+    front: 'Contextual Retrieval vs Fixed-Width Chunking: what does prepending headers fix?',
+    back: 'Fixed slicing detaches pronouns and numbers from their subject (e.g. "It costs $40"). Prepending `[Doc Title > Section Heading]` keeps context intact inside every chunk embedding.',
+  },
+  {
+    id: 'fc-6-3-2',
+    moduleId: 'mod-6',
+    track: 'ai-eng',
+    front: 'In RAG, why MUST tenant_id ACL filtering run BEFORE top-k ranking?',
+    back: 'Post-filtering after global top-k allows unauthorized tenants to crowd out valid matches (producing false empty results) and risks leaking existence information across tenants.',
+  },
+  {
+    id: 'fc-6-3-3',
+    moduleId: 'mod-6',
+    track: 'ai-eng',
+    front: 'How does Small-to-Big (Parent-Child) RAG improve both recall and generation?',
+    back: 'Small child chunks produce sharp, un-diluted embeddings for matching, while expanding to the deduplicated parent section gives the generator surrounding tables, caveats, and context.',
+  },
 ];

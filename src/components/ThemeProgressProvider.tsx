@@ -5,6 +5,7 @@ import type { CourseProgress, FlashcardReviewState, SyncConfig } from '@/types/c
 import {
   createInitialProgress,
   decodePortableToken,
+  generateQuizSeed,
   loadLocalProgress,
   loadSyncConfig,
   mergeProgress,
@@ -118,6 +119,9 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
       document.documentElement.setAttribute('data-theme', savedTheme);
 
       let local = updateStreak(loadLocalProgress());
+      if (!local.quizSeed || local.quizSeed === 'default-learner-seed') {
+        local = { ...local, quizSeed: generateQuizSeed() };
+      }
       const cfg = loadSyncConfig();
       setSyncConfig(cfg);
 
