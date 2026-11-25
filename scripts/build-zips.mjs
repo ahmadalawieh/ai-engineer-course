@@ -104,6 +104,7 @@ function compileWorkbench() {
     [
       path.join(ROOT, 'src/data/jobWorkbench.ts'),
       path.join(ROOT, 'src/data/capstoneStarterKit.ts'),
+      path.join(ROOT, 'src/data/studioRepos.ts'),
     ],
     {
       target: ts.ScriptTarget.ES2020,
@@ -146,6 +147,7 @@ function compileWorkbench() {
 function main() {
   compileWorkbench();
   const { GUIDED_PROJECTS } = require(path.join(TMP_DIR, 'data/jobWorkbench.js'));
+  const { STUDIO_STARTER_REPOS } = require(path.join(TMP_DIR, 'data/studioRepos.js'));
   const {
     getSharedRealBuildFiles,
     buildCommonEnvExample,
@@ -199,6 +201,15 @@ function main() {
     const entries = Array.from(fileMap.entries()).map(([name, data]) => ({ name, data }));
     const zipBuf = createZipBuffer(entries);
     const outPath = path.join(OUT_DIR, `${proj.id}.zip`);
+    fs.writeFileSync(outPath, zipBuf);
+    console.log(`Built ${path.relative(ROOT, outPath)} (${entries.length} files, ${zipBuf.length} bytes)`);
+  }
+
+  for (const repo of STUDIO_STARTER_REPOS) {
+    const prefix = `${repo.id}/`;
+    const entries = repo.files.map((f) => ({ name: `${prefix}${f.filename}`, data: f.content }));
+    const zipBuf = createZipBuffer(entries);
+    const outPath = path.join(OUT_DIR, `${repo.id}.zip`);
     fs.writeFileSync(outPath, zipBuf);
     console.log(`Built ${path.relative(ROOT, outPath)} (${entries.length} files, ${zipBuf.length} bytes)`);
   }

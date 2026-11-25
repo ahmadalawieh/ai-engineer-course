@@ -29,9 +29,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'AI Mastery Studio — Basic to Advanced ML & AI Engineer',
+  title: 'AI Engineer Studio — Applied AI Software Engineering Simulator',
   description:
-    'A complete, beginner-friendly interactive roadmap taking learners from zero coding experience through Python, SQL, Machine Learning, LLMs, RAG, Agents, and Production AI Engineering.',
+    'Interactive job simulator for Applied AI Software Engineers: master Python, SQL, FastAPI, Hybrid RAG, MCP Agents, and Production AI Gateways through real company and freelance tickets.',
 };
 
 export default function RootLayout({

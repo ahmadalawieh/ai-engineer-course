@@ -1,88 +1,58 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('AI Mastery Studio E2E Smoke Suite', () => {
-  test('tracks, placement test, timed module exam, Pyodide lab, evidence pack, and readiness gating', async ({
+test.describe('AI Engineer Studio 3-Screen E2E Smoke Suite', () => {
+  test('mission board stepper, split-pane staging runner, and ship & verify repo proof', async ({
     page,
   }) => {
-    // 1. Home page & Learning Track switching
+    // 1. Screen 1: Minimal Mission Board & 5-Node Stepper
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /From Absolute Beginner to Production ML/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: '1. Mission Board' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Clean Messy Webhook Customer Payloads/i })).toBeVisible();
 
-    await page.getByRole('button', { name: 'AI Engineer Fast Track' }).click();
-    await expect(page.getByText(/AI Engineer Fast Track Active/i)).toBeVisible();
-    await expect(page.getByText(/MODULE 00/i)).toHaveCount(0);
+    // Switch to System 1 on the stepper
+    await page.getByRole('button', { name: /System 1: Doc Extraction/i }).click();
+    await expect(page.getByRole('heading', { name: /Extract Strict JSON From Messy LLM Output/i })).toBeVisible();
 
-    await page.getByRole('button', { name: 'AI Engineer Zero-to-Hire' }).click();
-    await expect(page.getByText(/MODULE 00/i).first()).toBeVisible();
+    // Expand drawer and open S1-2 directly
+    await page.getByRole('button', { name: /View all 4 tickets in System 1/i }).click();
+    await page.getByRole('button', { name: /S1-2/i }).click();
 
-    // Switch Target Level bar
-    await page.getByRole('button', { name: 'Mid-Level', exact: true }).click();
-    await expect(page.getByText(/Mid-Level AI Engineer/i)).toBeVisible();
-    await page.getByRole('button', { name: 'Junior', exact: true }).click();
+    // 2. Screen 2: Split-Pane Ticket Workspace & Pyodide Staging Simulator
+    await expect(page.getByText(/Acceptance Criteria/i)).toBeVisible();
+    await page.getByRole('button', { name: 'Solution', exact: true }).click();
+    await page.getByRole('button', { name: /Run Staging Check/i }).click();
+    await expect(page.getByText(/Merged to Staging/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Invoice #1042 \(Clean\)/i)).toBeVisible();
 
-    // 2. Placement Test flow
-    await page.getByRole('button', { name: /Developer Placement Test/i }).click();
-    await expect(page.getByRole('button', { name: /Submit & Grade/i })).toBeVisible();
-    await page.getByRole('button', { name: /Submit & Grade/i }).click();
-    await expect(page.getByRole('button', { name: 'Done' })).toBeVisible();
-    await page.getByRole('button', { name: 'Done' }).click();
+    // 3. Screen 3: Ship & Verify Real Starter Repo Proof
+    await page.getByRole('button', { name: /3\. Ship & Verify/i }).click();
+    await expect(page.getByRole('heading', { name: 'doc-ops-extractor' })).toBeVisible();
 
-    // 3. Timed Module Exam flow
-    const moduleExamBtn = page.getByRole('button', { name: /20Q Exam/i }).first();
-    await moduleExamBtn.click();
-    await expect(page.getByRole('button', { name: /Submit & Grade/i })).toBeVisible();
-    await page.getByRole('button', { name: /Submit & Grade/i }).click();
-    await expect(page.getByText(/Explanation:/i).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Done' }).click();
+    const repoInput = page.getByPlaceholder(/Public GitHub repo URL/i);
+    const jsonArea = page.getByPlaceholder(/Paste JSON from evidence\.json/i);
+    const verifyBtn = page.getByRole('button', { name: /Validate & Save Evidence/i });
 
-    // 4. In-browser Pyodide Python lab execution on Lesson 1.0
-    await page.goto('/?lesson=1-0');
-    const solutionBtn = page.getByRole('button', { name: 'Solution', exact: true }).first();
-    await expect(solutionBtn).toBeVisible();
-    await solutionBtn.click();
-    const checkBtn = page.getByRole('button', { name: /Check Solution/i }).first();
-    await checkBtn.click();
-    await expect(page.getByText(/Passed \(\+60 XP\)/i).first()).toBeVisible({ timeout: 30_000 });
+    await repoInput.fill('not-a-url');
+    await verifyBtn.click();
+    await expect(page.getByText(/valid public GitHub repository URL/i)).toBeVisible();
 
-    // 5. Practice Arena: Evidence Pack validation & Readiness Report gating
-    await page.goto('/?view=arena');
-    await page.getByRole('button', { name: /Evidence Pack/i }).click();
-
-    const firstRepoInput = page.getByPlaceholder(/Public GitHub repo URL/i).first();
-    const firstDemoInput = page.getByPlaceholder(/Live deployed demo URL/i).first();
-    const firstJsonArea = page.getByPlaceholder(/Paste JSON from evidence\.json/i).first();
-    const validateBtns = page.getByRole('button', { name: /Validate & Save Evidence/i });
-
-    // Invalid evidence check
-    await firstRepoInput.fill('not-a-url');
-    await firstJsonArea.fill('{bad json');
-    await validateBtns.first().click();
-    await expect(page.getByText(/valid|GitHub|JSON/i).first()).toBeVisible();
-
-    // Valid proj-churn evidence submission matching validator.py output schema
-    const sampleEvidence = JSON.stringify({
-      project_id: 'proj-churn',
-      generated_at: '2026-11-22T00:00:00Z',
-      mode: 'offline_fixture',
+    const validEvidence = JSON.stringify({
+      project_id: 'doc-ops-extractor',
+      generated_at: '2026-11-25T12:00:00Z',
+      mode: 'local_pytest',
       passed: true,
-      tests: { passed: 5, failed: 0 },
-      latency_ms: { p50: 14, p95: 28 },
-      cost_usd: { per_request: 0.0005, total_run: 0.0025 },
+      tests: { passed: 4, failed: 0 },
+      latency_ms: { p50: 12, p95: 24 },
+      cost_usd: { per_request: 0.0004, total_run: 0.0016 },
       security: {
         secret_scan_passed: true,
         injection_tests_passed: true,
         findings: [],
       },
     });
-    await firstRepoInput.fill('https://github.com/example-learner/proj-churn');
-    await firstDemoInput.fill('https://proj-churn-demo.fly.dev');
-    await firstJsonArea.fill(sampleEvidence);
-    await validateBtns.first().click();
-    await expect(page.getByText(/Saved: 5 tests passed/i)).toBeVisible();
-
-    // Verify Readiness & Report gating + honest disclosure
-    await page.getByRole('button', { name: /Readiness & Report/i }).click();
-    await expect(page.getByText(/Remaining Requirements to Unlock/i)).toBeVisible();
-    await expect(page.getByText(/No course grants an employer job title/i)).toBeVisible();
+    await repoInput.fill('https://github.com/example-learner/doc-ops-extractor');
+    await jsonArea.fill(validEvidence);
+    await verifyBtn.click();
+    await expect(page.getByText(/Verified doc-ops-extractor: 4 pytest checks passed/i)).toBeVisible();
   });
 });
