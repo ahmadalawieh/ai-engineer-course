@@ -4,8 +4,9 @@ import React, { useMemo, useState } from 'react';
 import {
   ArrowRight,
   Award,
-  Briefcase,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Circle,
   Clock,
   Cloud,
@@ -14,6 +15,7 @@ import {
   Lock,
   PlayCircle,
   ShieldCheck,
+  Sparkles,
   Zap,
 } from 'lucide-react';
 import { ALL_LESSONS, COURSE_MODULES, TOTAL_LABS, getLessonById, getTotalCourseMinutes } from '@/data/curriculum';
@@ -36,16 +38,6 @@ function trackLabel(track: TrackTag): string {
   return 'Core ML/AI';
 }
 
-function pathBadgeLabel(
-  path: 'foundation' | 'ml-depth' | 'ai-eng' | 'career' | undefined,
-  learningTrack: 'ai-eng-fast' | 'ai-eng-full' | 'dual-ml-ai'
-): string {
-  if (path === 'foundation') return 'Foundation';
-  if (path === 'ml-depth') return learningTrack === 'dual-ml-ai' ? 'ML Core' : 'Optional ML Depth';
-  if (path === 'career') return 'Career & Prep';
-  return 'Core AI Eng';
-}
-
 export function HomeView({
   onSelectLesson,
   onOpenWork,
@@ -59,6 +51,7 @@ export function HomeView({
 }) {
   const { progress, authUser, setTargetLevel, setLearningTrack } = useCourseApp();
   const [trackFilter, setTrackFilter] = useState<'all' | TrackTag>('all');
+  const [hideCompleted, setHideCompleted] = useState(false);
   const [activeExam, setActiveExam] = useState<TimedExamSpec | null>(null);
 
   const activeLevelId: LevelId = progress.targetLevel || 'junior';
@@ -91,16 +84,26 @@ export function HomeView({
     [resumeLesson.id]
   );
 
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => ({
+    [resumeModule.id]: true,
+  }));
+
+  const toggleModule = (modId: string) => {
+    setExpandedModules((prev) => ({ ...prev, [modId]: !prev[modId] }));
+  };
+
   const filteredModules = useMemo(() => {
     const byTrack =
       activeLearningTrack === 'ai-eng-fast'
         ? COURSE_MODULES.filter((m) => m.recommendedPath !== 'foundation')
         : COURSE_MODULES;
-    if (trackFilter === 'all') return byTrack;
-    return byTrack.filter(
-      (m) => m.track === trackFilter || m.lessons.some((l) => l.track === trackFilter)
-    );
-  }, [activeLearningTrack, trackFilter]);
+    const byPillar =
+      trackFilter === 'all'
+        ? byTrack
+        : byTrack.filter((m) => m.track === trackFilter || m.lessons.some((l) => l.track === trackFilter));
+    if (!hideCompleted) return byPillar;
+    return byPillar.filter((m) => m.lessons.some((l) => !progress.completedLessons.includes(l.id)));
+  }, [activeLearningTrack, trackFilter, hideCompleted, progress.completedLessons]);
 
   const examsTotal = levelEval.level.requiredModuleExams.length;
   const examsDone = examsTotal - levelEval.missingExams.length;
@@ -111,7 +114,8 @@ export function HomeView({
 
   const readinessPct = useMemo(() => {
     const lessonRatio = levelEval.lessonsTotal > 0 ? levelEval.lessonsDone / levelEval.lessonsTotal : 0;
-    const labRatio = levelEval.level.requiredLabPct > 0 ? Math.min(1, levelEval.labPct / levelEval.level.requiredLabPct) : 0;
+    const labRatio =
+      levelEval.level.requiredLabPct > 0 ? Math.min(1, levelEval.labPct / levelEval.level.requiredLabPct) : 0;
     const examRatio = examsTotal > 0 ? examsDone / examsTotal : 0;
     const capstoneRatio = capstonesTotal > 0 ? capstonesDone / capstonesTotal : 0;
     return Math.round(((lessonRatio + labRatio + examRatio + capstoneRatio) / 4) * 100);
@@ -133,10 +137,9 @@ export function HomeView({
             </div>
 
             <h1 className="bento-hero-title">From Absolute Beginner to Production ML &amp; AI Engineer.</h1>
-            <p style={{ fontSize: '0.94rem', color: 'var(--ink-2)', maxWidth: '64ch', lineHeight: 1.55 }}>
-              Interactive {COURSE_MODULES.length}-module curriculum with{' '}
-              <strong>{TOTAL_LABS} auto-verified Python &amp; SQL labs</strong>,{' '}
-              <strong>20 live visual simulators</strong>, and <strong>7 capstone starter repos</strong>.
+            <p style={{ fontSize: '0.94rem', color: 'var(--ink-2)', maxWidth: '60ch', lineHeight: 1.55 }}>
+              {COURSE_MODULES.length} modules, <strong>{TOTAL_LABS} auto-verified Python &amp; SQL labs</strong>, and{' '}
+              <strong>7 capstone repos</strong>—focused one step at a time.
             </p>
 
             <div className="bento-resume-banner">
@@ -176,14 +179,6 @@ export function HomeView({
               {completedCount === 0
                 ? `Start Lesson ${resumeLesson.number}: ${resumeLesson.title}`
                 : `Resume ${resumeLesson.number}: ${resumeLesson.title}`}
-            </button>
-            <button type="button" className="btn" onClick={onOpenWork}>
-              <Briefcase size={15} />
-              Real Work &amp; 7 Capstones
-            </button>
-            <button type="button" className="btn" onClick={onOpenArena}>
-              <Award size={15} />
-              Arena &amp; Interviews
             </button>
             <button type="button" className="btn" onClick={() => setActiveExam(PLACEMENT_EXAM)}>
               <Zap size={14} color={progress.fastTrackUnlocked ? 'var(--success)' : 'var(--accent)'} />
@@ -338,10 +333,41 @@ export function HomeView({
         </aside>
       </section>
 
-      <details className="bento-card" style={{ padding: '14px 20px', marginBottom: 24 }}>
-        <summary style={{ cursor: 'pointer', fontSize: '0.86rem', fontWeight: 600, color: 'var(--accent)' }}>
+      <section className="focus-strip" aria-label="Today's Focus">
+        <button type="button" className="focus-strip-item" onClick={() => onSelectLesson(resumeLesson.id)}>
+          <Sparkles size={15} color="var(--accent)" />
+          <div>
+            <div className="focus-strip-label">1. Next Lesson</div>
+            <div className="focus-strip-val">
+              {resumeLesson.number} {resumeLesson.title}
+            </div>
+          </div>
+          <ArrowRight size={14} className="focus-strip-arrow" />
+        </button>
+
+        <button type="button" className="focus-strip-item" onClick={onOpenArena}>
+          <Award size={15} color="var(--success)" />
+          <div>
+            <div className="focus-strip-label">2. Daily Drill</div>
+            <div className="focus-strip-val">Flashcards &amp; Mock Interviews</div>
+          </div>
+          <ArrowRight size={14} className="focus-strip-arrow" />
+        </button>
+
+        <button type="button" className="focus-strip-item" onClick={onOpenWork}>
+          <ShieldCheck size={15} color="var(--accent-warm)" />
+          <div>
+            <div className="focus-strip-label">3. Proof of Work</div>
+            <div className="focus-strip-val">7 Capstone Repos &amp; Tickets</div>
+          </div>
+          <ArrowRight size={14} className="focus-strip-arrow" />
+        </button>
+      </section>
+
+      <details className="bento-card" style={{ padding: '12px 18px', marginBottom: 22 }}>
+        <summary style={{ cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, color: 'var(--accent)' }}>
           <ShieldCheck size={14} style={{ display: 'inline', marginRight: 6 }} />
-          View {levelCompetencies.length} Required Competencies &amp; Honest Credential Scope ({levelEval.level.title})
+          View {levelCompetencies.length} Required Competencies &amp; Credential Scope ({levelEval.level.title})
         </summary>
         <p style={{ fontSize: '0.84rem', color: 'var(--ink-2)', marginTop: 10, lineHeight: 1.5 }}>
           {levelEval.level.barSummary}
@@ -381,15 +407,15 @@ export function HomeView({
       </details>
 
       <section aria-labelledby="curriculum-heading">
-        <div className="section-header" style={{ marginTop: 12 }}>
+        <div className="section-header" style={{ marginTop: 8 }}>
           <div>
-            <h2 id="curriculum-heading">Complete {COURSE_MODULES.length}-Module Zero-to-Job-Ready AI Engineer Path</h2>
-            <p style={{ color: 'var(--ink-2)', fontSize: '0.92rem', marginTop: 4 }}>
-              Step-by-step from terminal &amp; zero code to Python, SQL, scikit-learn, XGBoost, PyTorch, Transformers, RAG, Agents, Production SwEng &amp; Interviews.
+            <h2 id="curriculum-heading">{COURSE_MODULES.length}-Module Curriculum</h2>
+            <p style={{ color: 'var(--ink-muted)', fontSize: '0.88rem', marginTop: 4 }}>
+              Expand any module to view its lessons, or jump straight into your active module below.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
             <div className="pill-tabs" role="tablist" aria-label="Choose learning track">
               <button
                 type="button"
@@ -417,36 +443,36 @@ export function HomeView({
               </button>
             </div>
 
-            <div className="pill-tabs" role="tablist" aria-label="Filter by skill pillar">
-              <button
-                type="button"
-                className={`pill-tab ${trackFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setTrackFilter('all')}
-              >
-                All Shown ({filteredModules.length})
-              </button>
-              <button
-                type="button"
-                className={`pill-tab ${trackFilter === 'core' ? 'active' : ''}`}
-                onClick={() => setTrackFilter('core')}
-              >
-                Python &amp; Foundations
-              </button>
-              <button
-                type="button"
-                className={`pill-tab ${trackFilter === 'ds' ? 'active' : ''}`}
-                onClick={() => setTrackFilter('ds')}
-              >
-                SQL &amp; Tabular ML
-              </button>
-              <button
-                type="button"
-                className={`pill-tab ${trackFilter === 'ai-eng' ? 'active' : ''}`}
-                onClick={() => setTrackFilter('ai-eng')}
-              >
-                LLMs, RAG &amp; Agents
-              </button>
-            </div>
+            <select
+              className="input-field"
+              style={{ width: 'auto', minWidth: 170 }}
+              aria-label="Filter by skill pillar"
+              value={trackFilter}
+              onChange={(e) => setTrackFilter(e.target.value as 'all' | TrackTag)}
+            >
+              <option value="all">All Pillars ({filteredModules.length})</option>
+              <option value="core">Python &amp; Foundations</option>
+              <option value="ds">SQL &amp; Tabular ML</option>
+              <option value="ai-eng">LLMs, RAG &amp; Agents</option>
+            </select>
+
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: '0.8rem',
+                color: 'var(--ink-muted)',
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={hideCompleted}
+                onChange={(e) => setHideCompleted(e.target.checked)}
+              />
+              Hide completed
+            </label>
           </div>
         </div>
 
@@ -458,10 +484,10 @@ export function HomeView({
                 ? 'AI Engineer Fast Track Active (Modules 0–1 hidden; Modules 2–4 marked Optional ML Depth)'
                 : `Fast Track for Developers Unlocked (Placement ${progress.placementScore?.score}/${progress.placementScore?.total})`}
             </div>
-            <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)' }}>
+            <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)' }}>
               {activeLearningTrack === 'ai-eng-fast'
-                ? 'Foundation Modules 0–1 (Terminal, Git & Python syntax) are skipped—switch back to "AI Engineer Zero-to-Hire" anytime to revisit them. Focus on Core AI Eng Modules 5–11 and pick Optional ML Depth Modules 2–4 as needed.'
-                : 'Beginner Terminal/Git (Module 0) & Python syntax basics (`1.0–1.2`) prerequisites are auto-cleared. Jump straight to Applied AI Engineering, Software Engineering & Interviews—or revisit any foundation lesson anytime.'}
+                ? 'Foundation Modules 0–1 are skipped—switch back to "AI Engineer Zero-to-Hire" anytime to revisit them.'
+                : 'Beginner Terminal/Git (Module 0) & Python syntax basics (`1.0–1.2`) prerequisites are auto-cleared.'}
             </p>
           </div>
         )}
@@ -469,88 +495,79 @@ export function HomeView({
         <div className="module-grid">
           {filteredModules.map((mod) => {
             const modDone = mod.lessons.filter((l) => progress.completedLessons.includes(l.id)).length;
+            const modPct = Math.round((modDone / mod.lessons.length) * 100);
             const modExam = progress.moduleExamScores?.[mod.id];
             const modExamPassed = modExam && modExam.bestScore >= Math.ceil(modExam.total * 0.7);
-            const pathBadge = pathBadgeLabel(mod.recommendedPath, activeLearningTrack);
             const statusClass =
               modDone === mod.lessons.length ? 'completed' : modDone > 0 ? 'progress' : 'upcoming';
             const statusText =
               modDone === mod.lessons.length ? 'Completed' : modDone > 0 ? 'In Progress' : 'Up Next';
+            const isExpanded = Boolean(expandedModules[mod.id]);
 
             return (
               <article key={mod.id} className="module-card">
                 <div className="module-top" style={{ gap: 6, flexWrap: 'wrap' }}>
                   <span className="module-num">
-                    MODULE {String(mod.number).padStart(2, '0')} · {modDone}/{mod.lessons.length} DONE
+                    MODULE {String(mod.number).padStart(2, '0')} · {modDone}/{mod.lessons.length}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <span className={`module-status-pill ${statusClass}`}>{statusText}</span>
-                    <span
-                      className="track-badge"
-                      style={{
-                        background:
-                          mod.recommendedPath === 'ml-depth' && activeLearningTrack !== 'dual-ml-ai'
-                            ? 'var(--surface-2)'
-                            : 'var(--accent-soft)',
-                        color:
-                          mod.recommendedPath === 'ml-depth' && activeLearningTrack !== 'dual-ml-ai'
-                            ? 'var(--ink-muted)'
-                            : 'var(--accent)',
-                        border: '1px solid var(--border)',
-                      }}
-                    >
-                      {pathBadge}
-                    </span>
                     <span className={`track-badge track-${mod.track}`}>{trackLabel(mod.track)}</span>
                   </div>
                 </div>
 
                 <div>
                   <h3>{mod.title}</h3>
-                  <p className="module-sub" style={{ marginTop: 6 }}>
+                  <p className="module-sub" style={{ marginTop: 4 }}>
                     {mod.subtitle}
                   </p>
                 </div>
 
-                <div className="lesson-list">
-                  {mod.lessons.map((lesson) => {
-                    const done = progress.completedLessons.includes(lesson.id);
-                    const qBest = progress.quizScores[lesson.id];
-                    const softLocked =
-                      !done &&
-                      getUnmetPrerequisites(
-                        lesson.id,
-                        progress.completedLessons,
-                        Boolean(progress.fastTrackUnlocked)
-                      ).unmetLessons.length > 0;
-                    return (
-                      <button
-                        key={lesson.id}
-                        type="button"
-                        className="lesson-row"
-                        onClick={() => onSelectLesson(lesson.id)}
-                        title={softLocked ? 'Prerequisites recommended (click to view or unlock)' : undefined}
-                      >
-                        <div className="lesson-row-left">
-                          {done ? (
-                            <CheckCircle2 size={16} color="var(--success)" style={{ flexShrink: 0 }} />
-                          ) : softLocked ? (
-                            <Lock size={15} color="var(--accent-warm)" style={{ flexShrink: 0 }} />
-                          ) : (
-                            <Circle size={16} color="var(--ink-muted)" style={{ flexShrink: 0 }} />
-                          )}
-                          <span className="lesson-row-title">
-                            {lesson.number} {lesson.title}
-                          </span>
-                        </div>
-                        <span className="lesson-row-meta">
-                          {qBest ? `${qBest.bestScore}/${qBest.total} · ` : ''}
-                          {lesson.durationMinutes}m
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div className="progress-track" style={{ height: 5 }}>
+                  <div className="progress-fill" style={{ width: `${modPct}%` }} />
                 </div>
+
+                {isExpanded && (
+                  <div className="lesson-list">
+                    {mod.lessons.map((lesson) => {
+                      const done = progress.completedLessons.includes(lesson.id);
+                      const qBest = progress.quizScores[lesson.id];
+                      const softLocked =
+                        !done &&
+                        getUnmetPrerequisites(
+                          lesson.id,
+                          progress.completedLessons,
+                          Boolean(progress.fastTrackUnlocked)
+                        ).unmetLessons.length > 0;
+                      return (
+                        <button
+                          key={lesson.id}
+                          type="button"
+                          className="lesson-row"
+                          onClick={() => onSelectLesson(lesson.id)}
+                          title={softLocked ? 'Prerequisites recommended (click to view or unlock)' : undefined}
+                        >
+                          <div className="lesson-row-left">
+                            {done ? (
+                              <CheckCircle2 size={15} color="var(--success)" style={{ flexShrink: 0 }} />
+                            ) : softLocked ? (
+                              <Lock size={14} color="var(--accent-warm)" style={{ flexShrink: 0 }} />
+                            ) : (
+                              <Circle size={15} color="var(--ink-muted)" style={{ flexShrink: 0 }} />
+                            )}
+                            <span className="lesson-row-title">
+                              {lesson.number} {lesson.title}
+                            </span>
+                          </div>
+                          <span className="lesson-row-meta">
+                            {qBest ? `${qBest.bestScore}/${qBest.total} · ` : ''}
+                            {lesson.durationMinutes}m
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div
                   style={{
@@ -568,9 +585,17 @@ export function HomeView({
                 >
                   <span>
                     <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />~{mod.estimatedHours}h ·{' '}
-                    {mod.capstoneDeliverable}
+                    {mod.lessons.length} lessons
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => toggleModule(mod.id)}
+                    >
+                      {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      {isExpanded ? 'Hide' : 'Lessons'}
+                    </button>
                     <button
                       type="button"
                       className="btn btn-sm"

@@ -576,6 +576,7 @@ export function LessonView({
   const [scrollPct, setScrollPct] = useState(0);
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [softUnlocked, setSoftUnlocked] = useState<Record<string, boolean>>({});
+  const [focusMode, setFocusMode] = useState<'all' | 'concept' | 'practice' | 'check'>('all');
 
   const { unmetLessons } = getUnmetPrerequisites(
     lesson.id,
@@ -814,27 +815,71 @@ export function LessonView({
           </div>
         </header>
 
-        {lesson.blocks.map((block, idx) => renderContentBlock(block, idx))}
+        <div className="lesson-focus-bar" role="tablist" aria-label="Lesson focus mode">
+          <button
+            type="button"
+            className={`pill-tab ${focusMode === 'all' ? 'active' : ''}`}
+            onClick={() => setFocusMode('all')}
+          >
+            All Sections
+          </button>
+          <button
+            type="button"
+            className={`pill-tab ${focusMode === 'concept' ? 'active' : ''}`}
+            onClick={() => setFocusMode('concept')}
+          >
+            1. Concept
+          </button>
+          <button
+            type="button"
+            className={`pill-tab ${focusMode === 'practice' ? 'active' : ''}`}
+            onClick={() => setFocusMode('practice')}
+          >
+            2. Labs &amp; Simulators
+          </button>
+          <button
+            type="button"
+            className={`pill-tab ${focusMode === 'check' ? 'active' : ''}`}
+            onClick={() => setFocusMode('check')}
+          >
+            3. Quiz &amp; Check
+          </button>
+        </div>
 
-        {lesson.checkWithoutNotes && lesson.checkWithoutNotes.length > 0 && (
-          <section className="callout callout-key-takeaway block" aria-label="Check yourself without notes">
-            <div className="callout-title">
-              <Target size={16} /> Check Yourself Without Notes
-            </div>
-            <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)', marginBottom: 8 }}>
-              Before taking the quiz, cover the lesson above and answer these aloud in plain words:
-            </p>
-            <ol style={{ paddingLeft: 20, fontSize: '0.9rem', color: 'var(--ink-2)', display: 'grid', gap: 5 }}>
-              {lesson.checkWithoutNotes.map((item, idx) => (
-                <li key={idx}>
-                  <RichText text={item} />
-                </li>
-              ))}
-            </ol>
-          </section>
+        {lesson.blocks
+          .filter((block) => {
+            if (focusMode === 'all') return true;
+            const isPractice =
+              block.type === 'python-lab' || block.type === 'code-builder' || block.type === 'simulator';
+            if (focusMode === 'practice') return isPractice;
+            if (focusMode === 'concept') return !isPractice;
+            return false;
+          })
+          .map((block, idx) => renderContentBlock(block, idx))}
+
+        {(focusMode === 'all' || focusMode === 'check') &&
+          lesson.checkWithoutNotes &&
+          lesson.checkWithoutNotes.length > 0 && (
+            <section className="callout callout-key-takeaway block" aria-label="Check yourself without notes">
+              <div className="callout-title">
+                <Target size={16} /> Check Yourself Without Notes
+              </div>
+              <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)', marginBottom: 8 }}>
+                Before taking the quiz, cover the lesson above and answer these aloud in plain words:
+              </p>
+              <ol style={{ paddingLeft: 20, fontSize: '0.9rem', color: 'var(--ink-2)', display: 'grid', gap: 5 }}>
+                {lesson.checkWithoutNotes.map((item, idx) => (
+                  <li key={idx}>
+                    <RichText text={item} />
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+        {(focusMode === 'all' || focusMode === 'check') && (
+          <LessonQuiz key={lesson.id} lessonId={lesson.id} questions={lesson.quiz} />
         )}
-
-        <LessonQuiz key={lesson.id} lessonId={lesson.id} questions={lesson.quiz} />
 
         <section className="block" style={{ marginTop: 28 }}>
           <h3 style={{ fontSize: '1.1rem', marginBottom: 8 }}>Personal Study Notes (Auto-Synced)</h3>
