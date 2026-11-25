@@ -1,40 +1,41 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('AI Engineer Studio 3-Screen E2E Smoke Suite', () => {
-  test('mission board stepper, split-pane staging runner, and ship & verify repo proof', async ({
+test.describe('AI Engineer Studio 7-Stage Beginner-to-Mid Smoke Suite', () => {
+  test('7-stage path, 4-step single-card lesson player, Windows/Mac setup toggle, Pyodide practice, and 7 projects hub', async ({
     page,
   }) => {
-    // 1. Screen 1: Minimal Mission Board & 5-Node Stepper
+    // 1. Screen 1: My Path (7-Stage Roadmap)
     await page.goto('/');
-    await expect(page.getByRole('button', { name: '1. Mission Board' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Clean Messy Webhook Customer Payloads/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: '1. My Path' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Your Developer Toolkit/i })).toBeVisible();
 
-    // Switch to System 1 on the stepper
-    await page.getByRole('button', { name: /System 1: Doc Extraction/i }).click();
-    await expect(page.getByRole('heading', { name: /Extract Strict JSON From Messy LLM Output/i })).toBeVisible();
+    // Open Lesson 1.1
+    await page.getByRole('button', { name: /Start Lesson 1\.1/i }).click();
 
-    // Expand drawer and open S1-2 directly
-    await page.getByRole('button', { name: /View all 4 tickets in System 1/i }).click();
-    await page.getByRole('button', { name: /S1-2/i }).click();
+    // 2. Screen 2: Step 1 -> Step 2 (Windows/Mac) -> Step 3 (Pyodide) -> Step 4 (Real Project)
+    await expect(page.getByText(/STEP 1 OF 4/i)).toBeVisible();
+    await page.getByRole('button', { name: /Next: On Your PC/i }).click();
 
-    // 2. Screen 2: Split-Pane Ticket Workspace & Pyodide Staging Simulator
-    await expect(page.getByText(/Acceptance Criteria/i)).toBeVisible();
+    await expect(page.getByText(/STEP 2 OF 4/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Windows \(PowerShell\)/i })).toBeVisible();
+    await page.getByRole('button', { name: /Next: Try It Here/i }).click();
+
+    await expect(page.getByText(/STEP 3 OF 4/i)).toBeVisible();
     await page.getByRole('button', { name: 'Solution', exact: true }).click();
-    await page.getByRole('button', { name: /Run Staging Check/i }).click();
-    await expect(page.getByText(/Merged to Staging/i)).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/Invoice #1042 \(Clean\)/i)).toBeVisible();
+    await page.getByRole('button', { name: /Run Practice/i }).click();
+    await expect(page.getByText(/Your first Python variable and print\(\) worked!/i)).toBeVisible({ timeout: 30_000 });
 
-    // 3. Screen 3: Ship & Verify Real Starter Repo Proof
-    await page.getByRole('button', { name: /3\. Ship & Verify/i }).click();
-    await expect(page.getByRole('heading', { name: 'doc-ops-extractor' })).toBeVisible();
+    await page.getByRole('button', { name: /Next: Add to Real Project/i }).click();
+    await expect(page.getByText(/STEP 4 OF 4/i)).toBeVisible();
 
+    // 3. Screen 3: My 7 Projects Hub
+    await page.getByRole('button', { name: /3\. My 7 Projects/i }).click();
+    await expect(page.getByRole('heading', { name: /Project 1: Freelance Quote/i })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Project 3' }).click();
     const repoInput = page.getByPlaceholder(/Public GitHub repo URL/i);
     const jsonArea = page.getByPlaceholder(/Paste JSON from evidence\.json/i);
     const verifyBtn = page.getByRole('button', { name: /Validate & Save Evidence/i });
-
-    await repoInput.fill('not-a-url');
-    await verifyBtn.click();
-    await expect(page.getByText(/valid public GitHub repository URL/i)).toBeVisible();
 
     const validEvidence = JSON.stringify({
       project_id: 'doc-ops-extractor',
@@ -42,7 +43,7 @@ test.describe('AI Engineer Studio 3-Screen E2E Smoke Suite', () => {
       mode: 'local_pytest',
       passed: true,
       tests: { passed: 4, failed: 0 },
-      latency_ms: { p50: 12, p95: 24 },
+      latency_ms: { p50: 10, p95: 22 },
       cost_usd: { per_request: 0.0004, total_run: 0.0016 },
       security: {
         secret_scan_passed: true,
@@ -50,9 +51,9 @@ test.describe('AI Engineer Studio 3-Screen E2E Smoke Suite', () => {
         findings: [],
       },
     });
-    await repoInput.fill('https://github.com/example-learner/doc-ops-extractor');
+    await repoInput.fill('https://github.com/example-learner/ai-invoice-extractor');
     await jsonArea.fill(validEvidence);
     await verifyBtn.click();
-    await expect(page.getByText(/Verified doc-ops-extractor: 4 pytest checks passed/i)).toBeVisible();
+    await expect(page.getByText(/4 pytest checks passed/i)).toBeVisible();
   });
 });

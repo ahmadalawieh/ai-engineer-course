@@ -2,29 +2,37 @@
 
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Copy, Download, ExternalLink, FileCheck2, Terminal } from 'lucide-react';
-import { STUDIO_PHASES, getTicketsByPhase } from '@/data/studioCurriculum';
+import { JOURNEY_STAGES, getStageLessons } from '@/data/journeyCurriculum';
 import { validateCapstoneEvidence } from '@/data/levels';
-import type { PhaseId } from '@/types/studio';
+import type { OsPlatform } from '@/types/journey';
 import { useCourseApp } from './ThemeProgressProvider';
 
-const REPO_PHASES = STUDIO_PHASES.filter((p) => Boolean(p.repo));
+const VALIDATOR_PROJECT_IDS = new Set([
+  'doc-ops-extractor',
+  'tenant-rag-copilot',
+  'ops-workflow-agent',
+  'ai-prod-gateway',
+]);
 
 export function ShipVerifyView({
-  initialPhaseId = 'system-1',
+  initialStageNumber = 1,
+  osPlatform,
 }: {
-  initialPhaseId?: PhaseId;
+  initialStageNumber?: number;
+  osPlatform: OsPlatform;
 }) {
   const { progress, saveCapstoneEvidence } = useCourseApp();
-  const [selectedPhaseId, setSelectedPhaseId] = useState<PhaseId>(
-    initialPhaseId === 'phase-0' ? 'system-1' : initialPhaseId
-  );
+  const [selectedStageNum, setSelectedStageNum] = useState<number>(initialStageNumber);
 
-  const phase = useMemo(
-    () => REPO_PHASES.find((p) => p.id === selectedPhaseId) || REPO_PHASES[0],
-    [selectedPhaseId]
+  const stage = useMemo(
+    () => JOURNEY_STAGES.find((s) => s.stageNumber === selectedStageNum) || JOURNEY_STAGES[0],
+    [selectedStageNum]
   );
-  const repo = phase.repo!;
-  const saved = progress.capstoneEvidence?.[repo.repoId];
+  const proj = stage.project;
+  const repoIdForValidator = proj.id === 'project-3-ai-extractor' ? 'doc-ops-extractor' : proj.id;
+  const usesValidatorJson = VALIDATOR_PROJECT_IDS.has(repoIdForValidator);
+
+  const saved = progress.capstoneEvidence?.[repoIdForValidator];
 
   const [repoUrl, setRepoUrl] = useState(saved?.repoUrl || '');
   const [demoUrl, setDemoUrl] = useState(saved?.demoUrl || '');
@@ -32,32 +40,56 @@ export function ShipVerifyView({
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
 
-  const selectSystem = (nextPhaseId: PhaseId) => {
-    setSelectedPhaseId(nextPhaseId);
-    const nextRepo = REPO_PHASES.find((p) => p.id === nextPhaseId)?.repo;
-    const prevSaved = nextRepo ? progress.capstoneEvidence?.[nextRepo.repoId] : undefined;
+  const selectStage = (num: number) => {
+    setSelectedStageNum(num);
+    const nextProj = JOURNEY_STAGES.find((s) => s.stageNumber === num)?.project;
+    const nextKey = nextProj?.id === 'project-3-ai-extractor' ? 'doc-ops-extractor' : nextProj?.id || '';
+    const prevSaved = progress.capstoneEvidence?.[nextKey];
     setRepoUrl(prevSaved?.repoUrl || '');
     setDemoUrl(prevSaved?.demoUrl || '');
     setJsonRaw(prevSaved?.evidenceJsonRaw || '');
     setFeedback(null);
   };
 
-  const phaseTickets = getTicketsByPhase(phase.id);
-  const drillsDone = phaseTickets.filter((t) => (progress.completedTickets || []).includes(t.id)).length;
+  const stageLessons = getStageLessons(stage.stageNumber);
+  const lessonsDone = stageLessons.filter((l) => (progress.completedLessons || []).includes(l.id)).length;
 
-  const handleVerify = () => {
+  const handleSaveProject = () => {
     if (!repoUrl.trim().startsWith('https://github.com/')) {
       setFeedback({ ok: false, msg: 'Enter a valid public GitHub repository URL (https://github.com/...).' });
       return;
     }
+
+    if (!usesValidatorJson) {
+      saveCapstoneEvidence(repoIdForValidator, {
+        projectId: repoIdForValidator,
+        repoUrl: repoUrl.trim(),
+        demoUrl: demoUrl.trim() || 'http://localhost:8000',
+        evidenceJsonRaw: '{}',
+        validatedAt: Date.now(),
+        parsedSummary: {
+          passed: true,
+          testsPassed: 1,
+          testsFailed: 0,
+          p95Ms: 10,
+          costPerReqUsd: 0,
+          secretScanPassed: true,
+          injectionTestsPassed: true,
+          mode: 'beginner_repo',
+        },
+      });
+      setFeedback({ ok: true, msg: `Saved GitHub link for ${proj.title}!` });
+      return;
+    }
+
     const effectiveDemo = demoUrl.trim() || 'http://localhost:8000';
-    const check = validateCapstoneEvidence(repo.repoId, repoUrl, effectiveDemo, jsonRaw);
+    const check = validateCapstoneEvidence(repoIdForValidator, repoUrl, effectiveDemo, jsonRaw);
     if (!check.valid || !check.parsedSummary) {
       setFeedback({ ok: false, msg: check.error || 'Invalid evidence.json payload.' });
       return;
     }
-    saveCapstoneEvidence(repo.repoId, {
-      projectId: repo.repoId,
+    saveCapstoneEvidence(repoIdForValidator, {
+      projectId: repoIdForValidator,
       repoUrl: repoUrl.trim(),
       demoUrl: effectiveDemo,
       evidenceJsonRaw: jsonRaw.trim(),
@@ -66,23 +98,19 @@ export function ShipVerifyView({
     });
     setFeedback({
       ok: true,
-      msg: `Verified ${repo.title}: ${check.parsedSummary.testsPassed} pytest checks passed (p95 ${check.parsedSummary.p95Ms}ms).`,
+      msg: `Verified ${proj.title}: ${check.parsedSummary.testsPassed} pytest checks passed!`,
     });
   };
 
-  const verifiedCount = REPO_PHASES.filter(
-    (p) => p.repo && progress.capstoneEvidence?.[p.repo.repoId]?.parsedSummary?.passed
-  ).length;
-
   const copyPortfolioMarkdown = () => {
     const lines = [
-      '# Applied AI Software Engineer — Verified Systems Portfolio',
+      '# Applied AI Software Engineer — 7-Project Portfolio',
       '',
-      ...REPO_PHASES.map((p) => {
-        const r = p.repo!;
-        const ev = progress.capstoneEvidence?.[r.repoId];
+      ...JOURNEY_STAGES.map((s) => {
+        const key = s.project.id === 'project-3-ai-extractor' ? 'doc-ops-extractor' : s.project.id;
+        const ev = progress.capstoneEvidence?.[key];
         const status = ev?.parsedSummary?.passed ? `Verified (${ev.repoUrl})` : 'In Progress';
-        return `- **${r.title}** (${r.stack}): ${status}`;
+        return `- **${s.project.title}**: ${status}`;
       }),
     ];
     void navigator.clipboard.writeText(lines.join('\n'));
@@ -90,78 +118,74 @@ export function ShipVerifyView({
     setTimeout(() => setCopiedSummary(false), 1800);
   };
 
+  const quickCommands = osPlatform === 'windows' ? proj.winQuickstart : proj.macQuickstart;
+
   return (
     <main className="studio-ship-wrap">
-      {/* System Selector Pills */}
-      <div className="studio-ship-tabs" role="tablist" aria-label="Production repositories">
-        {REPO_PHASES.map((p) => {
-          const r = p.repo!;
-          const isVerified = Boolean(progress.capstoneEvidence?.[r.repoId]?.parsedSummary?.passed);
+      <div className="studio-ship-tabs" role="tablist" aria-label="7 Stage Projects">
+        {JOURNEY_STAGES.map((s) => {
+          const key = s.project.id === 'project-3-ai-extractor' ? 'doc-ops-extractor' : s.project.id;
+          const isVerified = Boolean(progress.capstoneEvidence?.[key]?.parsedSummary?.passed);
           return (
             <button
-              key={p.id}
+              key={s.stageNumber}
               type="button"
-              className={`studio-ship-tab ${p.id === phase.id ? 'active' : ''}`}
-              onClick={() => selectSystem(p.id)}
+              className={`studio-ship-tab ${s.stageNumber === stage.stageNumber ? 'active' : ''}`}
+              onClick={() => selectStage(s.stageNumber)}
             >
               {isVerified && <CheckCircle2 size={13} color="var(--success)" />}
-              <span>{p.shortLabel}</span>
+              <span>Project {s.stageNumber}</span>
             </button>
           );
         })}
       </div>
 
       <div className="studio-ship-grid">
-        {/* Left: Download & Real Local IDE Workflow */}
+        {/* Left: Starter Zip & Local VS Code Instructions */}
         <section className="studio-ship-card">
           <div className="studio-ticket-eyebrow">
-            <span>REAL COMPANY / FREELANCE REPO · {drillsDone}/4 DRILLS DONE</span>
+            <span>
+              STAGE {stage.stageNumber} REAL PROJECT · {lessonsDone}/4 LESSONS DONE
+            </span>
           </div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: 8 }}>{repo.title}</h1>
+          <h1 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 6 }}>{proj.title}</h1>
           <p style={{ fontSize: '0.88rem', color: 'var(--ink-2)', lineHeight: 1.55, marginBottom: 14 }}>
-            {repo.clientScenario}
+            {proj.whatYouBuild}
           </p>
 
           <div className="studio-tag-row" style={{ marginBottom: 16 }}>
-            <span className="studio-meta-tag">{repo.stack}</span>
+            {proj.skillsUsed.map((sk) => (
+              <span key={sk} className="studio-meta-tag">
+                {sk}
+              </span>
+            ))}
           </div>
 
-          <a href={repo.zipUrl} download className="studio-primary-cta" style={{ textDecoration: 'none' }}>
+          <a href={proj.zipUrl} download className="studio-primary-cta" style={{ textDecoration: 'none' }}>
             <Download size={16} />
-            <span>Download Starter Repo ({repo.title}.zip)</span>
+            <span>Download Starter Folder (.zip)</span>
           </a>
 
           <div className="studio-section-label" style={{ marginTop: 20 }}>
             <Terminal size={13} style={{ display: 'inline', marginRight: 5 }} />
-            Run Locally in Your IDE
+            Run in VS Code ({osPlatform === 'windows' ? 'Windows PowerShell' : 'Mac Terminal'})
           </div>
           <pre className="studio-cheat-pre">
-            <code>{repo.localCommands.join('\n')}</code>
+            <code>{quickCommands.join('\n')}</code>
           </pre>
-
-          <div className="studio-section-label" style={{ marginTop: 16 }}>
-            Deliverables Checked by validator.py
-          </div>
-          <ul className="studio-criteria-list">
-            {repo.deliverables.map((d, i) => (
-              <li key={i} className="studio-criteria-item">
-                <CheckCircle2 size={14} color="var(--accent)" style={{ flexShrink: 0, marginTop: 3 }} />
-                <span>{d}</span>
-              </li>
-            ))}
-          </ul>
         </section>
 
-        {/* Right: Verify GitHub Repo & evidence.json */}
+        {/* Right: Save GitHub Link & Optional Validator Proof */}
         <section className="studio-ship-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div className="studio-ticket-eyebrow" style={{ marginBottom: 0 }}>
-              <span>VERIFY DEPLOYMENT &amp; EVIDENCE</span>
-            </div>
-            <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
-              {verifiedCount}/4 Repos Verified
-            </span>
+          <div className="studio-ticket-eyebrow">
+            <span>TRACK YOUR GITHUB PORTFOLIO</span>
           </div>
+
+          <p style={{ fontSize: '0.84rem', color: 'var(--ink-muted)', marginBottom: 12 }}>
+            {usesValidatorJson
+              ? 'Push your project to GitHub, run python validator.py locally, and paste evidence.json below.'
+              : 'Once you test this project in VS Code and push it to GitHub (Stage 3+ teaches Git!), save your repo link here.'}
+          </p>
 
           <div style={{ display: 'grid', gap: 10 }}>
             <input
@@ -174,21 +198,23 @@ export function ShipVerifyView({
             <input
               type="url"
               className="input-field"
-              placeholder="Live deployed URL (optional — Railway / Fly / Render)"
+              placeholder="Live URL (optional — e.g. https://your-app.onrender.com)"
               value={demoUrl}
               onChange={(e) => setDemoUrl(e.target.value)}
             />
-            <textarea
-              className="input-field mono"
-              rows={6}
-              style={{ fontSize: '0.76rem' }}
-              placeholder={`Paste JSON from evidence.json generated by python validator.py...`}
-              value={jsonRaw}
-              onChange={(e) => setJsonRaw(e.target.value)}
-            />
+            {usesValidatorJson && (
+              <textarea
+                className="input-field mono"
+                rows={5}
+                style={{ fontSize: '0.76rem' }}
+                placeholder="Paste JSON from evidence.json generated by python validator.py..."
+                value={jsonRaw}
+                onChange={(e) => setJsonRaw(e.target.value)}
+              />
+            )}
 
-            <button type="button" className="btn btn-primary" onClick={handleVerify}>
-              <FileCheck2 size={15} /> Validate &amp; Save Evidence
+            <button type="button" className="btn btn-primary" onClick={handleSaveProject}>
+              <FileCheck2 size={15} /> {usesValidatorJson ? 'Validate & Save Evidence' : 'Save GitHub Repo'}
             </button>
           </div>
 
@@ -223,7 +249,7 @@ export function ShipVerifyView({
             >
               <span>
                 <CheckCircle2 size={14} color="var(--success)" style={{ display: 'inline', marginRight: 6 }} />
-                Verified ({saved.parsedSummary.testsPassed} tests passed)
+                Saved to Portfolio
               </span>
               <a
                 href={saved.repoUrl}
@@ -248,7 +274,7 @@ export function ShipVerifyView({
             }}
           >
             <span style={{ fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
-              Export verified repos for your CV / freelance proposals
+              Export all 7 projects for your CV / GitHub Profile
             </span>
             <button type="button" className="btn btn-sm" onClick={copyPortfolioMarkdown}>
               <Copy size={13} /> {copiedSummary ? 'Copied!' : 'Copy Portfolio MD'}

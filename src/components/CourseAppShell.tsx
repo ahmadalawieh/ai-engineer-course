@@ -2,60 +2,69 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Moon, Sparkles, Sun } from 'lucide-react';
-import { STUDIO_PHASES, STUDIO_TICKETS, getTicketById } from '@/data/studioCurriculum';
-import type { PhaseId } from '@/types/studio';
+import { ALL_JOURNEY_LESSONS, getJourneyLessonById } from '@/data/journeyCurriculum';
+import type { OsPlatform } from '@/types/journey';
 import { MissionBoardView } from './MissionBoardView';
-import { TicketWorkspaceView } from './TicketWorkspaceView';
+import { StepLessonPlayerView } from './StepLessonPlayerView';
 import { ShipVerifyView } from './ShipVerifyView';
 import { SyncModal } from './SyncModal';
 import { useCourseApp } from './ThemeProgressProvider';
 
-export type StudioScreen = 'board' | 'workspace' | 'ship';
+export type StudioScreen = 'path' | 'lesson' | 'projects';
 
 export function CourseAppShell() {
   const { theme, toggleTheme, progress, syncConfig, syncStatus, authUser } = useCourseApp();
 
-  const completedSet = useMemo(() => new Set(progress.completedTickets || []), [progress.completedTickets]);
+  const completedSet = useMemo(() => new Set(progress.completedLessons || []), [progress.completedLessons]);
 
-  const firstOpenTicket = useMemo(
-    () => STUDIO_TICKETS.find((t) => !completedSet.has(t.id)) || STUDIO_TICKETS[0],
+  const firstOpenLesson = useMemo(
+    () => ALL_JOURNEY_LESSONS.find((l) => !completedSet.has(l.id)) || ALL_JOURNEY_LESSONS[0],
     [completedSet]
   );
 
-  const [screen, setScreen] = useState<StudioScreen>('board');
-  const [selectedPhaseId, setSelectedPhaseId] = useState<PhaseId>('phase-0');
-  const [activeTicketId, setActiveTicketId] = useState<string>('P0-1');
+  const [screen, setScreen] = useState<StudioScreen>('path');
+  const [selectedStage, setSelectedStage] = useState<number>(1);
+  const [activeLessonId, setActiveLessonId] = useState<string>('1-1');
+  const [osPlatform, setOsPlatform] = useState<OsPlatform>('windows');
   const [syncOpen, setSyncOpen] = useState(false);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
+      const savedOs = window.localStorage.getItem('ai_studio_os') as OsPlatform | null;
+      if (savedOs === 'windows' || savedOs === 'mac') {
+        setOsPlatform(savedOs);
+      }
+
       const params = new URLSearchParams(window.location.search);
-      const t = params.get('ticket');
+      const l = params.get('lesson');
       const s = params.get('screen');
-      if (t) {
-        const found = getTicketById(t);
+      if (l) {
+        const found = getJourneyLessonById(l);
         if (found) {
-          setActiveTicketId(found.id);
-          setSelectedPhaseId(found.phaseId);
-          setScreen('workspace');
+          setActiveLessonId(found.id);
+          setSelectedStage(found.stageNumber);
+          setScreen('lesson');
           return;
         }
       }
-      if (s === 'ship') {
-        setScreen('ship');
+      if (s === 'projects') {
+        setScreen('projects');
         return;
       }
-      setActiveTicketId(firstOpenTicket.id);
-      setSelectedPhaseId(firstOpenTicket.phaseId);
+      setActiveLessonId(firstOpenLesson.id);
+      setSelectedStage(firstOpenLesson.stageNumber);
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleChangeOs = (next: OsPlatform) => {
+    setOsPlatform(next);
+    window.localStorage.setItem('ai_studio_os', next);
+  };
+
   const isSynced = Boolean(authUser) || syncConfig.mode !== 'none' || syncStatus === 'synced';
-  const phaseIndex = STUDIO_PHASES.findIndex((p) => p.id === selectedPhaseId);
-  const sprintLabel = phaseIndex <= 0 ? 'Phase 0' : `Sprint ${phaseIndex}`;
-  const doneCount = STUDIO_TICKETS.filter((t) => completedSet.has(t.id)).length;
+  const doneCount = ALL_JOURNEY_LESSONS.filter((l) => completedSet.has(l.id)).length;
 
   return (
     <div className="studio-app">
@@ -63,7 +72,7 @@ export function CourseAppShell() {
         <button
           type="button"
           className="studio-brand"
-          onClick={() => setScreen('board')}
+          onClick={() => setScreen('path')}
         >
           <span className="studio-brand-icon">
             <Sparkles size={15} />
@@ -71,27 +80,27 @@ export function CourseAppShell() {
           <span className="studio-brand-text">AI Engineer Studio</span>
         </button>
 
-        <nav className="studio-nav-tabs" aria-label="Primary studio screens">
+        <nav className="studio-nav-tabs" aria-label="Course navigation">
           <button
             type="button"
-            className={`studio-nav-tab ${screen === 'board' ? 'active' : ''}`}
-            onClick={() => setScreen('board')}
+            className={`studio-nav-tab ${screen === 'path' ? 'active' : ''}`}
+            onClick={() => setScreen('path')}
           >
-            1. Mission Board
+            1. My Path
           </button>
           <button
             type="button"
-            className={`studio-nav-tab ${screen === 'workspace' ? 'active' : ''}`}
-            onClick={() => setScreen('workspace')}
+            className={`studio-nav-tab ${screen === 'lesson' ? 'active' : ''}`}
+            onClick={() => setScreen('lesson')}
           >
-            2. Workspace
+            2. Current Lesson
           </button>
           <button
             type="button"
-            className={`studio-nav-tab ${screen === 'ship' ? 'active' : ''}`}
-            onClick={() => setScreen('ship')}
+            className={`studio-nav-tab ${screen === 'projects' ? 'active' : ''}`}
+            onClick={() => setScreen('projects')}
           >
-            3. Ship &amp; Verify
+            3. My 7 Projects
           </button>
         </nav>
 
@@ -103,7 +112,7 @@ export function CourseAppShell() {
             title="Sync progress across devices"
           >
             <span>
-              {sprintLabel} · {doneCount}/{STUDIO_TICKETS.length} · {isSynced ? 'Synced' : 'Sync'}
+              {doneCount}/{ALL_JOURNEY_LESSONS.length} Done · {isSynced ? 'Synced' : 'Sync'}
             </span>
             <span className={`studio-sync-dot ${isSynced ? 'on' : ''}`} />
           </button>
@@ -120,41 +129,45 @@ export function CourseAppShell() {
         </div>
       </header>
 
-      {screen === 'board' && (
+      {screen === 'path' && (
         <MissionBoardView
-          selectedPhaseId={selectedPhaseId}
-          onSelectPhase={(pid) => setSelectedPhaseId(pid)}
-          onOpenTicket={(tid) => {
-            const found = getTicketById(tid);
-            if (found) setSelectedPhaseId(found.phaseId);
-            setActiveTicketId(tid);
-            setScreen('workspace');
+          selectedStage={selectedStage}
+          onSelectStage={(num) => setSelectedStage(num)}
+          onOpenLesson={(lid) => {
+            const found = getJourneyLessonById(lid);
+            if (found) setSelectedStage(found.stageNumber);
+            setActiveLessonId(lid);
+            setScreen('lesson');
           }}
-          onOpenShipVerify={(pid) => {
-            setSelectedPhaseId(pid);
-            setScreen('ship');
-          }}
-        />
-      )}
-
-      {screen === 'workspace' && (
-        <TicketWorkspaceView
-          key={activeTicketId}
-          ticketId={activeTicketId}
-          onBackBoard={() => setScreen('board')}
-          onSelectTicket={(nextId) => {
-            const found = getTicketById(nextId);
-            if (found) setSelectedPhaseId(found.phaseId);
-            setActiveTicketId(nextId);
-          }}
-          onOpenShipVerify={(pid) => {
-            setSelectedPhaseId(pid);
-            setScreen('ship');
+          onOpenProject={(num) => {
+            setSelectedStage(num);
+            setScreen('projects');
           }}
         />
       )}
 
-      {screen === 'ship' && <ShipVerifyView initialPhaseId={selectedPhaseId} />}
+      {screen === 'lesson' && (
+        <StepLessonPlayerView
+          key={activeLessonId}
+          lessonId={activeLessonId}
+          osPlatform={osPlatform}
+          onChangeOs={handleChangeOs}
+          onBackPath={() => setScreen('path')}
+          onSelectLesson={(nextId) => {
+            const found = getJourneyLessonById(nextId);
+            if (found) setSelectedStage(found.stageNumber);
+            setActiveLessonId(nextId);
+          }}
+          onOpenProject={(num) => {
+            setSelectedStage(num);
+            setScreen('projects');
+          }}
+        />
+      )}
+
+      {screen === 'projects' && (
+        <ShipVerifyView initialStageNumber={selectedStage} osPlatform={osPlatform} />
+      )}
 
       <SyncModal open={syncOpen} onClose={() => setSyncOpen(false)} />
     </div>

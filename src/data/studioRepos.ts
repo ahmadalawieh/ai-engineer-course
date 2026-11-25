@@ -57,6 +57,176 @@ httpx>=0.27.0
 
 export const STUDIO_STARTER_REPOS: StarterRepoSpec[] = [
   {
+    id: 'project-1-quote-cli',
+    title: 'Project 1 — Freelance Quote & Invoice Calculator',
+    description: 'Beginner Python script calculating client quotes, VIP discounts, rush fees, and tax.',
+    files: [
+      {
+        filename: 'README.md',
+        content: `# Project 1: Freelance Quote Calculator\n\n## Run in VS Code Terminal (Windows)\n\`\`\`powershell\npython quote_tool.py\n\`\`\`\n`,
+      },
+      {
+        filename: 'quote_tool.py',
+        content: `client_name = input("Client name: ").strip() or "Acme Corp"
+hours = float(input("Estimated hours (e.g. 8): ") or 8)
+hourly_rate = 65.0
+is_rush = input("Rush delivery? (y/n): ").strip().lower() == "y"
+
+subtotal = hours * hourly_rate
+if subtotal >= 500:
+    subtotal = subtotal * 0.90
+    print("Applied 10% VIP project discount!")
+
+if is_rush:
+    subtotal = subtotal + 100.0
+    print("Added $100 rush delivery fee.")
+
+grand_total = round(subtotal * 1.08, 2)
+print(f"Quote for {client_name}: \${grand_total} (includes 8% tax)")
+`,
+      },
+    ],
+  },
+  {
+    id: 'project-2-lead-cleaner',
+    title: 'Project 2 — Automated Messy Lead & JSON Cleaner',
+    description: 'Reads raw_leads.json, cleans emails & missing fields safely, and writes clean_leads.json.',
+    files: [
+      {
+        filename: 'README.md',
+        content: `# Project 2: Automated Lead Cleaner\n\n## Run in VS Code Terminal\n\`\`\`powershell\npython clean_leads.py\n\`\`\`\n`,
+      },
+      {
+        filename: 'raw_leads.json',
+        content: `[\n  {"email": "  SARA@Acme.com ", "plan": "Pro", "spend": "750"},\n  {"email": "bad-email-no-at", "spend": "100"},\n  {"email": " bob@startup.io ", "spend": "TBD"}\n]\n`,
+      },
+      {
+        filename: 'clean_leads.py',
+        content: `import json
+
+def safe_spend(raw_val):
+    try:
+        return float(raw_val)
+    except (ValueError, TypeError):
+        return 0.0
+
+def clean_batch(records):
+    valid = []
+    for r in records:
+        email = str(r.get("email") or "").strip().lower()
+        if "@" not in email:
+            continue
+        spend = safe_spend(r.get("spend"))
+        valid.append({
+            "email": email,
+            "plan": str(r.get("plan") or "starter").strip().lower(),
+            "spend": spend,
+            "vip": spend >= 500.0,
+        })
+    return valid
+
+if __name__ == "__main__":
+    with open("raw_leads.json", "r", encoding="utf-8") as f:
+        raw = json.load(f)
+    cleaned = clean_batch(raw)
+    with open("clean_leads.json", "w", encoding="utf-8") as f:
+        json.dump(cleaned, f, indent=2)
+    print(f"Cleaned {len(cleaned)} valid leads -> saved to clean_leads.json")
+`,
+      },
+    ],
+  },
+  {
+    id: 'project-4-support-webapp',
+    title: 'Project 4 — Full-Stack AI Order & Support Web App',
+    description: 'HTML/CSS frontend + FastAPI + SQLite orders table working together on localhost:8000.',
+    files: [
+      { filename: 'requirements.txt', content: COMMON_REQS },
+      {
+        filename: 'README.md',
+        content: `# Project 4: Full-Stack AI Order Support Web App\n\n## Run Locally\n\`\`\`powershell\npython -m venv .venv\n.venv\\Scripts\\activate\npip install -r requirements.txt\nuvicorn main:app --reload\n\`\`\`\nThen open http://localhost:8000 in your browser!\n`,
+      },
+      {
+        filename: 'public/index.html',
+        content: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Order Support</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #090a0f; color: #f1f5f9; max-width: 560px; margin: 60px auto; padding: 0 20px; }
+    .card { background: #11141b; border: 1px solid #1e2430; border-radius: 14px; padding: 24px; }
+    input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #2d3646; background: #090a0f; color: #fff; margin-bottom: 12px; }
+    button { background: #22d3ee; color: #061317; font-weight: 700; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+    #reply { margin-top: 16px; color: #cbd5e1; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Customer Order Support</h2>
+    <p style="color:#7c8799;font-size:14px;">Try asking about <code>ORD-101</code> or <code>ORD-102</code></p>
+    <input id="msg" placeholder="Where is ORD-101?" value="Hi, where is ORD-101?" />
+    <button onclick="sendQuestion()">Ask Assistant</button>
+    <div id="reply"></div>
+  </div>
+  <script>
+    async function sendQuestion() {
+      const message = document.getElementById('msg').value;
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      document.getElementById('reply').textContent = data.reply;
+    }
+  </script>
+</body>
+</html>
+`,
+      },
+      {
+        filename: 'main.py',
+        content: `import sqlite3
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+
+app = FastAPI(title="AI Order Support")
+
+def init_db():
+    with sqlite3.connect("orders.db") as conn:
+        conn.execute("CREATE TABLE IF NOT EXISTS orders (order_id TEXT PRIMARY KEY, status TEXT, eta TEXT)")
+        conn.executemany("INSERT OR REPLACE INTO orders VALUES (?, ?, ?)", [
+            ("ORD-101", "Shipped", "Arriving Thursday"),
+            ("ORD-102", "Processing", "Ships tomorrow morning"),
+        ])
+
+init_db()
+
+class AskReq(BaseModel):
+    message: str
+
+@app.get("/")
+def home():
+    return FileResponse("public/index.html")
+
+@app.post("/ask")
+def ask_support(req: AskReq):
+    for raw in req.message.split():
+        word = raw.strip(".,?!")
+        if word.startswith("ORD-"):
+            with sqlite3.connect("orders.db") as conn:
+                row = conn.execute("SELECT status, eta FROM orders WHERE order_id = ?", (word,)).fetchone()
+            if row:
+                return {"reply": f"Order {word} is currently {row[0]} ({row[1]})."}
+            return {"reply": f"We could not find order {word}. Please double-check the number."}
+    return {"reply": "Please include your ORD- order number so I can check our database!"}
+`,
+      },
+    ],
+  },
+  {
     id: 'doc-ops-extractor',
     title: 'System 1 — Automated Document & Ops Extraction Pipeline',
     description: 'FastAPI service extracting strict invoice schemas with deterministic math verification and SHA-256 deduplication.',
@@ -367,6 +537,10 @@ def test_unhealthy_primary_fails_over():
     r = client.post("/v1/chat", json={"prompt": "Hard design", "complexity": "high", "unhealthy_models": ["frontier-reasoning"]}).json()
     assert r["model"] == "backup-mid"
 `,
+      },
+      {
+        filename: 'Dockerfile',
+        content: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nCMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]\n`,
       },
       { filename: 'validator.py', content: makeValidatorPy('ai-prod-gateway') },
     ],
