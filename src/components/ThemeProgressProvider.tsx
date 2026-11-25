@@ -112,7 +112,7 @@ function clearSyncParamFromLocation(): void {
 }
 
 export function ThemeProgressProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<ThemeMode>('light');
+  const [theme, setTheme] = useState<ThemeMode>('dark');
   const [progress, setProgress] = useState<CourseProgress>(() => createInitialProgress());
   const [syncConfig, setSyncConfig] = useState<SyncConfig>({ mode: 'none', autoSync: true });
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
@@ -128,7 +128,7 @@ export function ThemeProgressProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     let active = true;
     const rafId = requestAnimationFrame(() => {
-      const savedTheme = (window.localStorage.getItem('ai_mastery_theme') as ThemeMode) || 'light';
+      const savedTheme = (window.localStorage.getItem('ai_mastery_theme') as ThemeMode) || 'dark';
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
 

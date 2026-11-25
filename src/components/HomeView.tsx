@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import Image from 'next/image';
 import {
   ArrowRight,
   Award,
@@ -10,7 +9,6 @@ import {
   Circle,
   Clock,
   Cloud,
-  Code2,
   Flame,
   GraduationCap,
   Lock,
@@ -88,6 +86,11 @@ export function HomeView({
     return nextUnfinished || ALL_LESSONS[0];
   }, [progress.lastVisitedLessonId, progress.completedLessons]);
 
+  const resumeModule = useMemo(
+    () => COURSE_MODULES.find((m) => m.lessons.some((l) => l.id === resumeLesson.id)) || COURSE_MODULES[0],
+    [resumeLesson.id]
+  );
+
   const filteredModules = useMemo(() => {
     const byTrack =
       activeLearningTrack === 'ai-eng-fast'
@@ -99,24 +102,73 @@ export function HomeView({
     );
   }, [activeLearningTrack, trackFilter]);
 
+  const examsTotal = levelEval.level.requiredModuleExams.length;
+  const examsDone = examsTotal - levelEval.missingExams.length;
+  const capstonesTotal = levelEval.level.requiredCapstones.length;
+  const capstonesDone = capstonesTotal - levelEval.missingCapstones.length;
+  const scenariosTotal = levelEval.level.requiredScenarios.length;
+  const scenariosDone = scenariosTotal - levelEval.missingScenarios.length;
+
+  const readinessPct = useMemo(() => {
+    const lessonRatio = levelEval.lessonsTotal > 0 ? levelEval.lessonsDone / levelEval.lessonsTotal : 0;
+    const labRatio = levelEval.level.requiredLabPct > 0 ? Math.min(1, levelEval.labPct / levelEval.level.requiredLabPct) : 0;
+    const examRatio = examsTotal > 0 ? examsDone / examsTotal : 0;
+    const capstoneRatio = capstonesTotal > 0 ? capstonesDone / capstonesTotal : 0;
+    return Math.round(((lessonRatio + labRatio + examRatio + capstoneRatio) / 4) * 100);
+  }, [levelEval, examsDone, examsTotal, capstonesDone, capstonesTotal]);
+
+  const ringRadius = 50;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCircumference - (readinessPct / 100) * ringCircumference;
+
   return (
     <main className="container">
-      <section className="hero">
-        <div>
-          <div className="hero-eyebrow">Basic to Advanced ML &amp; AI Engineer Roadmap</div>
-          <h1>From Absolute Beginner to Production ML &amp; AI Engineer.</h1>
-          <p className="hero-lead">
-            Starting completely from scratch with zero coding experience? Every concept builds
-            from first principles—guiding you step-by-step from your very first Python variable
-            through interactive SQL, scikit-learn &amp; XGBoost, Deep Learning, Transformers,
-            Hybrid RAG, Agents, and real workplace tickets with <strong>19 live visual simulators</strong>,{' '}
-            <strong>animated walkthroughs</strong>, <strong>architecture diagrams</strong>, and{' '}
-            <strong>in-browser Python &amp; SQL labs</strong>.
-          </p>
-          <div className="hero-actions">
+      <section className="bento-hero-grid" aria-label="Overview and Readiness Telemetry">
+        <div className="bento-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div className="bento-status-pill">
+              <span>{completedCount > 0 ? 'IN PROGRESS' : 'READY'}</span>
+              <span>•</span>
+              <span>MODULE {String(resumeModule.number).padStart(2, '0')}</span>
+            </div>
+
+            <h1 className="bento-hero-title">From Absolute Beginner to Production ML &amp; AI Engineer.</h1>
+            <p style={{ fontSize: '0.94rem', color: 'var(--ink-2)', maxWidth: '64ch', lineHeight: 1.55 }}>
+              Interactive {COURSE_MODULES.length}-module curriculum with{' '}
+              <strong>{TOTAL_LABS} auto-verified Python &amp; SQL labs</strong>,{' '}
+              <strong>20 live visual simulators</strong>, and <strong>7 capstone starter repos</strong>.
+            </p>
+
+            <div className="bento-resume-banner">
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                  marginBottom: 8,
+                }}
+              >
+                <span style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--ink)' }}>
+                  {completedCount === 0 ? 'Up Next:' : 'Resume:'} {resumeLesson.number} {resumeLesson.title}
+                </span>
+                <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
+                  {pct}% Complete · {progress.xp} XP ·{' '}
+                  <Flame size={12} style={{ display: 'inline', color: 'var(--accent-warm)', marginRight: 2 }} />
+                  {progress.streakDays}d
+                </span>
+              </div>
+              <div className="progress-track">
+                <div className="progress-fill" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-actions" style={{ marginTop: 4 }}>
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-primary btn-glow"
               onClick={() => onSelectLesson(resumeLesson.id)}
               id="hero-start-btn"
             >
@@ -126,19 +178,19 @@ export function HomeView({
                 : `Resume ${resumeLesson.number}: ${resumeLesson.title}`}
             </button>
             <button type="button" className="btn" onClick={onOpenWork}>
-              <Briefcase size={16} />
+              <Briefcase size={15} />
               Real Work &amp; 7 Capstones
             </button>
             <button type="button" className="btn" onClick={onOpenArena}>
-              <Award size={16} />
+              <Award size={15} />
               Arena &amp; Interviews
             </button>
             <button type="button" className="btn" onClick={() => setActiveExam(PLACEMENT_EXAM)}>
-              <Zap size={15} color={progress.fastTrackUnlocked ? 'var(--success)' : 'var(--accent)'} />
+              <Zap size={14} color={progress.fastTrackUnlocked ? 'var(--success)' : 'var(--accent)'} />
               {progress.fastTrackUnlocked ? 'Fast Track Active ✓' : 'Developer Placement Test'}
             </button>
             <button type="button" className="btn" onClick={() => setActiveExam(buildFinalComprehensiveAssessment())}>
-              <GraduationCap size={15} />
+              <GraduationCap size={14} />
               {progress.moduleExamScores?.['final-assessment']
                 ? `Final Exam: ${progress.moduleExamScores['final-assessment'].bestScore}/${progress.moduleExamScores['final-assessment'].total}`
                 : 'Final Assessment (25Q)'}
@@ -146,202 +198,193 @@ export function HomeView({
           </div>
         </div>
 
-        <aside className="hero-card" aria-label="Course progress summary">
-          <div className="hero-illustration-wrap">
-            <Image
-              src="/images/ai-roadmap-hero.jpg"
-              alt="From foundational blocks to neural networks and production AI engineering"
-              width={960}
-              height={540}
-              priority
-              className="hero-illustration-img"
-            />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-            <span className="mono" style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent)' }}>
-              YOUR MASTERY PROGRESS
-            </span>
-            <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--ink-muted)' }}>
-              <Flame size={13} style={{ display: 'inline', marginRight: 3, color: 'var(--accent-warm)' }} />
-              {progress.streakDays}d streak
-            </span>
-          </div>
-
-          <div className="stat-grid">
-            <div className="stat-box">
-              <div className="stat-val">
-                {completedCount}/{totalLessons}
-              </div>
-              <div className="stat-label">Lessons Mastered</div>
-            </div>
-            <div className="stat-box">
-              <div className="stat-val">{progress.completedLabs.length}/{TOTAL_LABS}</div>
-              <div className="stat-label">Python &amp; SQL Labs</div>
-            </div>
-            <div className="stat-box">
-              <div className="stat-val">
-                {(progress.completedTickets || []).length}/{WORKPLACE_TICKETS.length}
-              </div>
-              <div className="stat-label">Workplace Tickets</div>
-            </div>
-            <div className="stat-box">
-              <div className="stat-val">{progress.xp} XP</div>
-              <div className="stat-label">~{totalHours}h Total Path</div>
+        <aside className="bento-card" aria-labelledby="target-level-heading">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <h2 id="target-level-heading" style={{ fontSize: '1.05rem', fontWeight: 700 }}>
+              Readiness Telemetry
+            </h2>
+            <div className="pill-tabs" role="tablist" aria-label="Target AI Engineer Level">
+              {LEVEL_PATHS.map((lvl) => (
+                <button
+                  key={lvl.id}
+                  type="button"
+                  className={`pill-tab ${activeLevelId === lvl.id ? 'active' : ''}`}
+                  style={{ padding: '4px 9px', fontSize: '0.74rem' }}
+                  onClick={() => setTargetLevel(lvl.id)}
+                >
+                  {lvl.id === 'junior' ? 'Junior' : lvl.id === 'mid' ? 'Mid-Level' : 'Senior Bar'}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 6 }}>
-            <span style={{ color: 'var(--ink-2)' }}>Overall Readiness</span>
-            <strong className="mono">{pct}%</strong>
+          <div className="readiness-ring-wrap">
+            <div className="readiness-ring-center">
+              <svg className="readiness-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <linearGradient id="readinessGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--success)" />
+                  </linearGradient>
+                </defs>
+                <circle cx="60" cy="60" r={ringRadius} fill="none" stroke="var(--surface-3)" strokeWidth="9" />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r={ringRadius}
+                  fill="none"
+                  stroke="url(#readinessGrad)"
+                  strokeWidth="9"
+                  strokeLinecap="round"
+                  strokeDasharray={ringCircumference}
+                  strokeDashoffset={ringOffset}
+                />
+              </svg>
+              <span className="readiness-ring-pct">{readinessPct}%</span>
+            </div>
+            <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--ink)', marginTop: 6, textAlign: 'center' }}>
+              {levelEval.level.title}: {readinessPct}%
+            </div>
+            <div style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', textAlign: 'center' }}>
+              {levelEval.level.honestEffortRange}
+            </div>
           </div>
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${pct}%` }} />
+
+          <div className="telemetry-checklist">
+            <div className="telemetry-check-item">
+              <span className="telemetry-check-left">
+                <CheckCircle2
+                  size={15}
+                  color={levelEval.lessonsDone >= levelEval.lessonsTotal ? 'var(--success)' : 'var(--ink-muted)'}
+                />
+                <span>Core Lessons</span>
+              </span>
+              <span className="mono" style={{ fontSize: '0.78rem' }}>
+                {levelEval.lessonsDone}/{levelEval.lessonsTotal}
+              </span>
+            </div>
+
+            <div className="telemetry-check-item">
+              <span className="telemetry-check-left">
+                <CheckCircle2
+                  size={15}
+                  color={levelEval.labPct >= levelEval.level.requiredLabPct ? 'var(--success)' : 'var(--ink-muted)'}
+                />
+                <span>{TOTAL_LABS} Auto-Verified Labs</span>
+              </span>
+              <span className="mono" style={{ fontSize: '0.78rem' }}>
+                {levelEval.labPct}%/{levelEval.level.requiredLabPct}%
+              </span>
+            </div>
+
+            <div className="telemetry-check-item">
+              <span className="telemetry-check-left">
+                <CheckCircle2
+                  size={15}
+                  color={examsDone >= examsTotal ? 'var(--success)' : 'var(--ink-muted)'}
+                />
+                <span>Timed Exams (&ge;70%)</span>
+              </span>
+              <span className="mono" style={{ fontSize: '0.78rem' }}>
+                {examsDone}/{examsTotal}
+              </span>
+            </div>
+
+            <div className="telemetry-check-item">
+              <span className="telemetry-check-left">
+                <CheckCircle2
+                  size={15}
+                  color={capstonesDone >= capstonesTotal ? 'var(--success)' : 'var(--ink-muted)'}
+                />
+                <code>evidence.json</code>
+              </span>
+              <span className="mono" style={{ fontSize: '0.78rem' }}>
+                {capstonesDone}/{capstonesTotal}
+              </span>
+            </div>
+
+            <div className="telemetry-check-item">
+              <span className="telemetry-check-left">
+                <CheckCircle2
+                  size={15}
+                  color={scenariosDone >= scenariosTotal ? 'var(--success)' : 'var(--ink-muted)'}
+                />
+                <span>Scenario &amp; ADR Reviews</span>
+              </span>
+              <span className="mono" style={{ fontSize: '0.78rem' }}>
+                {scenariosDone}/{scenariosTotal}
+              </span>
+            </div>
           </div>
 
           <div
             style={{
               marginTop: 14,
-              paddingTop: 12,
+              paddingTop: 10,
               borderTop: '1px solid var(--border)',
               display: 'flex',
-              flexWrap: 'wrap',
               justifyContent: 'space-between',
               alignItems: 'center',
-              gap: '8px 12px',
-              fontSize: '0.8rem',
+              gap: 8,
+              fontSize: '0.76rem',
               color: 'var(--ink-muted)',
             }}
           >
-            <span>
-              <Code2 size={13} style={{ display: 'inline', marginRight: 4 }} />
-              {COURSE_MODULES.length} Modules · {totalLessons} Lessons · {TOTAL_LABS} Labs · {WORKPLACE_TICKETS.length} Job Tickets
-            </span>
+            <span>~{totalHours}h total · {WORKPLACE_TICKETS.length} tickets</span>
             <button type="button" className="btn btn-sm" onClick={onOpenSync}>
-              <Cloud size={13} /> {authUser ? `Synced (${authUser.name.split(' ')[0]})` : 'Google / Direct Sync'}
+              <Cloud size={12} /> {authUser ? authUser.name.split(' ')[0] : 'Sync'}
             </button>
           </div>
-          <p style={{ fontSize: '0.74rem', color: 'var(--ink-muted)', marginTop: 8, lineHeight: 1.4 }}>
-            Progress saves locally (self-reported). Public proof comes from your GitHub repos &amp; validator{' '}
-            <code>evidence.json</code> artifacts.
-          </p>
         </aside>
       </section>
 
-      <section aria-labelledby="target-level-heading" className="hero-card" style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
-          <div style={{ flex: '1 1 320px' }}>
-            <div className="hero-eyebrow" style={{ marginBottom: 6 }}>
-              <ShieldCheck size={13} style={{ display: 'inline', marginRight: 5 }} />
-              Evidence-Backed Target Level
-            </div>
-            <h2 id="target-level-heading" style={{ fontSize: '1.3rem', marginBottom: 4 }}>
-              {levelEval.level.title}
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)', marginBottom: 6 }}>{levelEval.level.tagline}</p>
-            <p style={{ fontSize: '0.82rem', color: 'var(--ink-muted)' }}>
-              <strong>Realistic effort:</strong> {levelEval.level.honestEffortRange}
-            </p>
-          </div>
-
-          <div className="pill-tabs" role="tablist" aria-label="Target AI Engineer Level">
-            {LEVEL_PATHS.map((lvl) => (
-              <button
-                key={lvl.id}
-                type="button"
-                className={`pill-tab ${activeLevelId === lvl.id ? 'active' : ''}`}
-                onClick={() => setTargetLevel(lvl.id)}
-              >
-                {lvl.id === 'junior' ? 'Junior' : lvl.id === 'mid' ? 'Mid-Level' : 'Senior Bar'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <p style={{ fontSize: '0.86rem', color: 'var(--ink-2)', marginTop: 12, lineHeight: 1.55 }}>
+      <details className="bento-card" style={{ padding: '14px 20px', marginBottom: 24 }}>
+        <summary style={{ cursor: 'pointer', fontSize: '0.86rem', fontWeight: 600, color: 'var(--accent)' }}>
+          <ShieldCheck size={14} style={{ display: 'inline', marginRight: 6 }} />
+          View {levelCompetencies.length} Required Competencies &amp; Honest Credential Scope ({levelEval.level.title})
+        </summary>
+        <p style={{ fontSize: '0.84rem', color: 'var(--ink-2)', marginTop: 10, lineHeight: 1.5 }}>
           {levelEval.level.barSummary}
         </p>
-
-        <div className="stat-grid" style={{ marginTop: 14, marginBottom: 12 }}>
-          <div className="stat-box">
-            <div className="stat-val">
-              {levelEval.lessonsDone}/{levelEval.lessonsTotal}
-            </div>
-            <div className="stat-label">Required Lessons</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-val">
-              {levelEval.labPct}%/{levelEval.level.requiredLabPct}%
-            </div>
-            <div className="stat-label">Lab Threshold</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-val">
-              {levelEval.level.requiredModuleExams.length - levelEval.missingExams.length}/
-              {levelEval.level.requiredModuleExams.length}
-            </div>
-            <div className="stat-label">Timed Exams (&ge;70%)</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-val">
-              {levelEval.level.requiredCapstones.length - levelEval.missingCapstones.length}/
-              {levelEval.level.requiredCapstones.length}
-            </div>
-            <div className="stat-label">Verified Capstones</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-val">
-              {levelEval.level.requiredScenarios.length - levelEval.missingScenarios.length}/
-              {levelEval.level.requiredScenarios.length}
-            </div>
-            <div className="stat-label">Scenario &amp; ADR Reviews</div>
-          </div>
-        </div>
-
-        <details style={{ marginTop: 8 }}>
-          <summary style={{ cursor: 'pointer', fontSize: '0.86rem', fontWeight: 600, color: 'var(--accent)' }}>
-            View {levelCompetencies.length} Required Competencies &amp; Honest Credential Scope
-          </summary>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            {levelCompetencies.map((comp) => (
-              <div
-                key={comp.id}
-                style={{
-                  border: '1px solid var(--border)',
-                  borderRadius: 10,
-                  padding: '10px 12px',
-                  background: 'var(--surface-2)',
-                }}
-              >
-                <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--accent)', fontWeight: 700 }}>
-                  {comp.level.toUpperCase()} · {comp.area}
-                </div>
-                <div style={{ fontWeight: 600, fontSize: '0.88rem', marginTop: 2 }}>{comp.title}</div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: 4, lineHeight: 1.45 }}>
-                  {comp.description}
-                </p>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gap: 10,
+            marginTop: 12,
+          }}
+        >
+          {levelCompetencies.map((comp) => (
+            <div
+              key={comp.id}
+              style={{
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: '10px 12px',
+                background: 'var(--surface-2)',
+              }}
+            >
+              <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--accent)', fontWeight: 700 }}>
+                {comp.level.toUpperCase()} · {comp.area}
               </div>
-            ))}
-          </div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: 12, lineHeight: 1.5 }}>
-            <strong>Honest Program Scope:</strong> No course grants a job title—titles come from employers.{' '}
-            {levelEval.level.honestScopeNote}
-          </p>
-        </details>
-      </section>
+              <div style={{ fontWeight: 600, fontSize: '0.88rem', marginTop: 2 }}>{comp.title}</div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: 4, lineHeight: 1.45 }}>
+                {comp.description}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: 12, lineHeight: 1.5 }}>
+          <strong>Honest Program Scope:</strong> No course grants a job title—titles come from employers.{' '}
+          {levelEval.level.honestScopeNote}
+        </p>
+      </details>
 
       <section aria-labelledby="curriculum-heading">
-        <div className="section-header">
+        <div className="section-header" style={{ marginTop: 12 }}>
           <div>
             <h2 id="curriculum-heading">Complete {COURSE_MODULES.length}-Module Zero-to-Job-Ready AI Engineer Path</h2>
-            <p style={{ color: 'var(--ink-2)', fontSize: '0.95rem', marginTop: 4 }}>
+            <p style={{ color: 'var(--ink-2)', fontSize: '0.92rem', marginTop: 4 }}>
               Step-by-step from terminal &amp; zero code to Python, SQL, scikit-learn, XGBoost, PyTorch, Transformers, RAG, Agents, Production SwEng &amp; Interviews.
             </p>
           </div>
@@ -429,6 +472,11 @@ export function HomeView({
             const modExam = progress.moduleExamScores?.[mod.id];
             const modExamPassed = modExam && modExam.bestScore >= Math.ceil(modExam.total * 0.7);
             const pathBadge = pathBadgeLabel(mod.recommendedPath, activeLearningTrack);
+            const statusClass =
+              modDone === mod.lessons.length ? 'completed' : modDone > 0 ? 'progress' : 'upcoming';
+            const statusText =
+              modDone === mod.lessons.length ? 'Completed' : modDone > 0 ? 'In Progress' : 'Up Next';
+
             return (
               <article key={mod.id} className="module-card">
                 <div className="module-top" style={{ gap: 6, flexWrap: 'wrap' }}>
@@ -436,6 +484,7 @@ export function HomeView({
                     MODULE {String(mod.number).padStart(2, '0')} · {modDone}/{mod.lessons.length} DONE
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span className={`module-status-pill ${statusClass}`}>{statusText}</span>
                     <span
                       className="track-badge"
                       style={{

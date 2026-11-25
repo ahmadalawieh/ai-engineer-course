@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { TopNav, type AppView } from './TopNav';
+import { TopCommandBar, TopNav, type AppView } from './TopNav';
 import { HomeView } from './HomeView';
 import { LessonView } from './LessonView';
 import { PracticeArena, type ArenaTab } from './PracticeArena';
@@ -13,6 +13,7 @@ import { useCourseApp } from './ThemeProgressProvider';
 export function CourseAppShell() {
   const { progress } = useCourseApp();
   const [view, setView] = useState<AppView>('home');
+  const [activeSection, setActiveSection] = useState<'overview' | 'modules' | 'evidence'>('overview');
   const [activeLessonId, setActiveLessonId] = useState<string>('1-0');
   const [arenaTab, setArenaTab] = useState<ArenaTab>('flashcards');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -55,42 +56,65 @@ export function CourseAppShell() {
   };
 
   return (
-    <>
+    <div className="dev-shell">
       <TopNav
         activeView={view}
+        activeSection={activeSection}
         onNavigate={(nextView) => {
           if (nextView === 'lesson' && !activeLessonId) {
             setActiveLessonId(progress.lastVisitedLessonId || '1-0');
           }
+          if (nextView === 'arena') {
+            setArenaTab('flashcards');
+          }
+          setActiveSection('overview');
           setView(nextView);
         }}
-        onOpenSearch={() => setSearchOpen(true)}
-        onOpenSync={() => setSyncOpen(true)}
+        onOpenModules={() => {
+          setActiveSection('modules');
+          setView('home');
+          requestAnimationFrame(() => {
+            document.getElementById('curriculum-heading')?.scrollIntoView({ behavior: 'smooth' });
+          });
+        }}
+        onOpenEvidence={() => {
+          setActiveSection('evidence');
+          setArenaTab('evidence');
+          setView('arena');
+        }}
       />
 
-      {view === 'home' && (
-        <HomeView
-          onSelectLesson={openLesson}
-          onOpenWork={() => setView('work')}
-          onOpenArena={() => {
-            setArenaTab('flashcards');
-            setView('arena');
-          }}
-          onOpenSync={() => setSyncOpen(true)}
-        />
-      )}
+      <div className="dev-main-wrap">
+        <TopCommandBar onOpenSearch={() => setSearchOpen(true)} onOpenSync={() => setSyncOpen(true)} />
 
-      {view === 'lesson' && (
-        <LessonView
-          lessonId={activeLessonId}
-          onSelectLesson={openLesson}
-          onBackHome={() => setView('home')}
-        />
-      )}
+        {view === 'home' && (
+          <HomeView
+            onSelectLesson={openLesson}
+            onOpenWork={() => setView('work')}
+            onOpenArena={() => {
+              setActiveSection('overview');
+              setArenaTab('flashcards');
+              setView('arena');
+            }}
+            onOpenSync={() => setSyncOpen(true)}
+          />
+        )}
 
-      {view === 'work' && <JobWorkBench />}
+        {view === 'lesson' && (
+          <LessonView
+            lessonId={activeLessonId}
+            onSelectLesson={openLesson}
+            onBackHome={() => {
+              setActiveSection('overview');
+              setView('home');
+            }}
+          />
+        )}
 
-      {view === 'arena' && <PracticeArena key={arenaTab} initialTab={arenaTab} onSelectLesson={openLesson} />}
+        {view === 'work' && <JobWorkBench />}
+
+        {view === 'arena' && <PracticeArena key={arenaTab} initialTab={arenaTab} onSelectLesson={openLesson} />}
+      </div>
 
       <SearchModal
         open={searchOpen}
@@ -103,6 +127,6 @@ export function CourseAppShell() {
       />
 
       <SyncModal open={syncOpen} onClose={() => setSyncOpen(false)} />
-    </>
+    </div>
   );
 }
